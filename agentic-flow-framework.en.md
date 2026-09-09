@@ -1,524 +1,115 @@
-# Agentic Flow Framework
+# Agentic Flow Framework — English Reader Guide
 
-**Version:** 1.1.1  
-**Updated:** 2026-09-09
+**Reader-guide version:** 1.3  
+**Updated:** 2026-09-09  
+**Canonical source of truth:** [`ARCHITECTURE.md`](ARCHITECTURE.md)
 
-A reusable, tool-agnostic operating framework for AI coding and engineering agents, generalized from the Yara workflow and checked against current primary documentation from OpenAI, Anthropic/Claude Code, OpenCode, Nx, and TypeScript.
+This document is a synchronized reader-facing guide. If it conflicts with `ARCHITECTURE.md`, the architecture file wins.
 
-> **Durable project memory; disposable, high-quality working context.**
+## Core idea
 
-## 1. Goal
+> Durable project memory; disposable, high-quality working context.
 
-The framework does not optimize for raw token reduction alone. It optimizes for **signal-to-context ratio**, bounded authority, reliable verification, and restart-safe project state.
+The framework separates project memory from agent working memory. Tasks, evidence, decisions, architecture changes, usage telemetry and project history remain durable; ordinary agent runs load only the current working set and pointers they actually need.
 
-Common failure modes in long agentic work are control-plane failures: giant permanent instruction files, whole-repository scans, stale chat memory, silent scope expansion, one agent acting as author/executor/judge, and evidence that disappears when a session ends.
+## Risk-adaptive task governance
 
-## 2. Lifecycle
-
-```text
-REQUEST
-  ↓
-TASK CONTRACT
-  ↓
-REVIEW / FREEZE
-  ↓
-APPLY AUTHORIZATION
-  ↓
-BOUNDED EXECUTION
-  ↓
-VERIFICATION + RECEIPTS
-  ↓
-INDEPENDENT REVIEW (risk-based)
-  ↓
-CLOSURE
-  ↓
-DURABLE CHECKPOINT
-  ↓
-SAFE CONTEXT RESET
-```
-
-Low-risk projects may combine gates, but the logical boundaries remain useful.
-
-## 3. Core principles
-
-1. Repository/durable state beats conversation memory.
-2. One rule has one authoritative home; link instead of duplicating policy.
-3. Keep always-on instructions short; load procedures on demand as skills.
-4. Write Definition of Done before implementation.
-5. Drafting a task is not permission to execute it.
-6. The executor is not automatically the final judge.
-7. A stronger model has more capability, not magical authority or truth.
-8. Execution may retry; strategy and scope may not silently mutate.
-9. STOP/BLOCKED is a valid result when prerequisites are missing.
-10. Verification must produce evidence proportional to risk.
-11. Reset context at durable semantic boundaries, not arbitrary token counts.
-12. Put high-volume exploration in isolated child contexts.
-13. Put deterministic rules in scripts/hooks/CI where practical.
-14. Skills need activation, authority, and output-contract tests.
-15. A fresh agent should reconstruct the current state from durable artifacts.
-
-## 4. Authority architecture
+### HIGH
+Architecture, persistence, production/security/trust, durable data, or material public-contract work:
 
 ```text
-POLICY / engineering constitution
-        ↓
-AGENTS.md — concise map + essential invariants
-        ↓
-Task contract
-        ↓
-On-demand SKILL.md procedures
-        ↓
-Vendor adapters — CLAUDE.md / GEMINI.md / hooks / tool config
+DRAFT → SUPERVISOR → FREEZE → SEPARATE APPLY → EXECUTE → EVIDENCE → INDEPENDENT CLOSURE
 ```
 
-Vendor adapters are implementation details, not a second source of policy.
-
-### Keep root instructions small
-
-OpenAI's Harness Engineering report describes a failed “one giant `AGENTS.md`” approach: it crowded out task/code context, became stale, and was difficult to verify. Their working approach treats a short `AGENTS.md` as a table of contents into structured repository knowledge.
-
-Put only stable, high-value material in root instructions:
-
-- source-of-truth locations;
-- safety/repository invariants;
-- build and test entrypoints;
-- evidence/status vocabulary;
-- pointers to deeper docs and skills.
-
-Do not put task history, raw logs, or long procedures there.
-
-## 5. Task contract
-
-A material task should define:
-
-```yaml
-goal: observed outcome to achieve
-symptom: what is actually observed
-hypotheses: theories, explicitly not facts
-scope: allowed edit surface
-non_scope: what must not be touched
-baseline: what must still pass
-uncertainties: facts to resolve before mutation
-definition_of_done: written before implementation
-required_evidence: receipts needed for closure
-stop_conditions: reasons to halt instead of improvising
-escalation_conditions: when stronger judgment is required
-```
-
-### Draft → review → apply
-
-For material work, separate authoring from execution. If execution proves that the task contract is wrong, STOP and amend it; do not silently rewrite the task while running it.
-
-## 6. Skills
-
-Skills are reusable procedures loaded only when their trigger is relevant. A useful skill contract declares:
+### MEDIUM
+Bounded correction inside an existing task:
 
 ```text
-PURPOSE
-USE_WHEN
-DO_NOT_USE_WHEN
-INPUT_CONTRACT
-OUTPUT_CONTRACT
-MUTATION_AUTHORITY
-REQUIRES
-CONFLICTS_WITH
-EVIDENCE_REQUIRED
-FAIL_CLOSED_BEHAVIOR
+OWNER-APPROVED AMENDMENT → BOUNDED APPLY → TESTS/EVIDENCE → INDEPENDENT CLOSURE
 ```
 
-Recommended starting default: **0–3 load-bearing skills** per task. This is a tunable policy, not a universal law.
-
-Each skill should have positive, negative, near-miss, authority/no-mutation, output-contract, and fresh-session discovery tests.
-
-## 7. Bounded execution
+### EVIDENCE_ONLY
+Docs, evidence or test-contract correction that grants no new runtime authority:
 
 ```text
-inspect
-→ hypothesis
-→ cheapest discriminating test
-→ act only if supported
-→ verify
-→ classify
+DURABLE APPROVED AMENDMENT + HASH/REF → UPDATE → CLOSURE CHECK IF MATERIAL
 ```
 
-Bound retries. A retry may repeat execution; it may not silently change strategy or scope.
+Source-of-truth, durable identity, STOP-before-scope-creep, no self-certification, no Task N+1 absorption, and “do not invent missing evidence” remain invariant at every level.
 
-## 8. Evidence
+## Model and token efficiency
 
-| Evidence | Meaning |
-|---|---|
-| CLAIM | assertion only |
-| STATIC_RECEIPT | file/line/diff/config |
-| TEST_RECEIPT | named test + result |
-| LIVE_RECEIPT | real-stack/runtime observation |
-| MUTATION_PROOF | break → test fails → restore → test passes |
-| INDEPENDENT_REVIEW | cold/read-only audit or reproduction |
-
-Do not collapse configured, implemented, and verified into one status.
-
-## 9. Context engineering
-
-Anthropic's current documentation describes context as working memory, warns that accuracy/recall degrade as context grows (“context rot”), and states that system prompts, messages, tool results, documents, and tool definitions all consume context.
-
-Use four sets:
+Semantic routing:
 
 ```text
-CORE_CONTEXT
-  stable policy + task contract + module map
-
-WORKING_SET
-  files/modules allowed to change
-
-REFERENCE_SET
-  contracts/interfaces needed to understand the task
-
-EXCLUDED_SET
-  unrelated modules, generated output, dependency trees, huge raw logs
+T0 deterministic/mechanical
+T1 cheap read-only discovery/partition
+T2 standard bounded execution
+T3 judgment/high-risk review
 ```
 
-A large context window is capacity, not permission to load the repository.
+Use the cheapest reliable tier whose output can meet the same acceptance bar. Cheap workers may gather evidence; they do not reduce DoD, tests, security or review requirements.
 
-### Semantic reset
+For long/cost-sensitive work use `skills/token-efficiency/SKILL.md`. The agent should warn on unjustified whole-repo scans, repeated rereads, full-history loading, huge raw logs, strong models doing mechanical work, overlapping subagents, repeated failed loops, or budget overruns.
 
-Reset after a durable boundary when:
+When the provider/harness exposes usage, record privacy-safe counters in `.agentic/usage/events.jsonl` using `schemas/USAGE_EVENT.md` and `scripts/usage_ledger.py`. Missing telemetry is unknown, not zero.
 
-- the task/phase is closed;
-- decisions and evidence are durable;
-- no required fact exists only in chat;
-- the next exact action is recorded;
-- repository state is inspectable.
+Prompt caching is a cost/latency optimization, not automatic context compression. Prefer small working sets, lazy tool/skill discovery, batched tool operations, filtered log artifacts, compact subagent handoffs and semantic resets.
 
-Do not make “clear every N tokens” the primary policy.
+## Hot state and cold history
 
-### Prompt caching is not compression
+Hot state for ordinary work:
 
-Anthropic explicitly states that `input_tokens`, `cache_read_input_tokens`, and `cache_creation_input_tokens` all count toward the context window; cached prefixes still occupy context. Caching is a cost/latency optimization, not a context-capacity solution.
+- current task/amendment;
+- current checkpoint/index;
+- current budget/unresolved decisions;
+- relevant modules/docs/skills only.
 
-## 10. Large modular frontend repositories
+Cold history:
 
-Do not make the model discover the working set by reading every frontend module. Determine affected scope mechanically when possible.
+- completed tasks;
+- supervisor judgments;
+- evidence packets;
+- architecture decisions;
+- token/cost ledger;
+- project timeline and generated stories.
 
-Useful existing mechanisms include:
+Cold history is opened only for provenance, audit, regression analysis, retrospective or explicit user request.
 
-- Nx `affected` + project graph;
-- TypeScript Project References;
-- Turbo/Bazel/workspace graphs;
-- import/AST dependency tooling already present in the repo.
+## Supervisors
 
-Nx documents that `affected` uses Git and its project graph to determine the minimum affected project set. TypeScript Project References are designed to split programs into smaller pieces, improve builds, and enforce logical separation.
+A supervisor may be a human, a separate model, or a cold independent session.
 
-Do not introduce Nx solely for the agent if the project does not otherwise benefit from it.
+- **Direct-access supervisor:** inspects real source/diff/tests/evidence and remains read-only during review.
+- **Evidence-only supervisor:** reviews a bounded evidence packet and marks inaccessible claims `UNVERIFIED_FROM_PACKET`.
 
-### Module context contract
+If an expensive model performs judgment, preserve the compact decision artifact with timestamp/version/evidence refs—not its chain-of-thought or full transcript.
 
-```yaml
-module: checkout
-edit_modules: [checkout]
-reference_modules: [cart, identity]
-public_contracts:
-  - packages/contracts/payment.ts
-exclude:
-  - node_modules/**
-  - dist/**
-  - coverage/**
-local_checks:
-  - npm run test:checkout
-  - npm run typecheck:checkout
-escalate_if:
-  - public_contract_changes
-  - tests_fail_outside_working_set
-```
+## Skills
 
-Start narrow and expand only when evidence/dependency graph requires it.
+Skills are on-demand procedures. The router default is 0–3 load-bearing skills, not the whole shelf. Broad skills may activate frequently; risk-triggered skills are expected to be rare.
 
-### Child agents as context firebreaks
+See `skills/00_INDEX.md`. New v1.3 skills include:
 
-Use isolated child contexts for:
+- `token-efficiency`
+- `documentation-freshness`
+- `project-storytelling`
 
-- locating code/tests/config;
-- import/export inventory;
-- summarizing large logs;
-- classifying failures;
-- repetitive pattern scans;
-- collecting dependency evidence.
+## Project storytelling and self-branding
 
-Return a bounded handoff, not a transcript:
+`project-storytelling` is explicitly cold/on-demand. When requested, it reconstructs project history, architecture evolution, engineering decisions, incidents, measurable advantages and portfolio/self-branding material from compact indexes first, opening raw artifacts only when a claim needs deeper verification.
 
-```text
-CONCLUSION
-FILES_READ
-AFFECTED_MODULES
-EVIDENCE_REFS
-FAILING_CHECKS
-UNRESOLVED
-RECOMMENDED_NEXT_STEP
-```
+Generated stories remain reader artifacts, not coding-agent standing context.
 
-Parallelism protects parent context but may increase total cost if agents duplicate reads. Parallelize independent bounded work, not overlapping exploration.
+## Documentation freshness
 
-### Control tool output
+Canonical and index documents carry versions and update dates. Material verified changes trigger `documentation-freshness`: update the authoritative source first, then synchronize reader guides and generated vendor adapters.
 
-Filter mechanically before model ingestion. Preserve full raw logs as artifacts, but send the model only the relevant slice plus the artifact path.
+## Start here
 
-```bash
-npm test 2>&1 | tail -n 120
-rg 'useLegacyCheckout' apps/web/src/features/checkout packages/contracts -n
-nx affected -t test --base=origin/main --head=HEAD
-```
+1. `README.md`
+2. `ARCHITECTURE.md`
+3. matching bootstrap prompt under `prompts/bootstrap/`
+4. current task/amendment and only the skills it triggers
 
-## 11. Model routing
-
-Routing low-risk work to cheaper models is a practical, documented pattern. Route by **uncertainty and blast radius**, not simply prompt length.
-
-| Tier | Work | Default authority |
-|---|---|---|
-| T0 Deterministic | graph, grep/AST, lint, typecheck, test selection, formatting | scripts/CI |
-| T1 Cheap read-only | discovery, inventory, log reduction, repetitive classification | no mutation |
-| T2 Standard execution | localized implementation, module refactor, tests, bounded bug fix | scoped edits |
-| T3 Judgment/high-risk | architecture, ambiguous diagnosis, cross-module contracts, security/data, high-risk closure | decision/review; mutation explicit |
-
-### Claude Code
-
-A practical policy is:
-
-```text
-T1 → Haiku for explicitly configured low-risk/read-only subagents
-T2 → Sonnet for normal coding/execution
-T3 → Opus for architecture/judgment when justified
-```
-
-**Current-version nuance:** as of Claude Code v2.1.198, the built-in `Explore` agent does **not** always run on Haiku; it inherits the main conversation's model. To force lower-cost exploration, define a project/user `Explore` subagent with `model: haiku` or explicitly configure subagent model routing. Claude Code still uses separate context for exploration/planning, and Anthropic's current cost guide explicitly recommends `model: haiku` for simple subagent tasks, Sonnet for most coding, and Opus for complex architecture/multi-step reasoning.
-
-### OpenAI API custom harness
-
-Current OpenAI API model guidance provides a cost/capability ladder:
-
-```text
-T1 → GPT-5.6 Luna — cost-sensitive/high-volume bounded work
-T2 → GPT-5.6 Terra — balance intelligence and cost
-T3 → GPT-5.6 Sol — complex professional work
-```
-
-Current published API list prices (per 1M text tokens) are:
-
-```text
-Luna  input $0.20 / output $1.20
-Terra input $2.00 / output $12.00
-Sol   input $4.00 / output $20.00
-```
-
-These are API prices and routing examples. Do not assume the hosted Codex product exposes the same model menu or billing behavior.
-
-### OpenCode
-
-OpenCode supports per-agent/per-command model overrides and child sessions, so the same cheap explorer / standard executor / stronger reviewer pattern can be implemented directly.
-
-### Escalation conditions
-
-```text
-UNKNOWN_ROOT_CAUSE
-CROSS_MODULE_PUBLIC_CONTRACT_CHANGE
-SECURITY_OR_AUTH_CHANGE
-DATABASE_OR_DURABLE_DATA_CHANGE
->2 FAILED_EXECUTION_LOOPS
-TESTS_FAIL_OUTSIDE_WORKING_SET
-DEPENDENCY_GRAPH_EXPANDS_MATERIALLY
-ARCHITECTURAL_REQUIREMENT_AMBIGUITY
-CHEAP_MODEL_LOW_CONFIDENCE_OR_CONFLICTING_EVIDENCE
-HIGH_RISK_CLOSURE
-```
-
-Escalation should transfer the compact task/evidence packet, not the cheaper model's full conversation.
-
-### Benchmark routing
-
-Same-family routing reduces adapter differences but does not guarantee quality. Use frozen fixtures:
-
-```text
-same task
-same tools
-same acceptance gates
-cheap tier vs standard/strong tier
-measure quality, rework, regressions, latency, cost
-```
-
-Promote a cheaper route only when results justify it.
-
-## 12. Yara skill telemetry audit
-
-The supplied `python3 scripts/skill_report.py --last 100` output needs normalization and denominator caveats.
-
-Inspection of Yara branch `claude` confirms:
-
-- `_audit/SKILL_EVENTS.jsonl` is local/gitignored, so its raw aggregate cannot be independently recomputed from GitHub;
-- `--last N` selects the latest N distinct **task IDs present in the event log**, not necessarily the latest N project tasks;
-- canonical skill IDs are basenames **without `.md`**;
-- historical telemetry contains both forms and the project documentation explicitly records this fragmentation;
-- `effectiveness_report()` groups the raw `skill` string, so `.md` and non-`.md` forms appear separately;
-- positive `effect_recorded` outcomes are association evidence unless a controlled fixture isolates the skill as the changed variable.
-
-After stripping `.md`, the 14 displayed rows collapse to **12 canonical skill IDs**.
-
-Fragmented pairs:
-
-```text
-yara_01_live_verify_against_real_stack
-  normalized: triggered 2, applied 1
-
-yara_eval_02_evaluating_a_test
-  normalized: triggered 3, applied 3
-```
-
-Strongest positive observed-association signals in the supplied sample:
-
-```text
-model-routing-and-delegation : 3
-diagnose-before-fix          : 2
-yara_06_fix_the_fix          : 2
-craft-and-apply-task          : 1
-```
-
-These are not causal proofs. Do not delete rarely triggered skills simply because the sample is small; keep them lazy/cold until stronger evidence exists.
-
-Normalize at report/read time rather than rewriting append-only history:
-
-```python
-def canonical_skill_id(value: str) -> str:
-    return value[:-3] if value.endswith('.md') else value
-```
-
-Add reporting fields such as:
-
-```text
-instrumented_task_count
-project_task_count_if_known
-telemetry_coverage_pct
-eligible_trigger_count
-activation_count
-positive/neutral/negative outcomes
-evidence tier
-```
-
-For causal skill evaluation, run the same frozen task fixture twice with the skill enabled vs removed/neutralized and hold other variables constant.
-
-## 13. Tool adapters
-
-- **Claude Code:** thin `CLAUDE.md`, on-demand skills, explicit subagent models/permissions, hooks for deterministic enforcement.
-- **Codex:** concise hierarchical `AGENTS.md`, durable repository-visible plans/evidence, isolated worktrees/agents.
-- **OpenCode:** `AGENTS.md`, lazy references, skills, per-agent model and permission settings.
-- **Gemini CLI:** use `GEMINI.md` hierarchy/imports carefully; compression/checkpoints do not replace durable task state.
-- **GitHub Copilot:** share standing rules; avoid policy duplication across instruction surfaces.
-- **OpenCloud:** treat as an execution/deployment adapter, not reasoning authority; keep validate → deploy → verify and scoped credentials.
-
-## 14. Governance levels
-
-### Minimal
-
-```text
-AGENTS.md
-Task/issue + DoD
-focused tests
-short evidence note
-semantic reset
-```
-
-### Standard — recommended default
-
-```text
-canonical policy
-concise AGENTS.md
-on-demand skills
-explicit task contract
-bounded model routing
-risk-based verification
-durable checkpoint
-independent review for material changes
-```
-
-### High assurance
-
-```text
-draft/freeze/apply separation
-contract identity/hash
-judgment ledger
-read-only independent reviewer
-negative tests / mutation proof
-locks or isolated worktrees
-durable evidence
-fresh-session recovery test
-```
-
-Use high assurance for production, multi-tenant, security/data-sensitive, or long autonomous campaigns.
-
-## 15. Starter policy
-
-```yaml
-context_policy:
-  root_instruction_target_lines: 120
-  default_edit_modules: 1
-  default_reference_modules: 2
-  raw_log_to_model: false
-  semantic_reset_after_closed_task: true
-
-routing:
-  deterministic_first: true
-  cheap_readonly_for: [discovery, inventory, log_summarization, classification]
-  standard_executor_for: [localized_feature_work, module_scoped_refactor, tests]
-  judgment_tier_for: [cross_module_contract_change, architecture, security, ambiguous_root_cause, high_risk_closure]
-
-escalation:
-  execution_retry_limit_before_judgment: 2
-  expand_scope_only_with_evidence: true
-  transfer_raw_conversation: false
-
-verification:
-  use_affected_graph_when_available: true
-  run_local_checks_first: true
-  broaden_tests_on_shared_contract_change: true
-```
-
-The numeric values are starting defaults, not universal laws. Tune against real project fixtures.
-
-## 16. Primary sources
-
-### OpenAI
-
-- https://openai.com/index/harness-engineering/
-- https://openai.com/index/unrolling-the-codex-agent-loop/
-- https://developers.openai.com/api/docs/models
-- https://developers.openai.com/api/docs/models/gpt-5.6-luna
-- https://developers.openai.com/api/docs/models/gpt-5.6-terra
-- https://developers.openai.com/api/docs/models/gpt-5.6-sol
-
-### Anthropic / Claude Code
-
-- https://platform.claude.com/docs/en/build-with-claude/context-windows
-- https://platform.claude.com/docs/en/build-with-claude/prompt-caching
-- https://platform.claude.com/docs/en/agents-and-tools/tool-use/manage-tool-context
-- https://code.claude.com/docs/en/sub-agents
-- https://code.claude.com/docs/en/costs
-- https://platform.claude.com/docs/en/about-claude/models/choosing-a-model
-
-### OpenCode
-
-- https://opencode.ai/docs/agents
-- https://opencode.ai/docs/rules
-
-### Frontend/monorepo mechanics
-
-- https://nx.dev/docs/features/ci-features/affected
-- https://www.typescriptlang.org/docs/handbook/project-references
-
-### Yara implementation inspected
-
-- `scripts/skill_report.py` — branch `claude`
-- `scripts/skill_events.py` — branch `claude`
-- `docs/SKILL_ACTIVATION_TRACE.md` — branch `claude`
-
-## 17. Vendor-drift rule
-
-Product defaults, model names, context limits, commands, and prices can change. Role-level policy should remain stable while concrete adapters are re-verified against current official documentation. Do not turn a vendor default into a permanent framework invariant.
-
----
-
-> **The ideal agentic workflow does not require long-lived agent memory. It requires durable project memory and disposable, high-quality working context.**
+Research evidence lives under `research/` and is dated; it informs policy but does not override the canonical architecture.
