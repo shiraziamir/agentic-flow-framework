@@ -1,6 +1,6 @@
 ---
 name: project-retrospective
-description: Reconstruct how a project or campaign evolved from Git, task artifacts, evidence, judgments, token/cost telemetry and the cold execution ledger. Use only when the user explicitly asks for audit, retrospective, project story, governance analysis, self-branding, architecture evolution or historical reconstruction.
+description: Reconstruct how a project or campaign evolved from Git, task artifacts, evidence, judgments, token/cost telemetry and the cold execution ledger. Use only for audit-grade retrospective, governance analysis, historical metrics or execution reconstruction.
 ---
 
 # Project Retrospective
@@ -11,19 +11,19 @@ COMMON — intentionally cold/on-demand.
 ## USE_WHEN
 
 - final campaign/rescue retrospective;
-- "tell the story of this project";
-- architecture/process evolution report;
+- execution/work reconstruction report;
 - governance-overhead analysis;
-- portfolio/self-branding case study grounded in evidence;
+- architecture/process evolution audit;
 - historical token/cost/task metrics;
-- owner asks why/when a durable decision was made.
+- owner asks for evidence-grounded counts/timeline of how work progressed.
 
 ## DO_NOT_USE_WHEN
 
 - normal implementation;
 - current-task diagnosis;
 - routine bootstrap;
-- merely because history exists.
+- merely because history exists;
+- a reader-facing narrative/self-branding request that does not require audit-grade reconstruction; use `project-storytelling` instead.
 
 ## INPUT_CONTRACT
 
@@ -52,7 +52,7 @@ Prefer, in this order:
 7. Distinguish runtime/implementation work from evidence/governance work.
 8. Analyze governance value versus ceremony using evidence, not aesthetics.
 9. Explain architecture/process evolution and "what we would do differently next time".
-10. For public storytelling/self-branding, translate evidence into outcomes and engineering practices without inventing unsupported precision.
+10. Produce bounded source refs that `project-storytelling` can later consume without rereading all raw history.
 
 ## SUGGESTED METRICS
 
@@ -76,7 +76,7 @@ deferred findings
 
 ## MUTATION_AUTHORITY
 
-Read-only by default. May generate a retrospective/report artifact when requested. Must not rewrite historical source artifacts to make the story cleaner.
+Read-only by default. May generate a retrospective/report artifact when requested. Must not rewrite historical source artifacts to make the reconstruction cleaner.
 
 ## EVIDENCE_REQUIRED
 
@@ -92,4 +92,4 @@ Never extrapolate exact historical numbers from incomplete logs.
 
 ## OUTPUT_CONTRACT
 
-A timestamped/versioned report containing scope, evidence basis, timeline, metrics with truth classes, notable prevented failures, governance analysis, architecture evolution, deferred/unknown items, lessons, and optional public-facing project story.
+A timestamped/versioned report containing scope, evidence basis, timeline, metrics with truth classes, notable prevented failures, governance analysis, architecture/process evolution, deferred/unknown items, lessons and bounded source refs for optional later storytelling.
