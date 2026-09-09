@@ -1,20 +1,23 @@
 # Bootstrap prompt — Gemini CLI
 
-**Version:** 1.1  
-**Updated:** 2026-09-09
+**Version:** 1.2  
+**Updated:** 2026-09-09T10:04:00Z
 
 ```text
 Bootstrap Gemini CLI from this framework.
 
-First apply every rule in prompts/bootstrap/GENERIC.md. The following are Gemini-specific additions only.
+Canonical authority is ARCHITECTURE.md + schemas/ + verification/ + skills/. GEMINI.md and generated Gemini-facing files are adapters only.
 
-Canonical authority: ARCHITECTURE.md, schemas/, skills/. Generated GEMINI.md/settings/context files remain adapters and must identify the canonical architecture version.
+Inspect the target project's existing GEMINI.md/context files plus actual frontend/backend/shared/data/infra/CI layout, build/test commands and task stores. Generate a concise adapter that:
+- points to canonical authority/version;
+- exposes change classification and verification profiles lazily;
+- exposes DRAFT_TASK -> REVIEW_DRAFT -> freeze/authorization -> APPLY_TASK -> VERIFY_AND_REPORT -> supervisor workflow;
+- records claim -> minimum receipt requirements before APPLY;
+- keeps reports bounded to actual ref/artifact/environment and checks executed/not executed;
+- uses current Gemini capabilities for delegation/usage reporting only when actually available;
+- keeps cold history and unused profiles out of normal context.
 
-Use Gemini context-file hierarchy/imports as a concise map, not as a place to concatenate the full framework/history. Preserve hot-state/cold-history separation and only expose skills/procedures needed by current triggers.
+If structured JSON/YAML task/evidence/status artifacts are used, make scripts/verification_lint.py discoverable.
 
-Where current Gemini CLI supports checkpointing/compaction/session statistics, treat them as adapter capabilities rather than replacements for durable task state. If `/stats` exposes token/session usage, it may feed the portable usage ledger; unavailable counters remain unknown.
-
-Do not assume compression means evidence/history is safely durable. Do not encode a model name as authority.
-
-Validate fresh-session discovery, adaptive governance, TOKEN_WASTE_WARNING behavior for long work, and report unsupported features.
+Do not make generated context files a second policy source. Document any unsupported feature instead of pretending it exists.
 ```
