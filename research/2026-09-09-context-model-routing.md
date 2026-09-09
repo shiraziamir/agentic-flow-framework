@@ -17,19 +17,19 @@ Sources:
 
 ### 2. Separate-context subagents are a real context-control mechanism
 
-Claude Code documents subagents as separate context windows. Its built-in Explore agent is read-only and uses Haiku for codebase search/analysis specifically to preserve parent context and control cost. OpenCode subagents run as child sessions with fresh context and permit per-agent model choice.
+Claude Code documents separate-context subagents for exploration/planning so high-volume research can stay out of the parent context. **Current-version nuance:** as of Claude Code v2.1.198, built-in `Explore` inherits the main conversation's model rather than always using Haiku. If lower-cost exploration is desired, define a project/user `Explore` subagent with `model: haiku`, or explicitly configure the subagent model. OpenCode subagents similarly run as child sessions and permit per-agent model choice.
 
 Sources:
-- https://code.claude.com/docs/en/subagents
+- https://code.claude.com/docs/en/sub-agents
 - https://code.claude.com/docs/en/context-window
 - https://opencode.ai/docs/agents
 
 ### 3. Cheap-model routing is officially supported and practical
 
-Claude Code supports `model: haiku|sonnet|opus|inherit` in subagent definitions and Anthropic's cost guide recommends Haiku for simple subagent work. OpenCode supports per-agent and per-command model overrides. For custom OpenAI API harnesses, GPT-5.6 currently provides Luna/Terra/Sol cost/capability tiers.
+Claude Code supports explicit subagent model configuration, and Anthropic's current cost guide says Sonnet handles most coding well, Opus should be reserved for complex architecture/multi-step reasoning, and `model: haiku` is appropriate for simple subagent tasks. OpenCode supports per-agent and per-command model overrides. For custom OpenAI API harnesses, GPT-5.6 currently provides Luna/Terra/Sol cost/capability tiers.
 
 Sources:
-- https://code.claude.com/docs/en/subagents
+- https://code.claude.com/docs/en/sub-agents
 - https://code.claude.com/docs/en/costs
 - https://platform.claude.com/docs/en/about-claude/models/choosing-a-model
 - https://developers.openai.com/api/docs/models/gpt-5.6-luna
@@ -72,7 +72,7 @@ For large modular frontends:
 
 1. Determine affected modules mechanically.
 2. Give the parent agent a small task contract and module map.
-3. Use cheap, read-only child agents for discovery/log reduction.
+3. Use cheap, read-only child agents for discovery/log reduction when the task is safely bounded.
 4. Use the normal coding tier for bounded implementation.
 5. Escalate architecture/cross-module/security/ambiguous work to a stronger judgment tier.
 6. Transfer compact evidence packets across tiers, not transcripts.
@@ -80,3 +80,7 @@ For large modular frontends:
 8. Make state durable and reset sessions at completed semantic boundaries.
 9. Measure model-route quality using frozen fixtures before making routing permanent.
 10. Treat cache hit as a cost metric, not a context-health metric.
+
+## Version-drift rule
+
+Vendor behavior changes. Static product examples in this repository are advisory, not permanent authority. Before relying on a version-specific product claim (default model, context limit, command behavior, pricing), re-check the current official vendor documentation. The framework's role model (`cheap_readonly`, `standard_execution`, `judgment`) should remain stable even when the concrete model mapping changes.
