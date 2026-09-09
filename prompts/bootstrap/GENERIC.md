@@ -1,7 +1,7 @@
 # Bootstrap prompt — generic coding agent
 
-**Version:** 1.2  
-**Updated:** 2026-09-09T10:04:00Z
+**Version:** 1.3  
+**Updated:** 2026-09-09T10:40:00Z
 
 Use this after cloning Agentic Flow Framework into a project or making it available as a reference.
 
@@ -11,40 +11,48 @@ You are bootstrapping this repository's agent operating layer.
 1. Read, in order:
    - ARCHITECTURE.md
    - schemas/TASK_CONTRACT.md
-   - schemas/AMENDMENT.md
    - schemas/CHANGE_CLASSIFICATION.md
    - schemas/CLAIM_RECEIPT.md
+   - schemas/PRODUCTION_PROFILE.md
+   - schemas/OPERATIONAL_GAP.md
    - schemas/EVIDENCE_PACKET.md
    - schemas/STATUS_REPORT.md
    - schemas/PROJECT_LAYOUT.md
    - verification/00_INDEX.md
+   - production/00_INDEX.md
    - skills/00_INDEX.md
 2. Record the canonical architecture version you are generating from.
-3. Inspect the target project's existing agent instructions, source layout, project/dependency graph, frontend/backend/shared/data/infra/CI boundaries, build/test mechanics, task/history stores, provider/harness telemetry and model/subagent capabilities. Do not overwrite working project-specific rules blindly and do not create shadow stores when equivalents already exist.
-4. Derive a project-local surface map and commands without assuming a specific language/framework. Identify how this project can mechanically find affected consumers/modules.
-5. Generate/update the minimum vendor-specific adapter files needed by this harness.
-6. Adapters are NON-AUTHORITATIVE. They point to canonical files and must not invent conflicting policy.
-7. Keep always-on instructions concise. Do not copy ARCHITECTURE.md, all verification profiles, completed-task history, judgment history, usage ledger, or every skill body into permanent context. Expose skills/tools/history/verification profiles lazily where supported.
-8. Preserve risk-adaptive governance: HIGH / MEDIUM / EVIDENCE_ONLY.
-9. Preserve the material lifecycle: DRAFT_TASK -> REVIEW_DRAFT -> freeze/authorization -> APPLY_TASK -> VERIFY_AND_REPORT -> required independent closure.
-10. Ensure material tasks classify primary surface/cross-cutting risks and freeze planned claim -> minimum receipt requirements before APPLY.
-11. Configure semantic roles using capabilities actually available: ORCHESTRATOR / CHEAP_READONLY / EXECUTION_TIER / JUDGMENT_TIER / INDEPENDENT_REVIEWER.
-12. Direct reviewers should remain read-only in the review pass and prefer task/diff/raw receipts before executor narrative. Evidence-only reviewers may not upgrade missing evidence.
-13. Where observable, wire provider/harness usage counters to the portable usage ledger; where unavailable, document telemetry as UNKNOWN rather than inventing it.
-14. Enable/operator-document TOKEN_WASTE_WARNING behavior for long/cost-sensitive work. Cheap workers remain read-only by default and cannot weaken acceptance quality.
-15. If structured task/evidence/status JSON/YAML artifacts are used, expose scripts/verification_lint.py as a deterministic check when practical.
-16. Preserve hot-state/cold-history separation: ordinary runs discover current task/classification/checkpoint/index without recursively reading completed tasks/judgments/stories/retrospectives.
-17. If the harness lacks a feature, document the limitation and preserve conceptual lifecycle using files/prompts instead of pretending the feature exists.
-18. Before writing, report the adapter plan and conflicts with existing files.
-19. After writing, verify a fresh session can discover:
-   - source of truth and canonical version;
-   - governance + change-surface classification;
-   - verification profile router and claim-receipt rules;
-   - DRAFT review / APPLY / VERIFY_AND_REPORT workflow;
-   - supervisor workflow;
-   - token-efficiency/usage path when applicable;
-   - current project state without loading cold history;
-   - build/test/affected-project commands;
-   without loading the entire framework into permanent context.
-20. Return changed paths and a concise validation receipt. Do not start product work.
+3. Inspect existing agent instructions, source/dependency graph, frontend/backend/shared/data/infra/CI boundaries, build/test/deploy mechanics, runtime environments, data stores, observability, security tooling, task/history stores and model/subagent capabilities. Do not create parallel shadow systems when working equivalents exist.
+4. Derive a project-local surface map and mechanically discoverable affected-consumer/build/test commands without assuming a language/framework.
+5. If this repository is or will be production-bound, create/update a compact project production profile conforming to schemas/PRODUCTION_PROFILE.md. Separate codebase_scale from readiness_tier; risk overrides repository size.
+6. Discover production capabilities before proposing tools:
+   - source -> build -> immutable artifact -> deploy -> running artifact identity -> rollback/forward recovery;
+   - metrics/logs/traces/health/SLO/alerts appropriate to tier;
+   - durable data inventory, RPO/RTO, backup and restore evidence;
+   - security/authz/secrets/dependencies/supply-chain/runtime controls;
+   - troubleshooting/runbooks/release correlation;
+   - resilience/failure assumptions;
+   - external/provider boundaries and code changeability.
+7. Any material missing/partial/unverified production requirement becomes an explicit operational gap. Never generate an optimistic production-ready badge from config presence.
+8. If logs are supplied to AI/agents, wire the AI_LOG_ANALYSIS profile: structured correlation, redaction/minimization, raw-query provenance, untrusted-data delimiters and read-only/least-privilege discovery.
+9. Generate/update the minimum vendor-specific adapter files needed by this harness. Adapters are NON-AUTHORITATIVE and point to canonical files/current project profile.
+10. Keep always-on instructions concise. Do not copy ARCHITECTURE.md, all verification/production profiles, completed history, gaps, judgments or the whole Skill shelf into permanent context. Expose them lazily.
+11. Preserve HIGH / MEDIUM / EVIDENCE_ONLY governance and DRAFT_TASK -> REVIEW_DRAFT -> freeze/authorization -> APPLY_TASK -> VERIFY_AND_REPORT -> required closure.
+12. Material tasks classify engineering + operational flags, production impact and planned claim -> minimum receipt before APPLY.
+13. Configure semantic roles from capabilities actually available: ORCHESTRATOR / CHEAP_READONLY / EXECUTION_TIER / JUDGMENT_TIER / INDEPENDENT_REVIEWER.
+14. Reviewers remain read-only during review; evidence-only review cannot upgrade missing receipts.
+15. Wire observable token/cost telemetry when available; unknown remains UNKNOWN. Enable TOKEN_WASTE_WARNING for material waste.
+16. Expose deterministic repository validators such as verification/readiness linting when compatible.
+17. Preserve hot-state/cold-history separation. Normal work may read current production profile + open-gap index when relevant, not every historical gap/incident/runbook.
+18. If the harness lacks a feature, document the limitation/gap instead of pretending it exists.
+19. Before writing, report adapter/bootstrap plan and conflicts.
+20. After writing, verify a fresh session can discover without loading the whole framework:
+   - source of truth/version;
+   - surface/operational classification;
+   - verification router + claim-receipt rules;
+   - current production profile/tier + open gaps;
+   - build/test/deploy/rollback commands or explicit gaps;
+   - observability/data recovery/security/troubleshooting entrypoints;
+   - workflow/supervisor/token-efficiency paths.
+21. Return changed paths, created gaps and concise validation receipts. Do not start unrelated product work.
 ```
