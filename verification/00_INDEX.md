@@ -1,6 +1,6 @@
 # Verification Profiles Index
 
-**Version:** 1.0  
+**Version:** 1.1  
 **Updated:** 2026-09-09T10:04:00Z
 
 Verification is selected from the change classification. Do not run every profile on every task.
@@ -22,13 +22,15 @@ Always start with [`GENERAL.md`](GENERAL.md).
 
 ## Cross-cutting annexes
 
-| Flag | Annex |
+| Flag / kind | Annex / extra |
 |---|---|
 | `AUTH_SECURITY` | [`SECURITY_AUTH.md`](SECURITY_AUTH.md) |
 | `PERFORMANCE`, `CONCURRENCY`, `CACHE_STATE`, `EXTERNAL_PROVIDER`, `OBSERVABILITY` | [`RELIABILITY_PERFORMANCE.md`](RELIABILITY_PERFORMANCE.md) |
 | `PERSISTENCE`, `MIGRATION` | `DATA.md` in addition to the primary profile |
 | `PUBLIC_CONTRACT` | `SHARED.md` plus relevant producer/consumer primary profiles |
 | `PRODUCTION` | `INFRA_CI.md` plus relevant application profile |
+| `DEPENDENCY_SUPPLY_CHAIN` or material `DEPENDENCY` | [`DEPENDENCY_SUPPLY_CHAIN.md`](DEPENDENCY_SUPPLY_CHAIN.md) |
+| load-bearing `TEST_ONLY` | primary profile + `test-mutation-proof` Skill when falsification/mutation proof is practical |
 
 ## Selection rule
 
@@ -54,3 +56,7 @@ IDENTITY
 ```
 
 Use the lowest level that directly establishes each claim; do not confuse a lower-level receipt with a higher-level claim.
+
+## Extensibility
+
+The primary-surface vocabulary is intentionally small. A target project may define additional project-local profiles (for example native mobile/desktop, embedded, ML/data-pipeline, or protocol-specific clients) when the existing primary profiles cannot express materially different verification semantics. Project-local profiles must point back to the same claim/receipt, reporting and STOP/amendment rules rather than creating a second policy system.
