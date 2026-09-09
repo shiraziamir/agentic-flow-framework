@@ -1,112 +1,116 @@
 # Target Project Durable Layout
 
-**Schema version:** 1.4  
-**Updated:** 2026-09-09T10:40:00Z
+**Schema version:** 1.5  
+**Updated:** 2026-09-09T11:30:00Z
 
-A target project may use this portable durable state layout. Names can be adapted, but responsibilities should remain distinct. Projects that already have equivalent stores should reuse them instead of creating shadow state.
+A target project may adapt names, but responsibilities should remain distinct. Reuse existing equivalent stores rather than creating shadow state.
 
 ```text
 .agentic/
+├── PROJECT_PROFILE.yaml        # HOT-ish: compact stable baseline/guardrails
 ├── CURRENT.md                  # HOT: recovery pointer only
 ├── INDEX.md                    # HOT: compact pointers, no long history
+├── overrides/
+│   ├── ACTIVE_INDEX.md         # HOT only when active exceptions exist
+│   └── <override-id>.yaml      # schemas/TEMPORARY_OVERRIDE.md artifacts
 ├── production/
-│   ├── PROFILE.yaml            # current schemas/PRODUCTION_PROFILE.md artifact
+│   ├── PROFILE.yaml            # current schemas/PRODUCTION_PROFILE.md posture artifact
 │   ├── GAP_INDEX.md            # compact open-gap pointers
 │   └── gaps/                   # schemas/OPERATIONAL_GAP.md artifacts
 ├── tasks/
 │   ├── active/                 # HOT
 │   └── completed/              # COLD concise task summaries/contracts
-├── classifications/            # current/archived change-surface classifications
-├── amendments/                 # COLD except active amendment
-├── authorizations/             # COLD except current authorization
-├── evidence/                   # evidence packets + referenced receipts
-├── reports/                    # reality-reflecting status/closure/readiness reports
-├── judgments/                  # COLD; expensive reviews/decisions live here
-│   └── INDEX.md                # compact decision lookup
-├── decisions/                  # architecture/product decision summaries
+├── classifications/
+├── amendments/
+├── authorizations/
+├── evidence/
+├── reports/
+├── judgments/
 │   └── INDEX.md
-├── runbooks/                   # operational/recovery/troubleshooting procedures
+├── decisions/
 │   └── INDEX.md
-├── incidents/                  # significant incident summaries/timelines when used
+├── runbooks/
+│   └── INDEX.md
+├── incidents/
 │   └── INDEX.md
 ├── usage/
-│   ├── events.jsonl            # append-only provider/harness usage events
-│   └── SUMMARY.md              # compact aggregate, timestamped/versioned
-├── checkpoints/                # durable resume boundaries
+│   ├── events.jsonl
+│   └── SUMMARY.md
+├── checkpoints/
 ├── history/
-│   ├── EXECUTION_LEDGER.jsonl  # append-only boundary facts; never preloaded
-│   └── PROJECT_TIMELINE.md     # compact dated milestones, not full receipts
-├── retrospectives/             # on-demand audit/work-reconstruction reports
-├── stories/                    # on-demand case studies/self-branding artifacts
+│   ├── EXECUTION_LEDGER.jsonl
+│   └── PROJECT_TIMELINE.md
+├── retrospectives/
+├── stories/
 └── README.md
 ```
+
+## Baseline vs reality
+
+`PROJECT_PROFILE.yaml` defines durable project expectations/permissions: testing policy, readiness tier, environment authority, required operating controls and architecture-pattern governance. It is **not** proof that those controls are satisfied.
+
+`production/PROFILE.yaml`, open gaps, receipts and reports reflect current operational reality. A project may require `backup: REQUIRED` while the current gap says restore capability is `UNVERIFIED`.
+
+Temporary deviations from the baseline live under `overrides/` and conform to `schemas/TEMPORARY_OVERRIDE.md`. An override is not a permanent baseline edit. Material overrides have owner/reason/expiry/risk/compensating-controls/restore verification; expired unresolved overrides become visible gaps or require explicit renewal.
 
 ## Hot-state rule
 
 Normal execution may preload only:
 
-- `CURRENT.md`;
-- `INDEX.md`;
+- `PROJECT_PROFILE.yaml` or the relevant bounded section;
+- `CURRENT.md` / `INDEX.md`;
 - current task/amendment/classification;
-- production `PROFILE` + open-gap pointers only when current task can affect production posture;
+- active override pointers when relevant;
+- production profile + open-gap pointers only when current work affects production posture;
 - directly relevant evidence/report/decision/runbook pointers;
-- canonical architecture, selected verification/production profiles and triggered skills required for current scope.
+- canonical architecture, selected verification/production profiles and triggered Skills.
 
-It must **not** recursively read completed tasks, all gaps, incidents, runbooks, judgments, evidence, reports, usage ledger, execution ledger, retrospectives, stories, all Skills or all profiles unless a trigger requires them.
+Do **not** recursively read completed tasks, historical overrides/gaps/incidents/runbooks/judgments/evidence/reports/usage/history/retrospectives/stories or the entire profile/Skill shelf unless a trigger requires them.
 
 ## Artifact relationships
 
 ```text
-PROJECT PRODUCTION PROFILE
-  -> OPEN OPERATIONAL GAPS
+PROJECT_PROFILE.yaml             desired baseline / permissions
+  -> ACTIVE OVERRIDES            temporary deviations
+  -> PRODUCTION PROFILE          current operating posture
+       -> OPEN GAPS              missing/partial/unverified reality
 
 TASK
-  -> CLASSIFICATION
-  -> PRODUCTION IMPACT / GAP REFS
+  -> CLASSIFICATION / PROFILE IMPACT
   -> AUTHORIZATION / AMENDMENT
   -> EVIDENCE PACKET
-       -> raw/bounded receipt refs
   -> STATUS REPORT
   -> SUPERVISOR JUDGMENT
-  -> PROFILE/GAP UPDATE when verified posture changed
+  -> PROFILE/GAP/OVERRIDE UPDATE only when receipts justify it
   -> CHECKPOINT / EXECUTION LEDGER boundary
 ```
 
-The same fact should not be rewritten independently into every artifact. Reference the authoritative artifact/hash/ref.
+Reference authoritative artifacts rather than duplicating the same status prose in every file.
 
-## Production artifacts
+## Midstream adoption
 
-- `production/PROFILE.yaml` records scale/tier, runtime, recovery, observability, security/resilience requirements and current gap refs.
-- `production/gaps/` records absent/partial/unverified/accepted-risk operational capabilities.
-- `runbooks/` stores tested procedures for deployment, rollback, recovery and troubleshooting; routine tasks should open only the relevant runbook.
-- `incidents/` stores bounded post-incident timelines/findings when project risk justifies them; raw telemetry remains in its telemetry system.
-- production readiness changes are receipts-based. A scanner/config/backup checkbox does not by itself close a gap.
+When Agentic Flow is introduced during active coding, the adoption snapshot records real branch/HEAD/dirty paths/current task/tests/environment mutations before any framework-driven product mutation. Existing work is preserved/reconciled and is never retroactively claimed as reviewed or authorized by this framework.
 
-## Verification artifacts
+## Production / verification artifacts
 
-- `classifications/` records `schemas/CHANGE_CLASSIFICATION.md` results when kept separately from the task.
-- `evidence/` stores `schemas/EVIDENCE_PACKET.md` packets and referenced small receipts/artifact pointers.
-- `reports/` stores `schemas/STATUS_REPORT.md` reality snapshots/readiness reports.
-- material JSON/YAML artifacts may be mechanically checked with repository scripts when available.
-- report/evidence validity is bound to repository/artifact/environment identity; later material mutation may require reverification/new version.
+- `production/PROFILE.yaml` records current scale/tier/runtime/recovery/observability/security/resilience posture.
+- `production/gaps/` records absent/partial/unverified/accepted-risk operating capabilities.
+- `runbooks/` stores tested deployment/rollback/recovery/troubleshooting procedures; load only the relevant runbook.
+- `incidents/` stores bounded incident summaries; raw telemetry stays in the telemetry system.
+- `classifications/`, `evidence/` and `reports/` preserve claim-aware task truth bound to ref/artifact/environment.
+- deterministic repository validators may check mechanical contradictions, but they do not replace runtime receipts.
 
 ## Cold-history rule
 
-Completed tasks, closed gaps, evidence/reports/judgments/incidents/usage/retrospectives/stories stay durable and indexed. They are opened on demand for regression, provenance, audit, incident investigation, architecture history, retrospective/storytelling, token/cost analysis or explicit user request.
-
-## Execution ledger
-
-Use `EXECUTION_RETROSPECTIVE_LEDGER.md` for compact boundary entries such as draft review, amendment, freeze, apply start, STOP, evidence-ready, closure review and close. Store pointers/counters, not narrative or raw logs.
+Completed tasks, expired/historical overrides, closed gaps, evidence/reports/judgments/incidents/usage/retrospectives/stories remain durable and indexed but open only for regression, provenance, audit, incident investigation, architecture history, retrospective/storytelling, token/cost analysis or explicit request.
 
 ## Artifact rules
 
-- Do not store chain-of-thought, private deliberation, full prompts/model responses or raw transcripts.
-- Keep exact task/amendment/classification/production-profile identity durable.
-- Evidence files hold observable receipts, not confident summaries only.
-- Status reports distinguish `OBSERVED / DERIVED / INFERRED / UNKNOWN / CONTRADICTED`, preserve skipped/not-run checks and residual risk.
-- Production gaps distinguish `NOT_IMPLEMENTED / PARTIAL / UNVERIFIED / BLOCKED / ACCEPTED_RISK / CLOSED`.
-- Judgment files identify review mode/independence, timestamp, decision, evidence refs and validity boundary; judgment does not replace missing behavioral receipts.
-- Usage telemetry records observable counters; missing telemetry is unknown, not zero.
-- Retrospective metrics classify facts as `PROVEN`, `RECONSTRUCTED` or `UNKNOWN`.
-- `CURRENT.md` is a recovery pointer, not a second task board/policy source.
-- Canonical/index/profile/report/retrospective/story documents carry version and update timestamp/date where practical.
+- Do not store private chain-of-thought, raw transcripts, full model prompts/responses, secrets or large raw log archives.
+- Evidence contains observable receipts rather than confident summaries only.
+- Reports distinguish `OBSERVED / DERIVED / INFERRED / UNKNOWN / CONTRADICTED` and preserve skipped/not-run checks.
+- Gaps distinguish `NOT_IMPLEMENTED / PARTIAL / UNVERIFIED / BLOCKED / ACCEPTED_RISK / CLOSED`.
+- Reviewer judgment does not substitute for missing behavioral/deployment/restore/security receipts.
+- Missing usage telemetry is unknown, never zero.
+- `CURRENT.md` is a recovery pointer, not a second policy/task board.
+- Canonical/index/profile/report/retrospective/story artifacts carry version/update timestamp where practical.
