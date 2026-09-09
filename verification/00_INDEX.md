@@ -1,9 +1,22 @@
 # Verification Profiles Index
 
-**Version:** 1.1  
-**Updated:** 2026-09-09T10:04:00Z
+**Version:** 1.2  
+**Updated:** 2026-09-09T10:40:00Z
 
-Verification is selected from the change classification. Do not run every profile on every task.
+Verification is selected from change classification. Do not run every profile on every task.
+
+## Verification vs production readiness
+
+These answer different questions:
+
+```text
+verification/  → What receipts directly establish this task/change claim?
+production/    → What operating bar must this project meet to build/deploy/observe/recover securely?
+```
+
+A task can be verification-complete while the project still has production gaps. A production profile does not replace code-path/behavior verification.
+
+When a material task can affect production posture, use both routers lazily: selected verification profiles here + only affected profiles from `production/00_INDEX.md`.
 
 ## Base profile
 
@@ -26,21 +39,23 @@ Always start with [`GENERAL.md`](GENERAL.md).
 |---|---|
 | `AUTH_SECURITY` | [`SECURITY_AUTH.md`](SECURITY_AUTH.md) |
 | `PERFORMANCE`, `CONCURRENCY`, `CACHE_STATE`, `EXTERNAL_PROVIDER`, `OBSERVABILITY` | [`RELIABILITY_PERFORMANCE.md`](RELIABILITY_PERFORMANCE.md) |
-| `PERSISTENCE`, `MIGRATION` | `DATA.md` in addition to the primary profile |
+| `PERSISTENCE`, `MIGRATION` | `DATA.md` in addition to primary profile |
 | `PUBLIC_CONTRACT` | `SHARED.md` plus relevant producer/consumer primary profiles |
-| `PRODUCTION` | `INFRA_CI.md` plus relevant application profile |
+| `PRODUCTION` | `INFRA_CI.md` plus relevant application profile; additionally consult project production profile |
 | `DEPENDENCY_SUPPLY_CHAIN` or material `DEPENDENCY` | [`DEPENDENCY_SUPPLY_CHAIN.md`](DEPENDENCY_SUPPLY_CHAIN.md) |
-| load-bearing `TEST_ONLY` | primary profile + `test-mutation-proof` Skill when falsification/mutation proof is practical |
+| load-bearing `TEST_ONLY` | primary profile + `test-mutation-proof` Skill when practical |
 
 ## Selection rule
 
-`GENERAL + primary surface + triggered cross-cutting annexes`
+```text
+GENERAL + primary surface + triggered cross-cutting annexes
+```
 
-The task contract freezes the planned profile set. If APPLY discovers a new material surface/flag, STOP and amend rather than silently weakening or expanding verification.
+Task contract freezes the planned set. If APPLY discovers a new material surface/flag, STOP and amend rather than silently weakening/expanding verification.
 
 ## Verification ladder
 
-Profiles choose from the common ladder in `schemas/CLAIM_RECEIPT.md`:
+Profiles choose from `schemas/CLAIM_RECEIPT.md`:
 
 ```text
 IDENTITY
@@ -55,8 +70,8 @@ IDENTITY
 → JUDGMENT
 ```
 
-Use the lowest level that directly establishes each claim; do not confuse a lower-level receipt with a higher-level claim.
+Use the lowest level that directly establishes each claim; a lower-level receipt never inherits a stronger claim.
 
 ## Extensibility
 
-The primary-surface vocabulary is intentionally small. A target project may define additional project-local profiles (for example native mobile/desktop, embedded, ML/data-pipeline, or protocol-specific clients) when the existing primary profiles cannot express materially different verification semantics. Project-local profiles must point back to the same claim/receipt, reporting and STOP/amendment rules rather than creating a second policy system.
+The primary-surface vocabulary is intentionally small. A target project may define project-local profiles (native mobile/desktop, embedded, ML/data-pipeline, protocol-specific clients, etc.) when materially different verification semantics exist. They must preserve the same claim/receipt/reporting/STOP-amendment authority rather than creating a second policy system.
