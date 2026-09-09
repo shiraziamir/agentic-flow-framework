@@ -1,0 +1,57 @@
+profile_version: 1
+project_id: example-service
+updated_at: 2026-09-09T11:30:00Z
+
+codebase_scale: MEDIUM
+readiness_tier: STANDARD
+
+surfaces:
+  frontend: false
+  backend: true
+  shared: true
+  data: true
+  infra: true
+
+quality:
+  test_strategy: TEST_FIRST_FOR_MATERIAL_CLAIMS
+  mutation_or_path_proof:
+    required_for_load_bearing_tests: true
+  minimum_layers:
+    - UNIT
+    - INTEGRATION
+    - CONTRACT
+
+operations:
+  metrics: REQUIRED
+  logs: REQUIRED
+  traces: OPTIONAL
+  slo: OPTIONAL
+  backup: REQUIRED
+  restore_test: REQUIRED
+  rollback: REQUIRED
+
+security:
+  threat_model: OPTIONAL
+  dependency_review: REQUIRED
+  secret_scanning: REQUIRED
+  least_privilege: REQUIRED
+
+agent_environment_policy:
+  local: AUTO_ALLOWED
+  ephemeral_test: AUTO_ALLOWED
+  shared_test: OWNER_APPROVAL
+  staging: OWNER_APPROVAL
+  production_read: OWNER_APPROVAL
+  production_mutation: OWNER_APPROVAL
+
+architecture_policy:
+  pattern_mode: AGENT_PROPOSES_OWNER_MAY_OVERRIDE
+  require_rationale_for_new_abstraction: true
+  avoid_pattern_without_boundary_or_failure_mode: true
+
+temporary_overrides:
+  directory: .agentic/overrides
+  require_expiry: true
+  require_owner: true
+  require_reason: true
+  require_compensating_control: true
