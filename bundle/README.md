@@ -1,10 +1,10 @@
 # Portable Agent Bundle
 
-Build the drop-in ZIP from a framework checkout:
+Build and self-test the drop-in ZIP:
 
 ```bash
-python3 scripts/build_agent_bundle.py
 python3 scripts/test_build_agent_bundle.py
+python3 scripts/build_agent_bundle.py
 ```
 
 Default ZIP:
@@ -13,16 +13,14 @@ Default ZIP:
 dist/agentic-flow-agent-bundle.zip
 ```
 
-Extract into a target project as `.agentic-flow/`, then instruct the coding agent to read:
+Extract into a target project as `.agentic-flow/`. The generated ZIP provides:
 
 ```text
-.agentic-flow/docs/agent/START_HERE.md
+.agentic-flow/START_HERE.md
+.agentic-flow/INSTALL_PROMPT.txt
+.agentic-flow/BUNDLE_MANIFEST.json
 ```
 
-For an active/mid-task session, use:
+For active/mid-task coding, `START_HERE.md` routes the agent to `docs/agent/MIDSTREAM_ADOPTION.md` before further mutation.
 
-```text
-.agentic-flow/docs/agent/MIDSTREAM_ADOPTION.md
-```
-
-The bundle intentionally excludes operator-only documentation, external research, reader HTML and cold project history. Its manifest contains SHA-256 hashes of bundled files.
+The bundle intentionally excludes operator-only documentation, external reference/research material, reader HTML and cold project history. The manifest records framework version plus SHA-256 hashes/byte counts for bundled source files.
