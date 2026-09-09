@@ -30,7 +30,7 @@ request
 Read this first:
 
 1. [`ARCHITECTURE.md`](ARCHITECTURE.md) — **canonical policy, authority and lifecycle**.
-2. [`schemas/`](schemas/) — task and evidence contracts.
+2. [`schemas/`](schemas/) — task, evidence and supervisor-decision contracts.
 3. [`skills/`](skills/) — reusable on-demand procedures.
 4. The frozen task contract for the current task.
 5. Durable evidence and supervisor decisions.
@@ -64,11 +64,16 @@ Read agentic-flow-framework/prompts/bootstrap/CLAUDE_CODE.md and apply it to thi
 Do not execute product work yet; only bootstrap and validate the agent operating layer.
 ```
 
-### 3. Start a material task
+### 3. Use the workflow prompts
 
-Use [`skills/task-contract/SKILL.md`](skills/task-contract/SKILL.md) and [`schemas/TASK_CONTRACT.md`](schemas/TASK_CONTRACT.md).
+You do not have to hand-write lifecycle prompts each time:
 
-The sequence is:
+- [DRAFT TASK](prompts/workflow/DRAFT_TASK.md)
+- [AMEND TASK](prompts/workflow/AMEND_TASK.md)
+- [APPLY TASK](prompts/workflow/APPLY_TASK.md)
+- [BUILD EVIDENCE PACKET](prompts/workflow/BUILD_EVIDENCE_PACKET.md)
+
+A material task should move through:
 
 ```text
 DRAFT
@@ -77,11 +82,15 @@ DRAFT
 → FREEZE
 → APPLY AUTHORIZATION
 → EXECUTION
+→ EVIDENCE_READY
+→ SUPERVISOR CLOSURE
 ```
 
 A draft is not execution permission. If execution later disproves scope or strategy, the executor must STOP and request amendment rather than silently rewrite the frozen task.
 
 ### 4. Choose a supervisor
+
+The supervisor may be a person, a different model, or a separate cold session/harness. Independence is a **role/property of the review**, not a model brand.
 
 #### Supervisor with direct repo/tool access — preferred
 
@@ -97,9 +106,26 @@ The executor supplies a packet conforming to [`schemas/EVIDENCE_PACKET.md`](sche
 
 Anything the supervisor cannot verify from the packet stays `UNVERIFIED_FROM_PACKET`. Missing access never becomes confident approval.
 
-### 5. Close with evidence
+Supervisor decisions can be persisted using [`schemas/SUPERVISOR_DECISION.md`](schemas/SUPERVISOR_DECISION.md).
 
-Before material closure load `evidence-integrity`. High-risk work should additionally use an `independent-review` pass. Closure maps every frozen DoD item to a receipt.
+### 5. Keep lifecycle state durable
+
+A target project may use the portable layout in [`schemas/PROJECT_LAYOUT.md`](schemas/PROJECT_LAYOUT.md):
+
+```text
+.agentic/
+├── tasks/
+├── authorizations/
+├── evidence/
+├── judgments/
+└── checkpoints/
+```
+
+If the project already has equivalent durable task/evidence locations, reuse them instead of creating shadow state.
+
+### 6. Close with evidence
+
+Before material closure load `evidence-integrity`. High-risk work should additionally use an `independent-review` pass. Closure maps every frozen DoD item to a receipt. The executor prepares evidence; the supervisor decides closure.
 
 ## Skills: why only some fire often
 
@@ -151,9 +177,10 @@ Map them to models your current harness actually exposes. Model names are config
 
 ```text
 ARCHITECTURE.md          canonical source of truth
-schemas/                 durable task/evidence contracts
+schemas/                 task/evidence/judgment/durable-layout contracts
 skills/                  portable on-demand skills
 prompts/bootstrap/       prompts that generate vendor adapters
+prompts/workflow/        executable lifecycle prompts
 prompts/supervisor/      independent review prompts
 templates/               routing/context examples
 research/                dated source research, not policy
