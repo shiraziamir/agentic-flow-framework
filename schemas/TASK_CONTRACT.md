@@ -1,7 +1,7 @@
 # Task Contract Schema
 
-**Schema version:** 1.3  
-**Updated:** 2026-09-09T10:40:00Z
+**Schema version:** 1.4  
+**Updated:** 2026-09-09T17:22:00+03:30
 
 A portable material task contract should contain:
 
@@ -66,6 +66,24 @@ stop_conditions:
 escalation_conditions:
   - <condition requiring stronger judgment, higher governance, reclassification or readiness review>
 
+authorization:
+  apply_authorization_ref: <ref|null>
+  execution_limit: <integer|unbounded|null>
+  consumed_on_attempt: true|false|null
+  attempts_used: <integer|null>
+  rerun_requires_new_authorization: true|false|null
+
+measurement_qualification:
+  required: true|false
+  policy_ref: schemas/EVIDENCE_RECOVERY.md
+  repository_ref_required: true|false
+  runtime_artifact_identity_required: true|false
+  environment_identity_required: true|false
+  writable_path_isolation_required: true|false
+  baseline_ref: <ref|null>
+  forbidden_preconditioning: []
+  invalid_evidence_disposition: VALID_FOR_CLAIM|PARTIAL_FOR_CLAIM|VOID_FOR_CLAIM|HISTORICAL_ONLY|UNKNOWN|null
+
 skills:
   selected: [<canonical-skill-id>]
 routing:
@@ -101,9 +119,43 @@ A material DRAFT is reviewed **before APPLY** for:
 7. build/deploy/observability/security/data/recovery implications triggered by the change;
 8. meaningful negative/error/security/persistence/live paths where applicable;
 9. important checks intentionally omitted;
-10. whether a separate/cold closure reviewer is required.
+10. whether a separate/cold closure reviewer is required;
+11. whether the planned evidence run itself needs runtime/environment/baseline qualification;
+12. whether bounded execution authority is single-use and what consumes it.
 
 The draft reviewer may return `ACCEPT_DRAFT`, `AMEND_DRAFT`, `NEEDS_EVIDENCE`, or `REJECT_DRAFT`. Acceptance freezes the contract; it does not itself authorize APPLY unless the active governance explicitly combines those gates.
+
+## Evidence-environment recovery rule
+
+Use `schemas/EVIDENCE_RECOVERY.md` when the evidence run may depend on a deployed/runtime artifact, shared/test environment, mutable baseline, provider budget/state, or host-side writable paths.
+
+If a run executes against the wrong/stale runtime or otherwise cannot measure the intended claim:
+
+- preserve the run as historical evidence;
+- classify it explicitly, including `VOID_FOR_CLAIM` where appropriate;
+- do not overwrite it with a rerun;
+- classify whether the defect belongs to implementation, evidence environment, baseline, authorization, or a mixture;
+- treat a finite/single-run authorization as consumed on attempt unless the durable authorization says otherwise;
+- obtain new authorization for a rerun or new rebuild/restart/mutation scope when required;
+- qualify the repaired measuring environment before spending provider calls or running the fresh live evidence sequence.
+
+Fixing the measuring instrument can remain a same-task recovery when product design/source does not need to change. Do not silently widen a verification recovery into implementation scope.
+
+## Capability-maturity wording
+
+Do not collapse these into one completion claim:
+
+```text
+DESIGNED
+IMPLEMENTED_IN_SOURCE
+MECHANICALLY_TESTED
+QUALIFIED_IN_NAMED_ENVIRONMENT
+LIVE_BEHAVIOR_PROVEN
+DEPLOYED_ARTIFACT_PROVEN
+PRODUCTION_BEHAVIOR_PROVEN
+```
+
+A task may legitimately close with some higher states unproven when they are outside its frozen contract. Report the boundary explicitly.
 
 ## Production-readiness rule
 

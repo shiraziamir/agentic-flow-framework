@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+Evidence-recovery hardening: adds a canonical recovery/measurement-qualification schema; separates designed/implemented/tested/qualified/live/deployed/production-proven capability states; formalizes stale/wrong-runtime evidence as preservable but potentially `VOID_FOR_CLAIM`; records single-use authorization consumption and rerun re-authorization; adds pre-live runtime/environment/writable-path qualification and explicit side-effect accounting.
+
 ## 1.7 — 2026-09-09
 
 Portable adoption release: separates agent/operator/reference docs; adds drop-in and midstream adoption guides/prompts; adds consolidated primary-source index; adds English/Persian prompting/task/agent-setup guides; adds deterministic Agent Bundle builder with manifest hashing and self-test; formalizes portable bundle/documentation boundaries.
