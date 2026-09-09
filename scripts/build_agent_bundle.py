@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Build the portable Agentic Flow drop-in bundle.
+"""Build the portable Agentic Flow distribution bundle.
 
-The bundle intentionally excludes operator docs, external research, reader HTML,
-retrospectives and repository history so a target coding agent receives only
-canonical/agent-facing runtime material.
+The ZIP is self-contained for both a coding agent and a human operator, while
+START_HERE.md keeps the coding-agent working context small. Deeper research,
+reader HTML, retrospectives, stories and repository history remain excluded.
 """
 from __future__ import annotations
 
@@ -13,9 +13,17 @@ import json
 import zipfile
 from pathlib import Path
 
-INCLUDE_FILES = {"VERSION", "ARCHITECTURE.md"}
+INCLUDE_FILES = {
+    "VERSION",
+    "ARCHITECTURE.md",
+    "bundle/README.md",
+    "bundle/BEST_PRACTICES_USED.en.txt",
+}
 INCLUDE_PREFIXES = (
     "docs/agent/",
+    "docs/operator/",
+    "docs/architecture/",
+    "docs/references/",
     "schemas/",
     "verification/",
     "production/",
@@ -27,7 +35,11 @@ INCLUDE_PREFIXES = (
 )
 INCLUDE_SCRIPTS = {
     "scripts/verification_lint.py",
+    "scripts/test_verification_lint.py",
     "scripts/production_readiness_lint.py",
+    "scripts/test_production_readiness_lint.py",
+    "scripts/build_agent_bundle.py",
+    "scripts/test_build_agent_bundle.py",
     "scripts/usage_ledger.py",
 }
 EXCLUDE_PARTS = {"__pycache__", ".DS_Store"}
@@ -65,6 +77,7 @@ def build(root: Path, output: Path) -> dict:
         "format": 1,
         "framework_version": version,
         "entrypoint": "START_HERE.md",
+        "operator_entrypoint": "README.md",
         "files": [],
     }
     output.parent.mkdir(parents=True, exist_ok=True)
@@ -83,14 +96,20 @@ def build(root: Path, output: Path) -> dict:
             _write(zf, f"agentic-flow/{rel}", data)
 
         start_here = (root / "docs/agent/START_HERE.md").read_bytes()
+        operator_readme = (root / "bundle/README.md").read_bytes()
+        best_practices = (root / "bundle/BEST_PRACTICES_USED.en.txt").read_bytes()
+        primary_sources = (root / "docs/references/PRIMARY_SOURCES.md").read_bytes()
         install_prompt = (
             "Read .agentic-flow/START_HERE.md and adopt Agentic Flow for this repository. "
             "Do not start or change product work until adoption validation is complete. "
             "If coding is already in progress, follow MIDSTREAM_ADOPTION before further mutation.\n"
         ).encode("utf-8")
 
+        _write(zf, "agentic-flow/README.md", operator_readme)
         _write(zf, "agentic-flow/START_HERE.md", start_here)
         _write(zf, "agentic-flow/INSTALL_PROMPT.txt", install_prompt)
+        _write(zf, "agentic-flow/BEST_PRACTICES_USED.en.txt", best_practices)
+        _write(zf, "agentic-flow/PRIMARY_SOURCES.md", primary_sources)
         _write(
             zf,
             "agentic-flow/BUNDLE_MANIFEST.json",

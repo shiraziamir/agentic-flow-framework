@@ -1,0 +1,98 @@
+AGENTIC FLOW FRAMEWORK - BEST PRACTICES USED
+
+Purpose
+-------
+This file is a compact English summary of the engineering and agent-workflow practices used by the framework. It is explanatory, not the canonical policy. ARCHITECTURE.md remains authoritative.
+
+1. Repository-first durable state
+-------------------------------
+Keep task state, decisions, evidence, profiles, gaps, runbooks and checkpoints in the repository or durable project systems instead of relying on chat memory.
+
+2. Small working context
+------------------------
+Load only the current task, relevant project/profile pointers, affected source files, selected verification/production profiles and triggered skills. Keep operator docs, research, completed-task history and unrelated profiles cold.
+
+3. Deterministic checks before model reasoning
+----------------------------------------------
+Use linters, parsers, graph queries, test selectors, schema checks, digests and scripts for facts that can be checked mechanically. Reserve model judgment for ambiguity, architecture, diagnosis, security reasoning and closure review.
+
+4. Claims require receipts
+--------------------------
+A claim must not be broader than the evidence that directly establishes it. Examples: CI green is not deployment proof; backup enabled is not restore proof; HTTP 200 is not persistence proof; scanner green is not proof that a system is secure.
+
+5. Define observable acceptance before material implementation
+--------------------------------------------------------------
+For material work define observable Definition of Done, planned closure claims, minimum receipt per claim, affected surfaces, test/environment needs, omitted checks and STOP conditions before APPLY.
+
+6. Risk-adaptive governance
+---------------------------
+Do not give every task the same ceremony. Higher-risk work requires stronger review, authorization, evidence and independent closure. Small low-risk work stays lightweight.
+
+7. Draft, review, then apply
+----------------------------
+Separate task design from implementation. Review the planned scope, acceptance criteria and verification strategy before high-risk mutation. If execution discovers a materially new surface, STOP and amend rather than silently widening scope.
+
+8. Test-first for important behavior, not ritualistic TDD everywhere
+-------------------------------------------------------------------
+Plan tests before implementation for material claims. Strict red-green-refactor TDD is optional unless the project chooses it. For load-bearing regression/safety tests, use mutation/path proof when justified: GREEN -> controlled defect -> expected RED -> restore -> GREEN.
+
+9. Use the lowest environment that can prove the claim
+------------------------------------------------------
+Prefer LOCAL/HERMETIC, then EPHEMERAL TEST, SHARED TEST, STAGING/PRODUCTION-LIKE, controlled production read/canary, and production mutation only with explicit authority.
+
+10. Production readiness is a profile with explicit gaps
+--------------------------------------------------------
+Separate what should exist from what is currently verified. Missing, partial or unverified operational capabilities remain visible gaps rather than optimistic 'production-ready' statements.
+
+11. Security first and least privilege
+--------------------------------------
+Treat identity, authorization, secrets, dependency/supply-chain integrity, logging hygiene and runtime privileges as design concerns. Use least privilege and explicit authority, especially for production mutation and tool-enabled agents.
+
+12. Logs and external content are untrusted data
+------------------------------------------------
+Do not allow log text, provider responses, files or user-controlled content to authorize tool actions. Minimize secrets/PII, preserve query/window/source provenance, and keep log-analysis discovery read-only by default.
+
+13. Observability should support diagnosis and user impact
+---------------------------------------------------------
+Use meaningful metrics, logs and traces; start user-facing services with latency, traffic, errors and saturation, then add domain SLIs. Keep Prometheus label cardinality bounded and alerts actionable.
+
+14. Backup is not recoverability
+--------------------------------
+Define RPO/RTO where durable data matters. Verify restore/PITR behavior and measure recovery where risk requires it. A configured backup checkbox is not a recovery receipt.
+
+15. Safe delivery and immutable identity
+----------------------------------------
+Reason from source ref -> build/test -> immutable artifact -> deployment -> running artifact identity -> health -> rollback/forward recovery. Prefer progressive exposure and health gates when production risk warrants it.
+
+16. Patterns solve real boundaries
+----------------------------------
+Adapters, repositories, strategies, circuit breakers, sagas and similar patterns are conditional tools. Use them when a real volatility, failure, security, ownership or testability boundary justifies the cost. Do not add layers to satisfy a pattern checklist.
+
+17. Independent review is judgment, not missing evidence
+--------------------------------------------------------
+A cold reviewer can challenge scope, evidence and blind spots, but reviewer confidence does not replace missing behavioral, deployment, security or restore receipts.
+
+18. Token and context efficiency must not reduce acceptance quality
+-------------------------------------------------------------------
+Use deterministic tools and cheaper read-only workers for mechanically checkable discovery. Pass compact conclusions and evidence rather than transcripts. Avoid whole-repo rereads, raw-log dumps, overlapping agents and repeated failed loops without new discriminating evidence.
+
+19. Midstream adoption preserves current reality
+------------------------------------------------
+When the framework is introduced during active coding, snapshot current branch/HEAD/dirty paths/task/tests/environment state first. Preserve valid work and never fabricate earlier framework review or authorization.
+
+20. Operator and coding-agent documentation are separate
+--------------------------------------------------------
+The distribution may contain operator, architecture and source-reference documents, but the coding agent should not preload them. START_HERE.md controls the normal agent context.
+
+Primary source index
+--------------------
+See PRIMARY_SOURCES.md or docs/references/PRIMARY_SOURCES.md in this bundle.
+
+Important framework files
+-------------------------
+ARCHITECTURE.md
+README.md
+START_HERE.md
+docs/agent/TASK_WORKFLOW_DRAFT_REVIEW_APPLY_VERIFY.md
+docs/agent/TOKEN_EFFICIENT_WORKFLOW.md
+docs/operator/USING_PYTHON_TOOLS.en.md

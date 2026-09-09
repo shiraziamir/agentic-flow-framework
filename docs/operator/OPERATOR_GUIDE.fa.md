@@ -1,8 +1,8 @@
 # راهنمای اپراتور — Agentic Flow
 
 **این فایل مخصوص اپراتور است و Agent نباید آن را به‌صورت دائمی preload کند.**  
-**نسخه:** 1.0  
-**به‌روزرسانی:** 2026-09-09T11:30:00Z
+**نسخه:** 1.7  
+**به‌روزرسانی:** 2026-09-09
 
 ## هدف
 
@@ -10,16 +10,16 @@
 
 ## نصب به‌صورت Drop-in
 
-روش پیشنهادی استفاده از Agent Bundle است. Bundle را در یک مسیر ثابت مانند زیر Extract کنید:
+Artifact قابل‌حمل خودش یک `README.md` در Root دارد. پوشه‌ی `agentic-flow/` داخل ZIP را در Repository مقصد به این شکل Extract کنید:
 
 ```text
 .agentic-flow/
 ```
 
-سپس فقط این Prompt را به Agent بدهید:
+سپس این Prompt را به Agent بدهید:
 
 ```text
-Read .agentic-flow/docs/agent/START_HERE.md and adopt the framework for this repository.
+Read .agentic-flow/START_HERE.md and adopt Agentic Flow for this repository.
 Do not start or change product work until adoption validation is complete.
 ```
 
@@ -39,11 +39,80 @@ Return the adoption snapshot and conflicts before continuing product mutation.
 .agentic/PROJECT_PROFILE.yaml
 ```
 
-از `templates/PROJECT_PROFILE.example.yaml` شروع کنید. این فایل باید کوچک بماند و فقط سطح مورد انتظار پروژه را مشخص کند؛ مانند `readiness tier`، سیاست تست، سطح دسترسی Agent به Environmentها، Backup/Metric/Restore requirements و سیاست Patternها. تاریخچه تسک‌ها و متن‌های طولانی نباید در این فایل قرار بگیرند.
+از `templates/PROJECT_PROFILE.example.yaml` شروع کنید. این فایل باید کوچک بماند و فقط سطح مورد انتظار پروژه را مشخص کند؛ مانند `readiness tier`، سیاست Test، سطح دسترسی Agent به Environmentها، Backup/Metric/Restore requirementها و سیاست Patternها. تاریخچه Taskها و متن‌های طولانی نباید در این فایل قرار بگیرند.
+
+## Workflow تسک
+
+برای تغییرهای مهم Agent را مستقیم به Coding نفرستید. Workflow عادی:
+
+```text
+DRAFT
+→ REVIEW
+→ FREEZE / APPLY AUTHORIZATION در صورت نیاز
+→ APPLY
+→ VERIFY + REPORT
+→ Independent Closure در صورت نیاز
+```
+
+راهنمای عملی Agent:
+
+```text
+docs/agent/TASK_WORKFLOW_DRAFT_REVIEW_APPLY_VERIFY.md
+```
+
+Promptهای اجرایی در `prompts/workflow/` هستند. شدت Governance باید متناسب با Risk باشد؛ تغییر کوچک نباید مجبور به تشریفات High-risk شود.
+
+## ابزارهای deterministic با Python
+
+راهنمای کامل دستورها:
+
+```text
+docs/operator/USING_PYTHON_TOOLS.fa.md
+```
+
+نسخه انگلیسی:
+
+```text
+docs/operator/USING_PYTHON_TOOLS.en.md
+```
+
+بررسی معمول Framework قبل از Release:
+
+```bash
+python3 scripts/test_verification_lint.py
+python3 scripts/test_production_readiness_lint.py
+python3 scripts/test_build_agent_bundle.py
+python3 scripts/build_agent_bundle.py
+```
+
+هدف هر Script:
+
+```text
+verification_lint.py
+  پیدا کردن تناقض مکانیکی در Task / Evidence / Status
+
+production_readiness_lint.py
+  پیدا کردن تناقض مکانیکی در Production Profile / Gap
+
+build_agent_bundle.py
+  ساخت ZIP قابل‌حمل و Manifest
+
+usage_ledger.py
+  ثبت و گزارش Counterهای واقعی Usage/Token در صورت وجود Telemetry
+```
+
+PASS شدن Linter به معنی درست بودن Runtime، Security، Deployment، Monitoring یا Restore نیست. Script فقط چیزی را که قانون deterministic دارد بررسی می‌کند؛ Claim واقعی همچنان Receipt واقعی لازم دارد.
 
 ## تصمیم‌هایی که بهتر است صریحاً دست اپراتور بمانند
 
-موارد زیر معمولاً باید مجوز Human/Owner داشته باشند: تغییر Production، عملیات مخرب روی داده، پذیرش Gap مهم امنیتی یا بازیابی، پایین‌آوردن دائمی Requirementهای Backup/Observability/Security، تغییر Pattern معماری در چند Module یا Public Contract، تغییر Task فریز‌شده‌ی High-risk، یا قبول‌کردن Acceptance Gate خراب.
+موارد زیر معمولاً باید مجوز Human/Owner داشته باشند:
+
+- تغییر Production یا عملیات مخرب روی داده؛
+- پذیرش Gap مهم Security/Data/Recovery؛
+- پایین‌آوردن دائمی Requirementهای Backup/Observability/Security؛
+- تغییر Pattern معماری در چند Module یا Public Contract؛
+- تغییر Task فریز‌شده‌ی High-risk؛
+- قبول‌کردن Acceptance Gate خراب.
 
 ## Exception موقت
 
@@ -59,10 +128,26 @@ Agent باید پایین‌ترین Environmentی را استفاده کند ک
 
 ## کنترل Token و Context
 
-فایل‌های Operator، Research و History را داخل Prompt دائمی Agent قرار ندهید. مدل قوی را برای Judgment و Ambiguity نگه دارید؛ کارهای Inventory، Log Reduction و Discovery قابل‌چک را می‌توان با ابزار deterministic یا Subagent ارزان Read-only انجام داد.
+راهنمای عملی:
+
+```text
+docs/agent/TOKEN_EFFICIENT_WORKFLOW.md
+```
+
+فایل‌های Operator، Research و History را داخل Context دائمی Agent قرار ندهید. مدل قوی را برای Judgment و Ambiguity نگه دارید؛ کارهای Inventory، Log Reduction و Discovery قابل‌چک را می‌توان با ابزار deterministic یا Subagent ارزان Read-only انجام داد.
+
+صرفه‌جویی Token مجوز پایین‌آوردن Evidence Bar نیست.
 
 ## بررسی‌های دوره‌ای اپراتور
 
-به‌صورت دوره‌ای این موارد ارزش بررسی دارند: Project Profile و Gapها، Overrideهای منقضی‌شده، تازگی Restore Test، مالکیت SLO/Alert، Dependency/Security posture، گزارش مصرف Token/Cost در صورت وجود Telemetry، و Retrospective برای اینکه Governance بیش از حد سنگین یا بیش از حد ضعیف نشده باشد.
+به‌صورت دوره‌ای این موارد ارزش بررسی دارند:
 
-`project-retrospective` و `project-storytelling` باید فقط در صورت نیاز Load شوند و بخشی از Context روزمره Agent نباشند.
+- Project Profile و Gapها؛
+- Overrideهای منقضی‌شده؛
+- تازگی Restore Test؛
+- مالکیت SLO/Alert؛
+- Dependency/Security posture؛
+- گزارش مصرف Token/Cost در صورت وجود Telemetry؛
+- Retrospective برای اینکه Governance بیش از حد سنگین یا بیش از حد ضعیف نشده باشد.
+
+`project-retrospective` و `project-storytelling` فقط در صورت نیاز Load شوند و بخشی از Context روزمره Agent نباشند.

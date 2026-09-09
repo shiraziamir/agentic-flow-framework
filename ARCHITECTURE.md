@@ -2,7 +2,7 @@
 
 **Status:** CANONICAL SOURCE OF TRUTH  
 **Version:** 1.7  
-**Updated:** 2026-09-09T11:30:00Z
+**Updated:** 2026-09-09T12:40:00Z
 
 Agentic Flow is a repository-first, vendor-neutral operating architecture for coding agents. This file is intentionally a **canonical map + invariant set**, not a giant always-on manual. Detailed rules live in the lower canonical layers and are loaded lazily.
 
@@ -44,16 +44,22 @@ The framework may be cloned directly or distributed as a generated ZIP built wit
 python3 scripts/build_agent_bundle.py
 ```
 
-The bundle is extracted into a target repository, preferably as:
+The `agentic-flow/` directory inside the bundle is extracted into a target repository as:
 
 ```text
 .agentic-flow/
 ```
 
+Human/operator installation starts at:
+
+```text
+.agentic-flow/README.md
+```
+
 A coding agent starts at:
 
 ```text
-.agentic-flow/docs/agent/START_HERE.md
+.agentic-flow/START_HERE.md
 ```
 
 For an active coding session, it must first follow:
@@ -62,7 +68,7 @@ For an active coding session, it must first follow:
 .agentic-flow/docs/agent/MIDSTREAM_ADOPTION.md
 ```
 
-The default Agent Bundle includes canonical/runtime material and agent-facing adoption docs. It deliberately excludes operator docs, external research, reader HTML and cold history. See `docs/architecture/BUNDLE_BOUNDARY.md`.
+The portable ZIP is a **distribution package**, not a preload list. It contains canonical/runtime material, agent-facing guides, separate operator guides, architecture explanation and primary-source/reference documentation so the package can be used offline. `START_HERE.md` keeps the coding-agent working context small and task-driven. Research notes, reader HTML and cold history remain outside the default bundle. See `docs/architecture/BUNDLE_BOUNDARY.md`.
 
 ### Adoption modes
 
@@ -139,7 +145,13 @@ DURABLE APPROVED AMENDMENT
 
 Before mutation, a material task defines observable DoD, engineering/production surfaces, affected consumers/environments, planned closure claims, minimum receipt for each claim, required test/environment strategy, intentionally omitted checks, project-profile impact, known gaps and STOP/escalation conditions.
 
-Use:
+Practical explanation:
+
+```text
+docs/agent/TASK_WORKFLOW_DRAFT_REVIEW_APPLY_VERIFY.md
+```
+
+Workflow prompts:
 
 ```text
 prompts/workflow/DRAFT_TASK.md
@@ -275,14 +287,21 @@ T3 JUDGMENT            architecture/security/ambiguity/high-risk closure
 
 Use the cheapest reliable tier without weakening acceptance quality. Escalation sends compact evidence, not transcript.
 
+Practical execution guidance:
+
+```text
+docs/agent/TOKEN_EFFICIENT_WORKFLOW.md
+```
+
 Normal agent context should contain only current task/profile pointers, relevant source, selected verification/production profiles and triggered skills. Do not preload operator docs, research, completed-task history, all judgments or the full skill/profile shelf. Emit `TOKEN_WASTE_WARNING` on material unjustified rereads/full-history/full-log scans/strong-model mechanical work/repeated loops/budget overrun.
 
 ## Operator / agent separation
 
-- `docs/agent/` — adoption/bootstrap material safe for lazy coding-agent use.
-- `docs/operator/` — human installation, prompting, task-writing, agent-setup and governance guidance; excluded from the default Agent Bundle.
-- `docs/architecture/` — reader explanations of how/why the system works.
-- `docs/references/` and `research/` — external provenance and dated research; cold by default.
+- `docs/agent/` — coding-agent adoption/execution material safe for lazy use.
+- `docs/operator/` — human installation, prompting, task-writing, Python-tool usage, agent setup and governance guidance. It may be physically present in the portable distribution but remains cold for normal coding-agent context.
+- `docs/architecture/` — reader explanations of how/why the system works; present for offline understanding, cold by default.
+- `docs/references/` — external provenance/reference index; present for offline traceability, cold by default.
+- `research/` — dated deeper research; not included in the default portable distribution and loaded only when explicitly needed.
 
 A useful operator rule that must govern agents should be promoted into this canonical architecture/schema/profile/skill rather than solved by permanently loading operator docs.
 
