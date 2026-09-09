@@ -1,16 +1,16 @@
 # Portable Skills Index
 
-**Version:** 1.3  
-**Updated:** 2026-09-09T10:04:00Z
+**Version:** 1.4  
+**Updated:** 2026-09-09T10:40:00Z
 
-Do not preload the shelf. Default: **0–3 load-bearing skills per task**. A fourth skill should be exceptional and justified by a distinct trigger. Verification profiles under `verification/` are not counted as Skills; load only the profiles selected by change classification.
+Do not preload the shelf. Default: **0–3 load-bearing skills per task**. A fourth skill should be exceptional and justified by a distinct trigger. Verification profiles under `verification/` and production profiles under `production/` are not counted as Skills; load only selected profiles.
 
 ## CORE
 
 | Skill | Trigger |
 |---|---|
 | `task-contract` | material task needs explicit scope/DoD/governance/review lifecycle |
-| `change-classification` | material change needs FRONTEND/BACKEND/SHARED/DATA/INFRA/CI/etc. surface + cross-cutting risk classification |
+| `change-classification` | material change needs engineering surface + cross-cutting/operational risk classification |
 | `surface-verification` | material code/config change needs claim-aware verification selected by surface/risk |
 | `model-routing` | model/delegation/tier choice is material |
 | `context-curation` | non-trivial repo, monorepo, delegation, or context-limit risk |
@@ -24,6 +24,8 @@ Do not preload the shelf. Default: **0–3 load-bearing skills per task**. A fou
 
 | Skill | Trigger |
 |---|---|
+| `production-readiness` | project/service is production-bound or a change affects DevOps/security/observability/recovery posture |
+| `evolvable-architecture` | module/provider/shared-contract boundaries materially affect changeability/testability |
 | `independent-review` | cold/read-only challenge materially improves confidence |
 | `blind-spot-audit` | HIGH/evidence-complex MEDIUM closure, broad claims, or false-complete risk |
 | `sibling-sweep` | first defect/fix may represent a broader or symmetric class |
@@ -31,13 +33,15 @@ Do not preload the shelf. Default: **0–3 load-bearing skills per task**. A fou
 | `research-with-provenance` | current external/vendor evidence materially affects a decision |
 | `epistemic-decision` | consequential choice remains uncertain after evidence gathering |
 | `documentation-freshness` | material verified change may make canonical/index/user docs stale |
-| `project-retrospective` | explicit audit/work-reconstruction/governance-analysis request needs timeline, metrics and truth classes from cold durable history |
-| `project-storytelling` | user explicitly requests history narrative, architecture story, case study or self-branding; prefer retrospective outputs as input when available |
+| `project-retrospective` | explicit audit/work-reconstruction/governance-analysis request needs timeline, metrics and truth classes from cold history |
+| `project-storytelling` | user explicitly requests history narrative/case study/self-branding; prefer retrospective inputs when available |
 
 ## RISK_TRIGGERED
 
 | Skill | Trigger |
 |---|---|
+| `ai-log-analysis` | logs/telemetry are supplied to an LLM/agent for production diagnosis or summarization |
+| `resilience-chaos` | failure/recovery behavior or a fault-injection/chaos experiment needs proof |
 | `test-mutation-proof` | a load-bearing test itself must be proven capable of failing |
 | `live-verification` | runtime/integration/deployment behavior cannot be established statically |
 | `systems-under-stress` | I/O/shared state/concurrency/restart/retry/dependency failure is material |
@@ -48,39 +52,35 @@ Do not preload the shelf. Default: **0–3 load-bearing skills per task**. A fou
 |---|---|
 | `controlled-agent-experiment` | claiming a model/skill/prompt/route improves quality, cost, latency, or rework |
 
-## Why this is not ranked only by usage frequency
-
-Yara telemetry showed the strongest repeated **observed-association** signals around model routing/delegation, diagnosis-before-fix, sibling/fix audit, and task-contract workflows. That supports making them easy to discover, but it does not establish causality.
-
-Rarely triggered skills are not automatically weak. A concurrency/stress, live-path, mutation-proof, blind-spot audit, retrospective, or storytelling procedure may correctly activate only when its trigger exists.
-
-Promotion/retirement should consider:
-
-1. eligible-trigger denominator, not only raw activations;
-2. activation correctness (positive, negative, near-miss);
-3. outcome/evidence quality;
-4. rework/regression/false-complete prevention;
-5. token/cost impact and waste flags where observable;
-6. controlled skill-present vs skill-neutralized fixtures when causal claims matter.
-
 ## Selection algorithm
 
 1. Start from the approved request/current task/amendment.
-2. Use `change-classification` for material work before choosing verification.
-3. Load `GENERAL + primary surface + triggered annexes` from `verification/00_INDEX.md`; do not load the whole profile shelf.
-4. Use `surface-verification` to map planned claims/DoD to adequate receipts.
-5. Select `model-routing` only if model/delegation choice matters.
-6. Select `context-curation` when working-set control/delegation is non-trivial.
-7. Select `token-efficiency` for long/cost-sensitive/multi-agent work, not as ritual on tiny tasks.
-8. Select one diagnosis/failure-mode skill only when that risk exists.
-9. Select verification extras (`test-mutation-proof`, `live-verification`, `systems-under-stress`) by risk, not ritual.
-10. Use `evidence-integrity` before material closure.
-11. Use `blind-spot-audit` for HIGH/evidence-complex closure or broad claims where false confidence is plausible.
-12. Use `documentation-freshness` when verified work changes architecture/capability/workflow/docs.
-13. Use `independent-review` when independence is part of the assurance argument.
-14. `project-retrospective` and `project-storytelling` are cold/on-demand and never normal execution context.
-15. Prefer `project-retrospective` first when exact timeline/metrics/governance reconstruction is needed; storytelling may consume that bounded reconstruction instead of raw history.
-16. Do not self-activate a newly discovered skill/profile inside a frozen HIGH task when it materially changes strategy/scope/verification; STOP/classify/amend first.
+2. Use `change-classification` for material work before choosing verification/production profiles.
+3. Load `GENERAL + primary surface + triggered annexes` from `verification/00_INDEX.md`.
+4. If project is production-bound or posture can change, consult current `schemas/PRODUCTION_PROFILE.md` artifact and `production/00_INDEX.md`; load only triggered production profiles.
+5. Use `surface-verification` to map planned claims/DoD to adequate receipts.
+6. Use `production-readiness` for launch/readiness/posture review, not on every tiny edit.
+7. Use `evolvable-architecture` only when a real long-term change/coupling boundary exists.
+8. Select `model-routing`, `context-curation` and `token-efficiency` only when those concerns are material.
+9. Select diagnosis/failure-mode skills by risk, not ritual.
+10. `ai-log-analysis` is mandatory when untrusted telemetry is intentionally fed to a tool-enabled AI workflow unless an equivalent project control exists.
+11. `resilience-chaos` is maturity/risk-triggered; production chaos is never a default requirement.
+12. Use `evidence-integrity` before material closure and `blind-spot-audit` when false confidence is plausible.
+13. Use `documentation-freshness` after material architecture/workflow/readiness changes.
+14. Use `independent-review` when independence is part of the assurance argument.
+15. Retrospective/storytelling skills remain cold/on-demand.
+16. Do not self-activate a newly discovered Skill/profile inside a frozen HIGH task when it materially changes strategy/scope/authority; STOP/classify/amend first.
+
+## Production-readiness discipline
+
+A production-capable repository should expose a compact current profile rather than forcing agents to infer posture from scattered files. Scale and assurance are separate:
+
+```text
+codebase_scale   SMALL | MEDIUM | LARGE
+readiness_tier   BASIC | STANDARD | HIGH_ASSURANCE
+```
+
+Risk overrides size. Material absent/partial/unverified production requirements are durable operational gaps, not hidden TODOs or optimistic prose.
 
 ## Claim/report discipline
 
@@ -91,6 +91,7 @@ All material reporting follows `schemas/CLAIM_RECEIPT.md` and `schemas/STATUS_RE
 - repository/artifact/environment identity;
 - important checks not executed;
 - no global/negative claim without a finite verified universe;
-- reviewer/model judgment never substitutes for missing behavioral evidence.
+- reviewer/model judgment never substitutes for missing behavioral evidence;
+- production-readiness claims name profile/tier and open gaps.
 
 Canonical skill IDs are directory names, lowercase kebab-case, with no `.md` suffix.
