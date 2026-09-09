@@ -1,17 +1,55 @@
 <!doctype html>
-<html lang="fa" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Agentic Flow Framework v1.4 — فارسی</title><style>body{max-width:920px;margin:40px auto;padding:0 24px;font:17px/1.9 system-ui,sans-serif;color:#202124}code,pre{direction:ltr;text-align:left;background:#f6f8fa}pre{padding:16px;overflow:auto}table{border-collapse:collapse;width:100%}th,td{border:1px solid #ddd;padding:8px;vertical-align:top}.note{padding:12px 16px;background:#f6f8fa;border-right:4px solid #888}h1,h2{line-height:1.4}</style></head><body>
-<h1>چارچوب Agentic Flow</h1><p><strong>نسخه راهنمای خواندنی:</strong> 1.4<br><strong>به‌روزرسانی:</strong> <code>2026-09-09T08:22:00Z</code><br><strong>منبع اصلی و قطعی:</strong> <code>ARCHITECTURE.md</code></p><p class="note">این HTML فقط نمای خواندنی همگام‌شده است. اگر با <code>ARCHITECTURE.md</code> اختلافی داشت، معماری canonical ملاک است.</p>
-<h2>اصل مرکزی</h2><blockquote>حافظه‌ی پروژه پایدار باشد؛ context کاری Agent باکیفیت ولی قابل دورریختن باشد.</blockquote><p>تسک‌ها، شواهد، تصمیم‌ها، تاریخ معماری، usage و تاریخ اجرای پروژه durable می‌مانند، اما Agent روزمره فقط working set لازم برای کار جاری را وارد context می‌کند.</p>
-<h2>Governance متناسب با ریسک</h2><table><tr><th>سطح</th><th>برای چه کاری</th><th>فلو</th></tr><tr><td>HIGH</td><td>معماری، persistence، production/security/trust، داده پایدار، public contract مهم</td><td>Draft → Supervisor → Freeze → Apply جدا → Execution → Evidence → Independent Closure</td></tr><tr><td>MEDIUM</td><td>اصلاح محدود داخل همان تسک</td><td>Owner-approved Amendment → Bounded Apply → Tests/Evidence → Independent Closure</td></tr><tr><td>EVIDENCE_ONLY</td><td>اصلاح داکیومنت، evidence یا test-contract بدون runtime authority جدید</td><td>Amendment پایدار + hash/ref → update → closure check در صورت اهمیت</td></tr></table><p>Source of truth روشن، هویت/hash پایدار، STOP قبل از scope creep، ممنوعیت self-certification، عدم جذب Task N+1 و ممنوعیت ساختن evidence مشابهِ چیزی که وجود ندارد در همه سطوح حفظ می‌شوند.</p>
-<h2>بهره‌وری Token و Model</h2><pre>T0 deterministic/mechanical
-T1 cheap read-only discovery/partition
-T2 standard bounded execution
-T3 judgment/high-risk review</pre><p>مدل ارزان‌تر فقط جایی استفاده می‌شود که همان کیفیت acceptance قابل حفظ و قابل بررسی باشد. Skill به نام <code>token-efficiency</code> روی whole-repo scan بی‌دلیل، reread سنگین، خواندن history کامل، log خام بزرگ، استفاده از مدل گران برای کار مکانیکی، subagentهای هم‌پوشان، loopهای شکست‌خورده و عبور از budget هشدار می‌دهد.</p><p>اگر provider یا harness آمار usage بدهد، با <code>schemas/USAGE_EVENT.md</code> و <code>scripts/usage_ledger.py</code> ثبت می‌شود. اگر عددی در دسترس نباشد، مقدار unknown می‌ماند. Prompt caching ممکن است هزینه/latency را کم کند، اما به‌عنوان context compression فرض نمی‌شود.</p>
-<h2>Hot State و Cold History</h2><p><strong>Hot:</strong> تسک/Amendment جاری، checkpoint/index، budget و تصمیم‌های حل‌نشده، ماژول‌ها/داک‌ها/Skillهای مرتبط. <strong>Cold:</strong> تسک‌های بسته‌شده، evidence، judgmentها، تصمیم‌های معماری، usage ledger، execution ledger، retrospectiveها، timeline و storyها. Cold history فقط برای provenance، audit، regression، retrospective، storytelling یا درخواست صریح کاربر باز می‌شود.</p>
-<h2>Supervisor</h2><p>Supervisor می‌تواند انسان، مدل جدا یا session کاملاً سرد باشد. در حالت دسترسی مستقیم، source/diff/test واقعی را بررسی می‌کند. در حالت بدون دسترسی مستقیم، evidence packet محدود را می‌خواند و ادعای غیرقابل اثبات را <code>UNVERIFIED_FROM_PACKET</code> می‌گذارد. نتیجه‌ی مدل گران به‌صورت decision artifact کوتاه ذخیره می‌شود، نه transcript یا reasoning خصوصی.</p>
-<h2>Execution Retrospective رسمی</h2><p>برای campaignها، rescueها و migrationهای طولانی می‌توان فایل سرد <code>.agentic/history/EXECUTION_LEDGER.jsonl</code> را نگه داشت. schema آن <code>schemas/EXECUTION_RETROSPECTIVE_LEDGER.md</code> است. این ledger فقط boundaryهای مهم مثل review، amendment، freeze، apply، STOP، evidence-ready و closure را با counter/refهای کوتاه ثبت می‌کند و raw transcript یا evidence تکراری نگه نمی‌دارد.</p><p>Skill سرد <code>project-retrospective</code> در صورت درخواست می‌تواند timeline، تعداد task/amendment/review/STOP، defectهای pre-closure، false-completeهای جلوگیری‌شده، implementation در برابر governance commits، روند تست‌ها، mutation/provider/token accounting در صورت وجود telemetry، findings deferشده، governance overhead و تکامل روش کار را بازسازی کند.</p><pre>PROVEN FROM GIT / DURABLE ARTIFACTS
-RECONSTRUCTED FROM OWNER JOURNAL / RECEIPTS
-UNKNOWN / NOT LOGGED RELIABLY</pre><p>برای بخش‌هایی از تاریخ که logging قابل اتکا نیست، عددسازی ممنوع است و وضعیت unknown باقی می‌ماند.</p>
-<h2>Storytelling و Self-Branding</h2><p><code>project-storytelling</code> از audit reconstruction جداست. این Skill شواهد proven/reconstructed را به narrative معماری، case study، lessons learned و محتوای portfolio/self-branding تبدیل می‌کند. اگر retrospective معتبر وجود داشته باشد، ابتدا همان گزارش bounded را مصرف می‌کند تا مجبور نشود کل archive را دوباره بخواند.</p>
-<h2>تازگی داکیومنت</h2><p>داکیومنت‌های canonical، index، retrospective و story باید version و timestamp داشته باشند. تغییر مهمِ verifyشده Skill <code>documentation-freshness</code> را فعال می‌کند: اول منبع authoritative اصلاح می‌شود و سپس reader viewها و adapterهای generated همگام می‌شوند.</p>
-<h2>شروع</h2><ol><li><code>README.md</code></li><li><code>ARCHITECTURE.md</code></li><li>Bootstrap prompt مناسب در <code>prompts/bootstrap/</code></li><li>تسک/Amendment جاری و فقط Skillهایی که trigger شده‌اند</li></ol></body></html>
+<html lang="fa" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Agentic Flow Framework v1.5 — فارسی</title><style>body{max-width:980px;margin:40px auto;padding:0 24px;font:17px/1.9 system-ui,sans-serif;color:#202124}code,pre{direction:ltr;text-align:left;background:#f6f8fa}pre{padding:16px;overflow:auto}table{border-collapse:collapse;width:100%}th,td{border:1px solid #ddd;padding:8px;vertical-align:top}.note{padding:12px 16px;background:#f6f8fa;border-right:4px solid #888}h1,h2{line-height:1.4}</style></head><body>
+<h1>چارچوب Agentic Flow</h1><p><strong>نسخه راهنمای خواندنی:</strong> 1.5<br><strong>به‌روزرسانی:</strong> <code>2026-09-09T10:04:00Z</code><br><strong>منبع اصلی و قطعی:</strong> <code>ARCHITECTURE.md</code></p><p class="note">این HTML فقط نمای خواندنی همگام‌شده است. اگر با <code>ARCHITECTURE.md</code> اختلاف داشت، معماری canonical ملاک است.</p>
+<h2>دو اصل مرکزی</h2><blockquote>حافظه پروژه پایدار باشد؛ context کاری Agent باکیفیت ولی قابل دورریختن باشد.</blockquote><blockquote>هیچ ادعایی نباید از رسیدِ مشخص، فعلی و مستقیمی که آن را اثبات می‌کند گسترده‌تر باشد.</blockquote>
+<h2>چرخه تسک مهم</h2><pre>REQUEST
+→ DRAFT TASK
+→ REVIEW DRAFT
+→ FREEZE
+→ APPLY AUTHORIZATION
+→ APPLY
+→ VERIFY + REALITY REPORT
+→ BLIND-SPOT / INDEPENDENT CLOSURE
+→ CHECKPOINT</pre><p>در سطح MEDIUM و EVIDENCE_ONLY ceremony کمتر می‌شود، ولی Source of Truth، هویت/hash پایدار، STOP قبل از scope creep، ممنوعیت ساختن evidence و محدود بودن ادعای گزارش به receipt واقعی باقی می‌مانند.</p>
+<h2>تفکیک نوع تغییر</h2><p>قبل از freeze کردن verification، تغییر مهم یک surface اصلی می‌گیرد:</p><pre>FRONTEND
+BACKEND
+SHARED
+DATA
+INFRA
+CI_CD
+TOOLING
+DOCS_EVIDENCE</pre><p>و در صورت نیاز flagهایی مثل <code>AUTH_SECURITY</code>، <code>PUBLIC_CONTRACT</code>، <code>PERSISTENCE</code>، <code>CONCURRENCY</code>، <code>CACHE_STATE</code>، <code>EXTERNAL_PROVIDER</code>، <code>PERFORMANCE</code>، <code>MIGRATION</code>، <code>OBSERVABILITY</code> و <code>PRODUCTION</code> اضافه می‌شوند.</p><p>Verification به شکل <code>GENERAL + primary surface + triggered annexes</code> انتخاب می‌شود. Classification صرفاً بر اساس اسم فولدر نیست؛ dependency graph، import، schema، contract و مصرف‌کننده‌های واقعی باید در نظر گرفته شوند.</p>
+<h2>Draft Review یعنی Review طراحی Verification</h2><p>قبل از APPLY، تسک باید goal و DoD قابل مشاهده، affected consumerها، claimهایی که قرار است آخر کار گفته شوند، حداقل receipt هر claim، verification profileها، checkهای مهمی که عمداً خارج scope هستند و STOP/reclassification conditionها را مشخص کند. <code>REVIEW_DRAFT.md</code> این طراحی را قبل از شروع implementation به چالش می‌کشد.</p>
+<h2>واقعیت گزارش و قدرت Receipt</h2><pre>OBSERVED
+DERIVED
+INFERRED
+UNKNOWN
+CONTRADICTED</pre><pre>IDENTITY
+→ STATIC
+→ BUILD
+→ FOCUSED_TEST
+→ PATH_PROOF
+→ INTEGRATION_CONTRACT
+→ LIVE_BEHAVIOR
+→ DEPLOYED_ARTIFACT
+→ EXHAUSTIVE_BOUNDED_NEGATIVE
+→ JUDGMENT</pre><p>Receipt ضعیف‌تر با توضیح Agent تبدیل به claim قوی‌تر نمی‌شود.</p><table><tr><th>میان‌بر ضعیف</th><th>چیزی که ثابت نمی‌کند</th></tr><tr><td>وجود source/config</td><td>رفتار runtime</td></tr><tr><td>Unit/Component test</td><td>User flow کامل Frontend</td></tr><tr><td>HTTP 200</td><td>Persistence یا side effect واقعی</td></tr><tr><td>Screenshot</td><td>کار کردن interaction</td></tr><tr><td>Mock موفق</td><td>سازگاری boundary واقعی</td></tr><tr><td>CI سبز</td><td>اجرا شدن همه job/testهای مرتبط</td></tr><tr><td>وجود commit</td><td>Deploy شدن همان artifact</td></tr><tr><td>PASS مدل/Reviewer</td><td>وجود behavioral evidence گمشده</td></tr></table>
+<h2>Frontend</h2><p>برای ادعای user-visible باید browser/user interaction روی surface واقعی بررسی شود؛ console/network failure، loading/error/empty/permission state و contract کلاینت API در صورت ارتباط بررسی می‌شوند. Screenshot به‌تنهایی receipt برای flow نیست.</p>
+<h2>Backend</h2><p>Verification باید در boundary مناسب handler/service/repository انجام شود و validation، authz/tenant/ownership، error path، timeout/retry/idempotency، provider و persistence در صورت ارتباط پوشش داده شوند. پاسخ <code>200 OK</code> به‌تنهایی receipt برای ذخیره شدن داده نیست.</p>
+<h2>Shared / Public Contract</h2><p>Consumerهای affected تا حد ممکن مکانیکی پیدا می‌شوند و فقط producer تست نمی‌شود. Type compatibility لزوماً runtime serialization/protocol compatibility را ثابت نمی‌کند.</p>
+<h2>Data / Persistence</h2><p>Representative existing data، migration، write/read، constraint، partial failure، idempotency و rollback/restore boundary در صورت نیاز بررسی می‌شوند. وجود migration file یا موفقیت روی DB خالی برای production-shaped data کافی نیست.</p>
+<h2>Infra / CI_CD</h2><p>Target environment/account/cluster، plan/rendered diff، trigger/conditionها، permission، artifact handoff و exact deployed artifact ثبت می‌شوند. CI سبز ممکن است checkهای skipped/neutral داشته باشد؛ گزارش باید مشخص کند چه چیزی واقعاً اجرا شد.</p>
+<h2>Security / Auth</h2><p>فقط positive path کافی نیست؛ negative/unauthorized/tenant/ownership path مرتبط و trust boundary واقعی باید بررسی شود. اگر ASVS یا استاندارد دیگری ادعا می‌شود، version و requirement مشخص لازم است.</p>
+<h2>Reliability / Performance</h2><p>Baseline و treatment باید قابل مقایسه باشند؛ در صورت اهمیت variance چند مشاهده لازم است و cache، retry، timeout، concurrency، provider و محدوده queryهای log/metric/trace باید روشن باشند.</p>
+<h2>Blind-Spot Audit</h2><p>برای HIGH یا MEDIUM پیچیده یک review سرد و read-only دنبال false confidence می‌گردد: ref/environment اشتباه یا stale، consumer/surface جاافتاده، bypass شدن changed path با cache/mock/fallback، proxy ضعیف به جای gate اصلی، gapهای frontend/backend/data/infra/security/reliability و claimهای کلی بزرگ‌تر از universe بررسی‌شده.</p>
+<h2>Independent Review</h2><pre>Task / DoD / Classification
+→ Actual Diff / Source
+→ Raw Receipts
+→ Independent Falsifying Checks
+→ Executor Narrative Last</pre><p>این ترتیب anchoring روی گزارش Executor را کمتر می‌کند. نتیجه Reviewer یک <code>JUDGMENT</code> است و behavioral receipt گمشده تولید نمی‌کند.</p>
+<h2>گزارش منعکس‌کننده واقعیت</h2><p>گزارش باید ref/artifact/environment دقیق، countها، وضعیت‌های <code>PASS/FAIL/PARTIAL/SKIPPED/UNVERIFIED</code>، checkهای مهم اجرا‌نشده، unknownها و residual risk را نشان دهد.</p><p>بهتر است بنویسیم:</p><pre>128/128 required tests passed at commit abc123.
+Browser flows A/B passed in testenv X.
+Production deployment was not checked.</pre><p>نه:</p><pre>Everything is good. No regressions.</pre><p>کلمات کلی مثل all/none/no regression/secure/fully tested فقط با universe محدود و روش exhaustive مجازند.</p>
+<h2>Lint مکانیکی</h2><pre>python3 scripts/verification_lint.py &lt;task/evidence/report files&gt;</pre><p>این ابزار contradictionهای مکانیکی مثل VERIFIED بدون evidence، receipt ضعیف‌تر از minimum، ref قدیمی یا DoD PASS بدون receipt را می‌گیرد؛ اما جای semantic verification و review مستقل را نمی‌گیرد.</p>
+<h2>Context و History</h2><p>فقط task/classification جاری، verification profileهای انتخاب‌شده و Skillهای triggerشده وارد context روزمره می‌شوند. taskهای بسته‌شده، reportها، evidence، judgmentها، usage، retrospective و storyها cold باقی می‌مانند.</p>
+<h2>شروع کار</h2><ol><li><code>README.md</code></li><li><code>ARCHITECTURE.md</code></li><li>Bootstrap prompt مناسب</li><li><code>DRAFT_TASK.md</code></li><li><code>REVIEW_DRAFT.md</code></li><li>Classification و Verification Profileهای همان task</li><li><code>APPLY_TASK.md</code></li><li><code>VERIFY_AND_REPORT.md</code></li><li>Supervisor مناسب</li></ol></body></html>
