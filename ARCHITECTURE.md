@@ -1,8 +1,8 @@
 # Agentic Flow Architecture
 
 **Status:** CANONICAL SOURCE OF TRUTH  
-**Version:** 1.3  
-**Updated:** 2026-09-09
+**Version:** 1.4  
+**Updated:** 2026-09-09T08:22:00Z
 
 This file defines the portable architecture. Vendor-specific files such as `CLAUDE.md`, `.claude/agents/*`, OpenCode agent definitions, `GEMINI.md`, or generated `AGENTS.md` variants are **adapters**, not policy authority.
 
@@ -11,7 +11,7 @@ This file defines the portable architecture. Vendor-specific files such as `CLAU
 When sources disagree, use this order:
 
 1. `ARCHITECTURE.md` — lifecycle, authority, invariants.
-2. `schemas/` — task/amendment/evidence/usage data contracts.
+2. `schemas/` — task/amendment/evidence/usage/history data contracts.
 3. `skills/` — reusable procedures, loaded only when their trigger fires.
 4. An approved/frozen task contract or approved amendment for the current task.
 5. Durable evidence and supervisor decisions for that task.
@@ -215,15 +215,62 @@ Daily agent context must stay small.
 - supervisor judgments;
 - architecture decision history;
 - usage/token/cost ledger;
-- generated project stories/case studies.
+- append-only execution retrospective ledger;
+- generated retrospectives and project stories/case studies.
 
 Cold history is indexed and versioned but loaded only on explicit trigger: decision provenance, regression investigation, audit, retrospective, project storytelling, or user request.
 
-## Project history and storytelling
+## Execution retrospective / work reconstruction
 
-The system should make later reconstruction easy without polluting normal execution context. Completed work records concise task summaries, decision refs, architecture changes, measurable outcomes, and usage coverage. On demand, `project-storytelling` reconstructs project history, architecture evolution, incidents, engineering advantages, and self-branding/case-study material from indexes first and raw artifacts only as needed.
+For long campaigns, rescues, migrations, or other work whose execution history itself has engineering value, maintain a compact **cold append-only execution ledger** using `schemas/EXECUTION_RETROSPECTIVE_LEDGER.md`.
 
-Generated stories are reader artifacts, not standing agent instructions.
+Record only meaningful boundaries such as:
+
+```text
+DRAFT_REVIEW
+AMENDMENT
+FREEZE
+APPLY_START
+STOP
+EVIDENCE_READY
+CLOSURE_REVIEW
+CLOSED
+FOLLOWUP_CREATED
+```
+
+Each entry points to Git/task/judgment/evidence/usage artifacts instead of copying them. This makes later reconstruction cheap without turning history into permanent context.
+
+A formal retrospective is an on-demand deliverable produced by `project-retrospective`. It reconstructs, where evidence permits:
+
+- timeline and reliable logging boundary;
+- tasks closed and amendment loops;
+- STOP conditions that prevented real mistakes;
+- independent judgments/reviews;
+- implementation versus evidence/governance commits;
+- tests added and suite-count evolution where derivable;
+- pre-closure defects and false-complete states caught;
+- provider calls, test-environment and production mutations;
+- deferred findings and intentionally blocked scope creep;
+- approximate duration/iterations only when timestamps/receipts support them;
+- governance value versus ceremony;
+- evolution of the engineering process;
+- what should change next time.
+
+Every material historical fact is classified as one of:
+
+```text
+PROVEN FROM GIT / DURABLE ARTIFACTS
+RECONSTRUCTED FROM OWNER JOURNAL / RECEIPTS
+UNKNOWN / NOT LOGGED RELIABLY
+```
+
+Unknown history stays unknown. Never backfill exact counts merely to make the retrospective complete.
+
+## Project history, storytelling and self-branding
+
+Execution reconstruction and storytelling are separate layers. `project-retrospective` produces the audit-grade timeline/metrics/truth classes. `project-storytelling` turns verified/reconstructed evidence into project history, architecture evolution, incidents, engineering advantages, case studies and self-branding material.
+
+When a retrospective already exists, storytelling should consume its bounded outputs and source refs rather than rereading the entire cold history. Generated stories are reader artifacts, not standing agent instructions.
 
 ## Documentation versioning and freshness
 
