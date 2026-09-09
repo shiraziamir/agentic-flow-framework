@@ -40,7 +40,7 @@ def load_doc(path: Path) -> dict[str, Any]:
 
 
 def present(value: Any) -> bool:
-    return value not in (None, "", "NONE", "NOT_DEFINED", "UNKNOWN")
+    return value not in (None, "", "NONE", "NOT_DEFINED", "UNKNOWN", "UNASSIGNED")
 
 
 def lint_profile(doc: dict[str, Any]) -> tuple[list[str], list[str]]:
