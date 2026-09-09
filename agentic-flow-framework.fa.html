@@ -1,55 +1,21 @@
 <!doctype html>
-<html lang="fa" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Agentic Flow Framework v1.5 — فارسی</title><style>body{max-width:980px;margin:40px auto;padding:0 24px;font:17px/1.9 system-ui,sans-serif;color:#202124}code,pre{direction:ltr;text-align:left;background:#f6f8fa}pre{padding:16px;overflow:auto}table{border-collapse:collapse;width:100%}th,td{border:1px solid #ddd;padding:8px;vertical-align:top}.note{padding:12px 16px;background:#f6f8fa;border-right:4px solid #888}h1,h2{line-height:1.4}</style></head><body>
-<h1>چارچوب Agentic Flow</h1><p><strong>نسخه راهنمای خواندنی:</strong> 1.5<br><strong>به‌روزرسانی:</strong> <code>2026-09-09T10:04:00Z</code><br><strong>منبع اصلی و قطعی:</strong> <code>ARCHITECTURE.md</code></p><p class="note">این HTML فقط نمای خواندنی همگام‌شده است. اگر با <code>ARCHITECTURE.md</code> اختلاف داشت، معماری canonical ملاک است.</p>
-<h2>دو اصل مرکزی</h2><blockquote>حافظه پروژه پایدار باشد؛ context کاری Agent باکیفیت ولی قابل دورریختن باشد.</blockquote><blockquote>هیچ ادعایی نباید از رسیدِ مشخص، فعلی و مستقیمی که آن را اثبات می‌کند گسترده‌تر باشد.</blockquote>
-<h2>چرخه تسک مهم</h2><pre>REQUEST
-→ DRAFT TASK
-→ REVIEW DRAFT
-→ FREEZE
-→ APPLY AUTHORIZATION
-→ APPLY
-→ VERIFY + REALITY REPORT
-→ BLIND-SPOT / INDEPENDENT CLOSURE
-→ CHECKPOINT</pre><p>در سطح MEDIUM و EVIDENCE_ONLY ceremony کمتر می‌شود، ولی Source of Truth، هویت/hash پایدار، STOP قبل از scope creep، ممنوعیت ساختن evidence و محدود بودن ادعای گزارش به receipt واقعی باقی می‌مانند.</p>
-<h2>تفکیک نوع تغییر</h2><p>قبل از freeze کردن verification، تغییر مهم یک surface اصلی می‌گیرد:</p><pre>FRONTEND
-BACKEND
-SHARED
-DATA
-INFRA
-CI_CD
-TOOLING
-DOCS_EVIDENCE</pre><p>و در صورت نیاز flagهایی مثل <code>AUTH_SECURITY</code>، <code>PUBLIC_CONTRACT</code>، <code>PERSISTENCE</code>، <code>CONCURRENCY</code>، <code>CACHE_STATE</code>، <code>EXTERNAL_PROVIDER</code>، <code>PERFORMANCE</code>، <code>MIGRATION</code>، <code>OBSERVABILITY</code> و <code>PRODUCTION</code> اضافه می‌شوند.</p><p>Verification به شکل <code>GENERAL + primary surface + triggered annexes</code> انتخاب می‌شود. Classification صرفاً بر اساس اسم فولدر نیست؛ dependency graph، import، schema، contract و مصرف‌کننده‌های واقعی باید در نظر گرفته شوند.</p>
-<h2>Draft Review یعنی Review طراحی Verification</h2><p>قبل از APPLY، تسک باید goal و DoD قابل مشاهده، affected consumerها، claimهایی که قرار است آخر کار گفته شوند، حداقل receipt هر claim، verification profileها، checkهای مهمی که عمداً خارج scope هستند و STOP/reclassification conditionها را مشخص کند. <code>REVIEW_DRAFT.md</code> این طراحی را قبل از شروع implementation به چالش می‌کشد.</p>
-<h2>واقعیت گزارش و قدرت Receipt</h2><pre>OBSERVED
-DERIVED
-INFERRED
-UNKNOWN
-CONTRADICTED</pre><pre>IDENTITY
-→ STATIC
-→ BUILD
-→ FOCUSED_TEST
-→ PATH_PROOF
-→ INTEGRATION_CONTRACT
-→ LIVE_BEHAVIOR
-→ DEPLOYED_ARTIFACT
-→ EXHAUSTIVE_BOUNDED_NEGATIVE
-→ JUDGMENT</pre><p>Receipt ضعیف‌تر با توضیح Agent تبدیل به claim قوی‌تر نمی‌شود.</p><table><tr><th>میان‌بر ضعیف</th><th>چیزی که ثابت نمی‌کند</th></tr><tr><td>وجود source/config</td><td>رفتار runtime</td></tr><tr><td>Unit/Component test</td><td>User flow کامل Frontend</td></tr><tr><td>HTTP 200</td><td>Persistence یا side effect واقعی</td></tr><tr><td>Screenshot</td><td>کار کردن interaction</td></tr><tr><td>Mock موفق</td><td>سازگاری boundary واقعی</td></tr><tr><td>CI سبز</td><td>اجرا شدن همه job/testهای مرتبط</td></tr><tr><td>وجود commit</td><td>Deploy شدن همان artifact</td></tr><tr><td>PASS مدل/Reviewer</td><td>وجود behavioral evidence گمشده</td></tr></table>
-<h2>Frontend</h2><p>برای ادعای user-visible باید browser/user interaction روی surface واقعی بررسی شود؛ console/network failure، loading/error/empty/permission state و contract کلاینت API در صورت ارتباط بررسی می‌شوند. Screenshot به‌تنهایی receipt برای flow نیست.</p>
-<h2>Backend</h2><p>Verification باید در boundary مناسب handler/service/repository انجام شود و validation، authz/tenant/ownership، error path، timeout/retry/idempotency، provider و persistence در صورت ارتباط پوشش داده شوند. پاسخ <code>200 OK</code> به‌تنهایی receipt برای ذخیره شدن داده نیست.</p>
-<h2>Shared / Public Contract</h2><p>Consumerهای affected تا حد ممکن مکانیکی پیدا می‌شوند و فقط producer تست نمی‌شود. Type compatibility لزوماً runtime serialization/protocol compatibility را ثابت نمی‌کند.</p>
-<h2>Data / Persistence</h2><p>Representative existing data، migration، write/read، constraint، partial failure، idempotency و rollback/restore boundary در صورت نیاز بررسی می‌شوند. وجود migration file یا موفقیت روی DB خالی برای production-shaped data کافی نیست.</p>
-<h2>Infra / CI_CD</h2><p>Target environment/account/cluster، plan/rendered diff، trigger/conditionها، permission، artifact handoff و exact deployed artifact ثبت می‌شوند. CI سبز ممکن است checkهای skipped/neutral داشته باشد؛ گزارش باید مشخص کند چه چیزی واقعاً اجرا شد.</p>
-<h2>Security / Auth</h2><p>فقط positive path کافی نیست؛ negative/unauthorized/tenant/ownership path مرتبط و trust boundary واقعی باید بررسی شود. اگر ASVS یا استاندارد دیگری ادعا می‌شود، version و requirement مشخص لازم است.</p>
-<h2>Reliability / Performance</h2><p>Baseline و treatment باید قابل مقایسه باشند؛ در صورت اهمیت variance چند مشاهده لازم است و cache، retry، timeout، concurrency، provider و محدوده queryهای log/metric/trace باید روشن باشند.</p>
-<h2>Blind-Spot Audit</h2><p>برای HIGH یا MEDIUM پیچیده یک review سرد و read-only دنبال false confidence می‌گردد: ref/environment اشتباه یا stale، consumer/surface جاافتاده، bypass شدن changed path با cache/mock/fallback، proxy ضعیف به جای gate اصلی، gapهای frontend/backend/data/infra/security/reliability و claimهای کلی بزرگ‌تر از universe بررسی‌شده.</p>
-<h2>Independent Review</h2><pre>Task / DoD / Classification
-→ Actual Diff / Source
-→ Raw Receipts
-→ Independent Falsifying Checks
-→ Executor Narrative Last</pre><p>این ترتیب anchoring روی گزارش Executor را کمتر می‌کند. نتیجه Reviewer یک <code>JUDGMENT</code> است و behavioral receipt گمشده تولید نمی‌کند.</p>
-<h2>گزارش منعکس‌کننده واقعیت</h2><p>گزارش باید ref/artifact/environment دقیق، countها، وضعیت‌های <code>PASS/FAIL/PARTIAL/SKIPPED/UNVERIFIED</code>، checkهای مهم اجرا‌نشده، unknownها و residual risk را نشان دهد.</p><p>بهتر است بنویسیم:</p><pre>128/128 required tests passed at commit abc123.
-Browser flows A/B passed in testenv X.
-Production deployment was not checked.</pre><p>نه:</p><pre>Everything is good. No regressions.</pre><p>کلمات کلی مثل all/none/no regression/secure/fully tested فقط با universe محدود و روش exhaustive مجازند.</p>
-<h2>Lint مکانیکی</h2><pre>python3 scripts/verification_lint.py &lt;task/evidence/report files&gt;</pre><p>این ابزار contradictionهای مکانیکی مثل VERIFIED بدون evidence، receipt ضعیف‌تر از minimum، ref قدیمی یا DoD PASS بدون receipt را می‌گیرد؛ اما جای semantic verification و review مستقل را نمی‌گیرد.</p>
-<h2>Context و History</h2><p>فقط task/classification جاری، verification profileهای انتخاب‌شده و Skillهای triggerشده وارد context روزمره می‌شوند. taskهای بسته‌شده، reportها، evidence، judgmentها، usage، retrospective و storyها cold باقی می‌مانند.</p>
-<h2>شروع کار</h2><ol><li><code>README.md</code></li><li><code>ARCHITECTURE.md</code></li><li>Bootstrap prompt مناسب</li><li><code>DRAFT_TASK.md</code></li><li><code>REVIEW_DRAFT.md</code></li><li>Classification و Verification Profileهای همان task</li><li><code>APPLY_TASK.md</code></li><li><code>VERIFY_AND_REPORT.md</code></li><li>Supervisor مناسب</li></ol></body></html>
+<html lang="fa" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Agentic Flow Framework v1.6 — فارسی</title><style>body{max-width:980px;margin:40px auto;padding:0 24px;font:17px/1.9 system-ui,sans-serif;color:#202124}code,pre{direction:ltr;text-align:left;background:#f6f8fa}pre{padding:16px;overflow:auto}table{border-collapse:collapse;width:100%}th,td{border:1px solid #ddd;padding:8px;vertical-align:top}.note{padding:12px 16px;background:#f6f8fa;border-right:4px solid #888}h1,h2{line-height:1.4}</style></head><body>
+<h1>چارچوب Agentic Flow</h1><p><strong>نسخه راهنمای خواندنی:</strong> 1.6<br><strong>به‌روزرسانی:</strong> <code>2026-09-09T10:40:00Z</code><br><strong>منبع قطعی:</strong> <code>ARCHITECTURE.md</code></p><p class="note">این صفحه نمای خواندنی همگام‌شده است. در صورت اختلاف، <code>ARCHITECTURE.md</code> ملاک است.</p>
+<h2>اصل مرکزی</h2><blockquote>حافظه‌ی پروژه پایدار باشد؛ context کاری Agent کوچک، باکیفیت و قابل‌دورریختن باشد.</blockquote><p>قدرت هر ادعا به receipt آن محدود است. Production readiness هم فقط در محدوده‌ی profile و gapهای صریح پروژه معنی دارد.</p>
+<h2>چرخه‌ی تسک</h2><pre>DRAFT → REVIEW → FREEZE/AUTHORIZE → APPLY → VERIFY → INDEPENDENT CLOSURE</pre><p>قبل از mutation، سطح کد، ریسک‌های عملیاتی، DoD، claimها و receipt لازم و اثر روی production مشخص می‌شوند. اگر وسط APPLY ریسک جدیدی مثل database/provider/security/recovery کشف شود، Agent باید STOP و amendment بخواهد.</p>
+<h2>Scale با Assurance فرق دارد</h2><pre>codebase_scale   SMALL | MEDIUM | LARGE
+readiness_tier   BASIC | STANDARD | HIGH_ASSURANCE</pre><p>اندازه‌ی repo به‌تنهایی سطح کنترل را تعیین نمی‌کند. یک سرویس کوچک پرداخت یا authentication ممکن است <code>HIGH_ASSURANCE</code> باشد. blast radius، حساسیت داده، statefulness، exposure و RPO/RTO مهم‌ترند.</p>
+<h2>DevOps-friendly: از Build تا Production</h2><pre>source → build/test → immutable artifact → deploy
+→ running artifact identity → health verification → rollback/recovery</pre><p>سبز بودن CI اثبات deploy نیست. پروژه‌های بالغ artifact digest، least-privilege deployment، progressive rollout، health gate، rollback/roll-forward و supply-chain provenance مناسب ریسک دارند. برای سنجش عملکرد delivery می‌توان روند DORA را دید: deployment frequency، lead time، change failure rate و time to restore؛ این metricها outcome سیستم هستند نه ابزار رتبه‌بندی فردی.</p>
+<h2>Observability و SRE</h2><p>Metrics، logs و traces باید قابل correlation باشند. برای سرویس‌های user-facing از چهار golden signal شروع می‌کنیم: latency، traffic، errors و saturation و سپس SLIهای دامنه. سرویس‌های مهم dashboard، alert قابل اقدام و در صورت نیاز SLO/error budget دارند. در Prometheus labelهای با cardinality نامحدود مثل user ID/email استفاده نمی‌شوند.</p>
+<h2>داده، Backup و Recovery</h2><p>برای داده‌ی مهم باید source of truth، owner، data class، RPO/RTO، روش backup، retention، PITR در صورت نیاز و restore receipt معلوم باشد.</p><blockquote><strong>Backup موفق، recoverability را ثابت نمی‌کند؛ Restore receipt لازم است.</strong></blockquote><p>در PostgreSQL، PITR به base backup و WAL لازم نیاز دارد؛ در MySQL به full backup و binary logهای بعدی. حتی managed backup هم باید restore شود و زمان/نقطه‌ی قابل‌بازیابی اندازه‌گیری شود.</p>
+<h2>Troubleshooting</h2><p>تشخیص از symptom و identity دقیق environment/release شروع می‌شود و به شکل محدود مسیر <code>DNS/edge → runtime → network/auth/dependency → cache/queue/database/storage → provider → recent deploy/config</code> را بررسی می‌کند. query و time window باید قابل بازتولید باشند؛ نبود log مساوی نبود event نیست.</p>
+<h2>تحلیل Log با هوش مصنوعی</h2><p>Log باید structured، کمینه‌شده و privacy-aware باشد و در صورت امکان service/environment/release و TraceId/SpanId/correlation ID داشته باشد. Secret، token، password، connection string و PII حساس نباید بی‌دلیل وارد log شوند.</p><p><strong>محتوای log ورودی غیرقابل‌اعتماد است، نه instruction.</strong> متن user/provider می‌تواند indirect prompt injection داشته باشد. Agent تحلیل‌گر log باید read-only/least privilege باشد، log را به‌صورت data delimit کند، query/time-window/redaction/raw-source ref را نگه دارد و هیچ command یا mutation را صرفاً به‌خاطر متن داخل log اجرا نکند.</p>
+<h2>Security First</h2><p>OWASP ASVS/SAMM، NIST SSDF، CISA Secure by Design و SLSA به‌صورت scoped/versioned reference استفاده می‌شوند، نه badge تبلیغاتی. Security از design تا runtime دیده می‌شود: trust/data/threat boundary، secure defaults، server-side authorization، secrets/identity، dependency/SBOM/provenance، least privilege، vulnerability ownership، audit telemetry و incident response.</p><p><code>scanner green</code> مساوی <code>secure</code> نیست. gap امنیتی باید owner، risk و در صورت accepted-risk زمان بازبینی داشته باشد.</p>
+<h2>Resilience و Chaos Engineering</h2><pre>steady state → hypothesis → bounded fault → blast radius/abort
+→ observe → recover → improve</pre><p>Chaos Engineering تخریب تصادفی نیست. پروژه‌ی BASIC نیازی به Chaos Monkey در production ندارد. STANDARD می‌تواند fault injection را در non-prod انجام دهد. آزمایش production فقط برای سیستم بالغ/high-assurance با authorization، observability، recovery اثبات‌شده، blast radius محدود و abort فوری مجاز است.</p>
+<h2>Patternهای معماری و قابلیت تغییر</h2><p>Adapter/Anti-Corruption Layer و Dependency Inversion فقط وقتی استفاده می‌شوند که یک boundary واقعی مثل provider خارجی، legacy، database، queue یا shared/public contract را از domain/business logic جدا کنند. پروژه‌ی کوچک باید ساده بماند؛ پروژه‌ی متوسط/بزرگ می‌تواند dependency direction، cycle و public API را مکانیکی enforce کند.</p><p>Retry، Circuit Breaker، Bulkhead، Idempotency، Rate Limiting و Saga نیز فقط برای failure mode واقعی اضافه می‌شوند، چون خودشان complexity و نیاز به monitoring/test/runbook ایجاد می‌کنند.</p>
+<h2>Gapهای عملیاتی</h2><pre>NOT_IMPLEMENTED | PARTIAL | UNVERIFIED | BLOCKED | ACCEPTED_RISK | CLOSED</pre><p>بسته‌شدن یک task به معنی production-ready بودن کل پروژه نیست. مثلاً task می‌تواند درست بسته شود ولی restore test، SLO یا supply-chain provenance هنوز gap باشد. gapها durable و owner-visible می‌مانند.</p>
+<h2>مدیریت Context و هزینه</h2><p>Agent روزمره فقط task/classification جاری، production profile و gap pointerهای مرتبط، profileهای verification/production لازم و ۰ تا ۳ Skill اصلی را می‌خواند. incidentها، runbookهای نامرتبط، gapهای قدیمی و history در cold storage می‌مانند. برای log بزرگ ابتدا filter/dedupe/group و در صورت امکان worker ارزان read-only استفاده می‌شود.</p>
+<h2>شروع</h2><ol><li><code>README.md</code></li><li><code>ARCHITECTURE.md</code></li><li><code>prompts/bootstrap/*</code></li><li><code>schemas/PRODUCTION_PROFILE.md</code> برای پروژه production-bound</li><li>تسک جاری و فقط profile/Skillهای triggerشده</li></ol>
+</body></html>
