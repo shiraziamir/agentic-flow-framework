@@ -1,23 +1,23 @@
 # Operator Guide — Agentic Flow
 
 **Operator-only document; agents should not preload this file.**  
-**Version:** 1.0  
+**Version:** 1.7  
 **Updated:** 2026-09-09T11:30:00Z
 
 ## Goal
 
-Use Agentic Flow without turning it into ceremony. The operator owns business risk, production authority, accepted risk, and major architecture decisions. The agent owns bounded execution inside those guardrails and should surface evidence/gaps rather than hide uncertainty.
+Use Agentic Flow without turning it into ceremony. The operator owns business risk, production authority, accepted risk and major architecture decisions. The agent owns bounded execution inside those guardrails and should surface evidence/gaps rather than hide uncertainty.
 
 ## Install / drop-in adoption
 
-Preferred distribution is the generated Agent Bundle. Extract it into a stable project directory such as `.agentic-flow/` and give the agent one instruction:
+Build or obtain the generated Agent Bundle, extract it into a stable project directory such as `.agentic-flow/`, and give the agent one instruction:
 
 ```text
-Read .agentic-flow/docs/agent/START_HERE.md and adopt the framework for this repository.
+Read .agentic-flow/START_HERE.md and adopt Agentic Flow for this repository.
 Do not start or change product work until adoption validation is complete.
 ```
 
-For an already-active coding session:
+For an already-active coding session, the same root entrypoint will route the agent to midstream adoption. You can also say:
 
 ```text
 Read .agentic-flow/docs/agent/MIDSTREAM_ADOPTION.md.
@@ -27,7 +27,7 @@ Return the adoption snapshot and conflicts before continuing product mutation.
 
 ## Project baseline
 
-Create one `.agentic/PROJECT_PROFILE.yaml` from `templates/PROJECT_PROFILE.example.yaml`. Keep it small. It should define the required engineering bar, environment permissions, testing policy, production profile and pattern-selection policy. It should not contain task history or large prose.
+Create one `.agentic/PROJECT_PROFILE.yaml` from `templates/PROJECT_PROFILE.example.yaml`. Keep it small. It should define the required engineering bar, environment permissions, testing policy, production/readiness expectations and pattern-selection policy. It should not contain task history or large prose.
 
 ## Operator decisions that should remain explicit
 
