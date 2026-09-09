@@ -1,7 +1,7 @@
 # Workflow prompt — DRAFT TASK
 
-**Version:** 1.1  
-**Updated:** 2026-09-09
+**Version:** 1.2  
+**Updated:** 2026-09-09T10:04:00Z
 
 ```text
 Create a DRAFT task contract for my request. Do not execute the task.
@@ -9,23 +9,35 @@ Create a DRAFT task contract for my request. Do not execute the task.
 Authority/read order:
 1. ARCHITECTURE.md
 2. schemas/TASK_CONTRACT.md
-3. skills/00_INDEX.md
-4. only the project files/skills necessary to understand this request
+3. schemas/CHANGE_CLASSIFICATION.md
+4. schemas/CLAIM_RECEIPT.md
+5. verification/00_INDEX.md
+6. skills/00_INDEX.md
+7. only the project files/skills necessary to understand this request
 
 Requirements:
-- classify governance first: HIGH, MEDIUM, or EVIDENCE_ONLY; justify the minimum sufficient level;
-- state the observed symptom separately from hypotheses;
+- state observed symptom separately from hypotheses;
+- classify governance level, primary engineering surface, change kind, mutation scope, affected consumers and cross-cutting flags using evidence rather than filename intuition;
 - define goal, EDIT_SET, REFERENCE_SET, EXCLUDED_SET and baseline;
-- write Definition of Done before implementation;
-- name uncertainties and facts that must be confirmed before mutation;
+- write observable Definition of Done before implementation;
+- enumerate the material claims the executor expects to make at closure;
+- map each planned claim to the minimum adequate receipt rung;
+- select GENERAL + primary surface + only triggered verification annexes;
+- include important checks intentionally outside scope and why;
+- name uncertainties/facts that must be confirmed before mutation;
 - select only 0–3 load-bearing skills unless a distinct fourth trigger is justified;
-- define stop and escalation conditions;
-- define evidence required for closure;
-- define expected model roles by phase when routing is material;
-- for long/cost-sensitive/multi-agent work, declare optional soft/hard usage budgets and load token-efficiency;
-- identify whether draft review and closure review need a human, model supervisor, either, or are not required by the chosen governance level;
-- avoid HIGH ceremony for purely evidence/docs corrections that grant no new runtime authority;
+- define stop/escalation/reclassification conditions;
+- define evidence required for closure with ref/artifact/environment identity where relevant;
+- identify draft review, blind-spot audit and closure-review requirements;
 - save/propose the task as DRAFT and STOP.
 
-Return task ref, governance classification, selected skills, expected routing/budget, and a short review summary. Do not APPLY.
+Return:
+- task ref/version;
+- classification summary;
+- planned claim -> receipt matrix;
+- selected verification profiles;
+- unresolved assumptions;
+- concise review summary.
+
+Do not APPLY.
 ```
