@@ -1,0 +1,9 @@
+# Generated Agent Bundle release artifacts
+dist/
+
+# Python runtime/cache artifacts
+__pycache__/
+*.py[cod]
+
+# Local editor / OS noise
+.DS_Store
