@@ -93,7 +93,7 @@ jobs:
           rm -rf dist
           python3 scripts/build_agent_bundle.py --output dist/agentic-flow-agent-bundle.zip
 
-      - name: Verify bundle manifest, hashes, and boundary
+      - name: Verify bundle manifest, hashes, docs, and context boundary
         shell: bash
         run: |
           set -euo pipefail
@@ -106,18 +106,34 @@ jobs:
           bundle = Path('dist/agentic-flow-agent-bundle.zip')
           version = Path('VERSION').read_text(encoding='utf-8').strip()
           required = {
+              'agentic-flow/README.md',
               'agentic-flow/START_HERE.md',
               'agentic-flow/INSTALL_PROMPT.txt',
+              'agentic-flow/BEST_PRACTICES_USED.en.txt',
+              'agentic-flow/PRIMARY_SOURCES.md',
               'agentic-flow/BUNDLE_MANIFEST.json',
               'agentic-flow/VERSION',
               'agentic-flow/ARCHITECTURE.md',
               'agentic-flow/docs/agent/START_HERE.md',
               'agentic-flow/docs/agent/MIDSTREAM_ADOPTION.md',
+              'agentic-flow/docs/agent/TASK_WORKFLOW_DRAFT_REVIEW_APPLY_VERIFY.md',
+              'agentic-flow/docs/agent/TOKEN_EFFICIENT_WORKFLOW.md',
+              'agentic-flow/docs/operator/OPERATOR_GUIDE.en.md',
+              'agentic-flow/docs/operator/OPERATOR_GUIDE.fa.md',
+              'agentic-flow/docs/operator/USING_PYTHON_TOOLS.en.md',
+              'agentic-flow/docs/operator/USING_PYTHON_TOOLS.fa.md',
+              'agentic-flow/docs/architecture/BUNDLE_BOUNDARY.md',
+              'agentic-flow/docs/architecture/WHY_AND_HOW.md',
+              'agentic-flow/docs/references/PRIMARY_SOURCES.md',
+              'agentic-flow/scripts/build_agent_bundle.py',
+              'agentic-flow/scripts/test_build_agent_bundle.py',
+              'agentic-flow/scripts/verification_lint.py',
+              'agentic-flow/scripts/test_verification_lint.py',
+              'agentic-flow/scripts/production_readiness_lint.py',
+              'agentic-flow/scripts/test_production_readiness_lint.py',
+              'agentic-flow/scripts/usage_ledger.py',
           }
           forbidden_fragments = (
-              '/docs/operator/',
-              '/docs/references/',
-              '/docs/architecture/',
               '/research/',
               '/retrospectives/',
               '/stories/',
@@ -134,7 +150,14 @@ jobs:
                   if any(fragment in name for fragment in forbidden_fragments)
               )
               if forbidden:
-                  raise SystemExit(f'bundle contains forbidden context files: {forbidden[:20]}')
+                  raise SystemExit(f'bundle contains cold-history/research files: {forbidden[:20]}')
+
+              html_readers = sorted(
+                  name for name in names
+                  if name.endswith('.html')
+              )
+              if html_readers:
+                  raise SystemExit(f'bundle contains reader HTML: {html_readers[:20]}')
 
               manifest = json.loads(zf.read('agentic-flow/BUNDLE_MANIFEST.json'))
               if manifest.get('framework_version') != version:
@@ -143,6 +166,8 @@ jobs:
                   )
               if manifest.get('entrypoint') != 'START_HERE.md':
                   raise SystemExit('manifest entrypoint must be START_HERE.md')
+              if manifest.get('operator_entrypoint') != 'README.md':
+                  raise SystemExit('manifest operator_entrypoint must be README.md')
 
               for item in manifest.get('files', []):
                   rel = item['path']
@@ -156,8 +181,15 @@ jobs:
                   if len(data) != item['bytes']:
                       raise SystemExit(f'byte-count mismatch for {rel}')
 
-              if zf.read('agentic-flow/START_HERE.md') != zf.read('agentic-flow/docs/agent/START_HERE.md'):
-                  raise SystemExit('root START_HERE.md does not match docs/agent/START_HERE.md')
+              alias_pairs = {
+                  'agentic-flow/START_HERE.md': 'agentic-flow/docs/agent/START_HERE.md',
+                  'agentic-flow/README.md': 'agentic-flow/bundle/README.md',
+                  'agentic-flow/BEST_PRACTICES_USED.en.txt': 'agentic-flow/bundle/BEST_PRACTICES_USED.en.txt',
+                  'agentic-flow/PRIMARY_SOURCES.md': 'agentic-flow/docs/references/PRIMARY_SOURCES.md',
+              }
+              for alias, source in alias_pairs.items():
+                  if zf.read(alias) != zf.read(source):
+                      raise SystemExit(f'root convenience file {alias} does not match {source}')
 
               Path('dist/BUNDLE_MANIFEST.json').write_bytes(
                   zf.read('agentic-flow/BUNDLE_MANIFEST.json')
@@ -186,7 +218,7 @@ jobs:
             echo "- Verification-lint self-tests: PASS"
             echo "- Production-readiness self-tests: PASS"
             echo "- Bundle-builder self-test: PASS"
-            echo "- Full-checkout bundle manifest/hash/boundary verification: PASS"
+            echo "- Full-checkout bundle manifest/hash/docs/boundary verification: PASS"
             echo
             echo '```text'
             cat dist/agentic-flow-agent-bundle.zip.sha256
