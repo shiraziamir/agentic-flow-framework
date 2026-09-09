@@ -1,20 +1,23 @@
 # Bootstrap prompt — OpenCode
 
-**Version:** 1.1  
-**Updated:** 2026-09-09
+**Version:** 1.2  
+**Updated:** 2026-09-09T10:04:00Z
 
 ```text
 Bootstrap OpenCode from this framework.
 
-First apply every rule in prompts/bootstrap/GENERIC.md. The following are OpenCode-specific additions only.
+Treat ARCHITECTURE.md, schemas/, verification/ and skills/ as canonical. OpenCode rules/agents/config generated in the target project are adapters.
 
-Canonical authority: ARCHITECTURE.md, schemas/, skills/. Generated OpenCode files remain adapters and must identify the canonical architecture version.
+Inspect the target project's real frontend/backend/shared/data/infra/CI boundaries and existing OpenCode rules/agents. Generate the smallest useful adapter:
+- concise rules pointing to canonical authority and project commands;
+- lazy Skill discovery and lazy verification-profile pointers keyed by change classification;
+- bounded cheap read-only discovery agents when current configured models/permissions support them;
+- a standard executor and read-only independent reviewer only when useful;
+- DRAFT_TASK -> REVIEW_DRAFT -> freeze/authorization -> APPLY_TASK -> VERIFY_AND_REPORT -> closure workflow pointers.
 
-Use AGENTS.md as a concise map. Reuse canonical SKILL.md directories through the OpenCode-compatible discovery paths where practical instead of duplicating skill prose. Configure per-agent model and permissions only from capabilities actually available in this environment.
+Material drafts classify engineering surface/cross-cutting risk and freeze claim -> minimum receipt requirements. Reports keep identity, skipped/not-run checks and bounded truth classes. Reviewer output is judgment, not a replacement for runtime evidence.
 
-Prefer a cheap read-only subagent for bounded discovery/log reduction when quality is mechanically checkable; use standard execution and stronger judgment roles only where justified. Keep completed task/judgment/usage/story history cold.
+Expose scripts/verification_lint.py if structured JSON/YAML artifacts are adopted.
 
-If session/model/token telemetry is not exposed by the current OpenCode/provider setup, record it as unavailable/unknown rather than fabricating counters.
-
-Validate fresh-session discovery, adaptive governance, lazy skill use, TOKEN_WASTE_WARNING behavior for long work, and report unsupported features.
+Do not preload all rules/skills/profiles/history. Preserve quality when using cheaper agents and document unsupported harness capabilities rather than simulating them.
 ```
