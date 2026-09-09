@@ -1,6 +1,6 @@
 # Change Classification Schema
 
-**Schema version:** 1.0  
+**Schema version:** 1.1  
 **Updated:** 2026-09-09T10:04:00Z
 
 Classify a material change before freezing its verification plan. Classification is a routing input, not a substitute for reading the actual diff/dependency graph.
@@ -20,12 +20,13 @@ cross_cutting_flags:
   - MIGRATION
   - OBSERVABILITY
   - PRODUCTION
+  - DEPENDENCY_SUPPLY_CHAIN
 runtime_mutation_scope: NONE|LOCAL|TESTENV|PRODUCTION
 public_contract_change: true|false
 affected_consumers: [<module/service/client/environment>]
 verification_profiles: [GENERAL, <primary>, <cross-cutting annexes>]
 classification_evidence:
-  - <path/diff/project-graph/import/API/schema evidence>
+  - <path/diff/project-graph/import/API/schema/manifest evidence>
 ```
 
 ## Primary surfaces
@@ -43,6 +44,8 @@ classification_evidence:
 
 1. Use deterministic path/project/dependency evidence first; agent intuition is only a proposal.
 2. Select one primary surface and zero or more cross-cutting flags. A task can touch several surfaces; use `affected_consumers` and annexes rather than hiding that fact.
-3. `AUTH_SECURITY`, `PERSISTENCE`, `PUBLIC_CONTRACT`, `MIGRATION`, or `PRODUCTION` may raise governance regardless of primary surface.
-4. If APPLY discovers an undeclared surface or cross-cutting risk that materially changes verification, authority, or scope: **STOP → record evidence → amend classification/contract**.
-5. Never downgrade classification merely to reduce ceremony, token use, or test cost.
+3. `AUTH_SECURITY`, `PERSISTENCE`, `PUBLIC_CONTRACT`, `MIGRATION`, `PRODUCTION`, or supply-chain-sensitive dependency changes may raise governance regardless of primary surface.
+4. `DEPENDENCY` changes should normally add `DEPENDENCY_SUPPLY_CHAIN` when manifest/lock/package/action/container/base-image behavior changes.
+5. `TEST_ONLY` changes that create/modify a load-bearing verification gate should trigger the `test-mutation-proof` Skill or an equivalent falsification receipt when practical.
+6. If APPLY discovers an undeclared surface or cross-cutting risk that materially changes verification, authority, or scope: **STOP → record evidence → amend classification/contract**.
+7. Never downgrade classification merely to reduce ceremony, token use, or test cost.
