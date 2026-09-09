@@ -1,0 +1,60 @@
+profile_id: project-production-profile
+version: 1
+updated_at: 2026-09-09T10:40:00Z
+
+codebase_scale: MEDIUM
+operational_complexity: MEDIUM
+readiness_tier: STANDARD
+
+business_context:
+  user_facing: true
+  internet_exposed: true
+  multi_tenant: false
+  stateful: true
+  durable_data_criticality: HIGH
+  data_classification: SENSITIVE
+  compliance_or_contractual_constraints: []
+  blast_radius: SERVICE
+
+runtime:
+  environments: [dev, staging, production]
+  deployment_platforms: [kubernetes]
+  runtime_owners: [platform-team]
+  oncall_or_support_owner: service-team
+
+recovery:
+  rpo: 15m
+  rto: 2h
+  backup_required: true
+  restore_test_required: true
+
+observability:
+  metrics_required: true
+  logs_required: true
+  traces_required: true
+  slo_required: true
+
+security:
+  threat_model_required: true
+  sbom_required: true
+  provenance_target: SLSA_BUILD_L1
+  vulnerability_management_required: true
+
+resilience:
+  failure_mode_analysis_required: true
+  recovery_drill_required: true
+  chaos_experiments_allowed: NON_PROD
+
+required_profiles:
+  - DELIVERY
+  - OBSERVABILITY
+  - SECURITY_FIRST
+  - DATA_DURABILITY
+  - TROUBLESHOOTING
+  - AI_LOG_ANALYSIS
+  - RESILIENCE_CHAOS
+  - CODE_ARCHITECTURE
+
+gaps:
+  - gap_id: GAP-001
+    ref: .agentic/gaps/GAP-001.yaml
