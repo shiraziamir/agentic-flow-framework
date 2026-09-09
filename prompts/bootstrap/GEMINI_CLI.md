@@ -1,14 +1,20 @@
 # Bootstrap prompt — Gemini CLI
 
+**Version:** 1.1  
+**Updated:** 2026-09-09
+
 ```text
 Bootstrap Gemini CLI from this framework.
 
-Canonical authority is ARCHITECTURE.md, schemas/, skills/.
+First apply every rule in prompts/bootstrap/GENERIC.md. The following are Gemini-specific additions only.
 
-Inspect existing GEMINI.md hierarchy, imports, settings and custom commands. Create/update a concise GEMINI.md adapter that points to canonical authority and project-specific commands. Use imports/lazy references carefully so permanent context does not become a copy of the entire framework.
+Canonical authority: ARCHITECTURE.md, schemas/, skills/. Generated GEMINI.md/settings/context files remain adapters and must identify the canonical architecture version.
 
-Where Gemini-specific agent/subagent functionality is unavailable or materially different, preserve role separation through separate sessions and the evidence packet schema rather than inventing unsupported behavior.
+Use Gemini context-file hierarchy/imports as a concise map, not as a place to concatenate the full framework/history. Preserve hot-state/cold-history separation and only expose skills/procedures needed by current triggers.
 
-Compression/checkpointing is capacity management, not durable task state.
-Validate that a fresh session can locate the source of truth and task workflow.
+Where current Gemini CLI supports checkpointing/compaction/session statistics, treat them as adapter capabilities rather than replacements for durable task state. If `/stats` exposes token/session usage, it may feed the portable usage ledger; unavailable counters remain unknown.
+
+Do not assume compression means evidence/history is safely durable. Do not encode a model name as authority.
+
+Validate fresh-session discovery, adaptive governance, TOKEN_WASTE_WARNING behavior for long work, and report unsupported features.
 ```
