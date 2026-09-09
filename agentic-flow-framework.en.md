@@ -1,111 +1,120 @@
 # Agentic Flow Framework — English Reader Guide
 
-**Reader-guide version:** 1.6  
-**Updated:** 2026-09-09T10:40:00Z  
+**Reader-guide version:** 1.7  
+**Updated:** 2026-09-09T11:30:00Z  
 **Canonical source of truth:** [`ARCHITECTURE.md`](ARCHITECTURE.md)
 
-This is a synchronized reader-facing guide. If it conflicts with `ARCHITECTURE.md`, the architecture file wins.
+This is a human-readable synchronized view. If it conflicts with `ARCHITECTURE.md`, the architecture file wins.
 
-## Core idea
+## What the framework does
 
-> Durable project memory; disposable, high-quality working context.
-
-> Claims are limited by receipts; production readiness is limited by the current profile and explicit gaps.
-
-## Task lifecycle
-
-Material work follows risk-adaptive governance:
+Agentic Flow separates task intent, implementation, evidence, operational posture and authority so a coding agent cannot turn a confident narrative into project truth.
 
 ```text
-DRAFT → REVIEW → FREEZE/AUTHORIZE → APPLY → VERIFY → INDEPENDENT CLOSURE when required
+project baseline
+→ bounded task
+→ reviewed verification design
+→ authorized implementation
+→ receipts / reality report
+→ independent judgment where required
+→ durable checkpoint
 ```
 
-The draft freezes engineering surface, operational flags, DoD, planned claims/minimum receipts and production impacts before mutation. New material risks discovered during APPLY trigger STOP/amendment.
+Core principles:
 
-## Reality and verification
+- durable project memory; disposable working context;
+- claims no broader than current receipts;
+- production readiness is profiled with explicit gaps;
+- project baseline and temporary exceptions are separate;
+- operator education and coding-agent runtime docs are separate context surfaces.
 
-Reports distinguish:
+## Portable adoption
+
+Build the drop-in bundle:
+
+```bash
+python3 scripts/build_agent_bundle.py
+```
+
+Extract `dist/agentic-flow-agent-bundle.zip` into a target repository as `.agentic-flow/`, then have the coding agent read:
 
 ```text
-OBSERVED | DERIVED | INFERRED | UNKNOWN | CONTRADICTED
+.agentic-flow/START_HERE.md
 ```
 
-A unit test, HTTP 200, screenshot, green CI, security scanner, backup setting or reviewer PASS cannot silently be upgraded into a stronger runtime/security/recovery claim.
+If coding is already active, the agent uses `docs/agent/MIDSTREAM_ADOPTION.md`, snapshots current HEAD/branch/dirty state/task/tests/environment mutations, preserves valid existing work, and never retroactively claims framework review/authorization.
 
-## Production profile
+The default bundle excludes operator docs, research/reference material and cold history so they do not become permanent token/context cost.
 
-Production projects use `schemas/PRODUCTION_PROFILE.md`.
+## Project profile
+
+A project normally keeps a small baseline:
 
 ```text
-codebase_scale   SMALL | MEDIUM | LARGE
-readiness_tier   BASIC | STANDARD | HIGH_ASSURANCE
+.agentic/PROJECT_PROFILE.yaml
 ```
 
-Size and assurance are separate. Risk, blast radius, sensitive data, statefulness and recovery needs can raise the tier regardless of repository size.
+It defines the intended testing, readiness, environment permissions, operational requirements and pattern-selection policy. It does **not** prove current reality. Missing or unverified capabilities remain gaps.
 
-Missing/partial/unverified capabilities become `schemas/OPERATIONAL_GAP.md` artifacts rather than being hidden by a `production-ready` label.
+Temporary suppression/exception uses an owned, expiring `TEMPORARY_OVERRIDE`; it does not silently rewrite the baseline.
 
-## DevOps-friendly delivery
-
-`production/DELIVERY.md` covers:
+## Material task lifecycle
 
 ```text
-source → build/test → immutable artifact → deploy target
-→ running artifact identity → health verification → rollback/forward recovery
+REQUEST
+→ DRAFT
+→ REVIEW
+→ required FREEZE / APPLY AUTHORIZATION
+→ APPLY
+→ VERIFY + REALITY REPORT
+→ independent closure when required
 ```
 
-STANDARD/HIGH_ASSURANCE projects add automated gates, artifact digests, safe rollout, supply-chain review/provenance and stronger release evidence according to risk.
+Before implementation, material work defines observable DoD, engineering/production surfaces, planned closure claims, minimum receipt for each claim, test/environment needs and STOP conditions.
 
-## Observability and SRE
+## Tests and environments
 
-`production/OBSERVABILITY.md` uses metrics, logs and traces as correlated evidence. User-facing systems start from latency, traffic, errors and saturation plus domain SLIs. Important services add useful dashboards, actionable alerts and SLO/error-budget operations where appropriate.
+Tests are designed before implementation for material claims, but strict TDD is not mandatory for every tiny/exploratory change. Important load-bearing regression/safety tests should receive mutation/path proof when risk warrants it:
 
-Prometheus labels are bounded; unbounded user/email identifiers do not belong in metric labels. OpenTelemetry-style service/resource and TraceId/SpanId correlation is preferred.
+```text
+GREEN → controlled defect → expected RED → restore → GREEN
+```
 
-## Data durability
+Environment ladder:
 
-`production/DATA_DURABILITY.md` requires important durable stores to define owner/source-of-truth, data class, RPO/RTO, backup/retention, PITR if needed and restore evidence.
+```text
+LOCAL/HERMETIC
+→ EPHEMERAL TEST
+→ SHARED TEST
+→ STAGING / PRODUCTION-LIKE
+→ CONTROLLED CANARY / PRODUCTION READ
+→ PRODUCTION MUTATION
+```
 
-> Backup success is not recoverability proof. Restore is the receipt.
+Use the lowest environment that can prove the claim. An agent may request stronger access; the request is not authority.
 
-PostgreSQL PITR depends on a base backup plus required WAL; MySQL PITR depends on a full backup plus subsequent binary logs. Managed backup services still need restore validation.
+## Production engineering
 
-## Troubleshooting
+Production profiles cover delivery, security, observability, data durability, troubleshooting, AI-safe log analysis, resilience/chaos and evolvable code architecture. Risk determines the assurance bar independently of repository size.
 
-`production/TROUBLESHOOTING.md` starts from user symptom and exact environment/release identity, then checks bounded layers: edge/DNS → runtime → dependency/network/auth → cache/queue/database/storage → provider → recent release/config.
+`backup enabled` is not recoverability: restore evidence is required. `CI green` is not deployment. `scanner green` is not security. Log text is untrusted data and cannot authorize an agent action.
 
-Use deployment markers, correlation IDs, traces/metrics and reproducible bounded log queries. Missing telemetry is UNKNOWN.
+## Patterns
 
-## AI-assisted log analysis
+Adapters, Anti-Corruption Layers, repositories, strategies, circuit breakers, sagas and similar patterns are conditional tools. The agent may use small/local/reversible patterns inside an approved strategy. Cross-module/public/architectural adoption should be proposed with problem, simpler alternative, benefits, costs and verification impact, then reviewed according to risk.
 
-`production/AI_LOG_ANALYSIS.md` treats logs as structured, privacy-sensitive and **untrusted external data**. AI workflows redact/minimize secrets/PII, preserve exact query/time-window/raw source refs, use read-only/least-privilege discovery and never authorize tools from instructions embedded in log text.
+## Documentation separation
 
-This explicitly addresses indirect prompt injection in user/provider-controlled telemetry.
+- `docs/agent/` — coding-agent adoption/bootstrap material;
+- `docs/operator/` — human installation, prompting/task-writing and governance guidance;
+- `docs/architecture/` — why/how explanations;
+- `docs/references/` and `research/` — external provenance and dated research.
 
-## Security first
+Operator/reference docs are not standing coding-agent instructions.
 
-`production/SECURITY_FIRST.md` uses OWASP ASVS/SAMM, NIST SSDF, CISA Secure by Design and SLSA as scoped/versioned references, not badges.
+## Start points
 
-Security spans design through runtime: trust/data/threat boundaries, secure defaults, server-side authorization, secrets/identity, dependencies/SBOM/provenance, vulnerability ownership, least privilege, secure telemetry and incident response.
-
-## Resilience and chaos
-
-`production/RESILIENCE_CHAOS.md` requires steady-state evidence, hypothesis, bounded fault, blast radius, abort conditions and recovery. BASIC projects do not need production chaos. STANDARD can use non-production fault injection; controlled production chaos belongs only to mature/high-assurance workflows with explicit authorization and proven recovery.
-
-## Evolvable architecture
-
-`production/CODE_ARCHITECTURE.md` applies adapters/anti-corruption layers and dependency inversion only where they protect real provider/legacy/data/shared-contract change boundaries. SMALL projects stay simple; MEDIUM/LARGE projects may add module/API/dependency-graph enforcement as complexity justifies it.
-
-## Context economy
-
-Normal work loads only the current task/classification, current project production profile/open-gap pointers when relevant, selected verification/production profiles and 0–3 triggered Skills. Historical gaps/incidents/runbooks/tasks stay cold.
-
-## Start here
-
-1. `README.md`
-2. `ARCHITECTURE.md`
-3. matching `prompts/bootstrap/*`
-4. target-project `schemas/PRODUCTION_PROFILE.md` artifact if production-bound
-5. current task/classification + only triggered verification/production profiles and Skills
-
-Current production-engineering evidence is recorded in `research/2026-09-09-production-engineering.md`.
+For coding agents: [`docs/agent/START_HERE.md`](docs/agent/START_HERE.md)  
+For operators: [`docs/operator/OPERATOR_GUIDE.en.md`](docs/operator/OPERATOR_GUIDE.en.md)  
+Why/how architecture: [`docs/architecture/WHY_AND_HOW.md`](docs/architecture/WHY_AND_HOW.md)  
+Consolidated sources: [`docs/references/PRIMARY_SOURCES.md`](docs/references/PRIMARY_SOURCES.md)
