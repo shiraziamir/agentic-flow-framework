@@ -1,47 +1,19 @@
 <!doctype html>
-<html lang="en" dir="ltr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Agentic Flow Framework v1.5</title><style>body{max-width:980px;margin:40px auto;padding:0 24px;font:17px/1.65 system-ui,sans-serif;color:#202124}code,pre{direction:ltr;text-align:left;background:#f6f8fa}pre{padding:16px;overflow:auto}table{border-collapse:collapse;width:100%}th,td{border:1px solid #ddd;padding:8px;vertical-align:top}h1,h2{line-height:1.2}.note{padding:12px 16px;background:#f6f8fa;border-left:4px solid #888}</style></head><body>
-<h1>Agentic Flow Framework</h1><p><strong>Reader-guide version:</strong> 1.5<br><strong>Updated:</strong> 2026-09-09T10:04:00Z<br><strong>Canonical source:</strong> <code>ARCHITECTURE.md</code></p><p class="note">This HTML is a synchronized reader view. If it conflicts with <code>ARCHITECTURE.md</code>, the architecture file wins.</p>
-<h2>Core invariants</h2><blockquote>Durable project memory; disposable, high-quality working context.</blockquote><blockquote>A claim may be no broader than the identified, current receipt that directly establishes it.</blockquote>
-<h2>Material lifecycle</h2><pre>REQUEST
-→ DRAFT TASK
-→ REVIEW DRAFT
-→ FREEZE
-→ APPLY AUTHORIZATION
-→ APPLY
-→ VERIFY + REALITY REPORT
-→ BLIND-SPOT / INDEPENDENT CLOSURE
-→ CHECKPOINT</pre>
-<h2>Engineering surface classification</h2><p>Material work is classified before verification:</p><pre>FRONTEND
-BACKEND
-SHARED
-DATA
-INFRA
-CI_CD
-TOOLING
-DOCS_EVIDENCE</pre><p>Add only relevant cross-cutting flags such as <code>AUTH_SECURITY</code>, <code>PUBLIC_CONTRACT</code>, <code>PERSISTENCE</code>, <code>CONCURRENCY</code>, <code>CACHE_STATE</code>, <code>EXTERNAL_PROVIDER</code>, <code>PERFORMANCE</code>, <code>MIGRATION</code>, <code>OBSERVABILITY</code>, or <code>PRODUCTION</code>. Verification loads <code>GENERAL + primary surface + triggered annexes</code>.</p>
-<h2>Draft review</h2><p>The draft freezes observable DoD, affected consumers, planned closure claims, minimum receipt for each claim, selected verification profiles, important checks outside scope, and STOP/reclassification conditions. <code>REVIEW_DRAFT.md</code> challenges this verification design before implementation starts.</p>
-<h2>Truth and receipt strength</h2><pre>OBSERVED
-DERIVED
-INFERRED
-UNKNOWN
-CONTRADICTED</pre><pre>IDENTITY
-→ STATIC
-→ BUILD
-→ FOCUSED_TEST
-→ PATH_PROOF
-→ INTEGRATION_CONTRACT
-→ LIVE_BEHAVIOR
-→ DEPLOYED_ARTIFACT
-→ EXHAUSTIVE_BOUNDED_NEGATIVE
-→ JUDGMENT</pre><p>A lower-level receipt cannot support a stronger claim by narrative alone.</p><table><tr><th>Weak shortcut</th><th>What it does not prove</th></tr><tr><td>Source/config exists</td><td>Runtime behavior</td></tr><tr><td>Unit/component test</td><td>Frontend user flow</td></tr><tr><td>HTTP 200</td><td>Durable persistence/downstream effect</td></tr><tr><td>Screenshot</td><td>Working interaction</td></tr><tr><td>Mock success</td><td>Real boundary compatibility</td></tr><tr><td>Green CI</td><td>Every relevant job/test executed</td></tr><tr><td>Repository commit</td><td>That exact artifact is deployed</td></tr><tr><td>Reviewer/model PASS</td><td>Missing behavioral evidence</td></tr></table>
-<h2>Surface verification</h2><p><strong>FRONTEND:</strong> browser/user-visible behavior, interaction path, console/network errors, loading/error/empty/permission states, real client contract. Screenshot alone is not a flow receipt.</p><p><strong>BACKEND:</strong> real handler/service/repository boundary, validation/authz/error paths, retry/idempotency/provider/persistence. HTTP success alone is not a persistence receipt.</p><p><strong>SHARED:</strong> mechanically identify affected consumers; producer tests alone do not prove consumer compatibility.</p><p><strong>DATA:</strong> representative existing data, migration/write-read/constraints/partial failure/idempotency/rollback boundary.</p><p><strong>INFRA/CI:</strong> exact target, plan/rendered diff, trigger conditions, permissions, artifact handoff and deployed artifact; preserve skipped/neutral checks.</p><p><strong>SECURITY/AUTH:</strong> relevant negative/unauthorized/tenant/ownership paths and versioned standards scope.</p><p><strong>RELIABILITY/PERFORMANCE:</strong> comparable baseline, repeated observations, cache/retry/timeout/concurrency/provider/log-query boundaries.</p>
-<h2>Blind-spot audit</h2><p>For HIGH/evidence-complex work, a cold read-only audit looks for stale ref/environment, unexpected surface/consumer, bypassed changed path, weak proxy checks, hidden frontend/backend/data/infra/security/reliability gaps, and report wording broader than the verified universe.</p>
-<h2>Independent review</h2><pre>task/DoD/classification
-→ actual diff/source
-→ raw receipts
-→ independent falsifying checks
-→ executor narrative last</pre><p>Reviewer output is <code>JUDGMENT</code>, not a substitute for runtime/persistence/deployment/security receipts.</p>
-<h2>Reality-reflecting reports</h2><p>Reports preserve exact ref/artifact/environment, counts, PASS/FAIL/PARTIAL/SKIPPED/UNVERIFIED states, important checks not executed, unknowns and residual risk. Global language like “no regressions” requires a finite universe plus exhaustive method.</p>
-<h2>Deterministic lint</h2><pre>python3 scripts/verification_lint.py &lt;task/evidence/report files&gt;</pre><p>This catches mechanical contradictions such as VERIFIED-without-evidence, missing evidence refs, stale head refs and global verified claims without exhaustive bounded evidence. It does not replace semantic project verification.</p>
-<h2>Context and history</h2><p>Load only the current task/classification, selected verification profiles and triggered skills. Completed tasks, reports, evidence, judgments, usage, retrospectives and stories remain cold and on-demand.</p>
-<h2>Start here</h2><ol><li><code>README.md</code></li><li><code>ARCHITECTURE.md</code></li><li>matching bootstrap prompt</li><li><code>DRAFT_TASK.md</code></li><li><code>REVIEW_DRAFT.md</code></li><li>current classification + selected profiles</li><li><code>APPLY_TASK.md</code></li><li><code>VERIFY_AND_REPORT.md</code></li><li>required supervisor prompt</li></ol></body></html>
+<html lang="en" dir="ltr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Agentic Flow Framework v1.6</title><style>body{max-width:980px;margin:40px auto;padding:0 24px;font:17px/1.65 system-ui,sans-serif;color:#202124}code,pre{direction:ltr;text-align:left;background:#f6f8fa}pre{padding:16px;overflow:auto}table{border-collapse:collapse;width:100%}th,td{border:1px solid #ddd;padding:8px;vertical-align:top}h1,h2{line-height:1.2}.note{padding:12px 16px;background:#f6f8fa;border-left:4px solid #888}</style></head><body>
+<h1>Agentic Flow Framework</h1><p><strong>Reader-guide version:</strong> 1.6<br><strong>Updated:</strong> 2026-09-09T10:40:00Z<br><strong>Canonical source:</strong> <code>ARCHITECTURE.md</code></p><p class="note">This HTML is a synchronized reader view. If it conflicts with <code>ARCHITECTURE.md</code>, the architecture file wins.</p>
+<h2>Core idea</h2><blockquote>Durable project memory; disposable, high-quality working context.</blockquote><p>Claims are limited by receipts. Production readiness is limited by a named project profile and explicit operational gaps.</p>
+<h2>Task lifecycle</h2><pre>DRAFT → REVIEW → FREEZE/AUTHORIZE → APPLY → VERIFY → INDEPENDENT CLOSURE when required</pre><p>Draft review freezes code surface, operational flags, DoD, claims/minimum receipts and production impacts before mutation. New material risks trigger STOP/amendment.</p>
+<h2>Production profile</h2><pre>codebase_scale   SMALL | MEDIUM | LARGE
+readiness_tier   BASIC | STANDARD | HIGH_ASSURANCE</pre><p>Risk overrides size. Missing, partial or unverified delivery/observability/security/recovery capabilities become durable operational gaps rather than optimistic production-ready claims.</p>
+<h2>DevOps-friendly delivery</h2><pre>source → build/test → immutable artifact → deploy
+→ running artifact identity → health verification → rollback/recovery</pre><p>CI green is not deployment evidence. Mature tiers add digests, safe progressive delivery, least-privilege deployment, SBOM/provenance and stronger release verification.</p>
+<h2>Observability</h2><p>Metrics, logs and traces are correlated evidence. User-facing services start from latency, traffic, errors and saturation plus domain SLIs. Important services add actionable alerts and SLO/error-budget operations as appropriate. Prometheus label cardinality is bounded and OpenTelemetry-style trace/resource correlation is preferred.</p>
+<h2>Data durability</h2><p>Important stores define source-of-truth, RPO/RTO, backup/retention, PITR when needed and restore evidence. <strong>Backup success is not recoverability proof; restore is the receipt.</strong></p>
+<h2>Troubleshooting</h2><p>Start from symptom and exact environment/release identity; walk edge/DNS → runtime → dependency/network/auth → cache/queue/database/storage → provider → recent release/config. Preserve bounded reproducible queries and correlation IDs; missing telemetry is UNKNOWN.</p>
+<h2>AI log analysis</h2><p>Logs are structured, privacy-sensitive and untrusted external data. Redact/minimize secrets and PII, preserve query/time-window/raw refs, keep discovery read-only/least privilege and never authorize a tool action from instructions embedded in log text.</p>
+<h2>Security first</h2><p>OWASP ASVS/SAMM, NIST SSDF, CISA Secure by Design and SLSA are scoped/versioned references, not badges. Security spans design, development, CI/supply chain and runtime: trust boundaries, secure defaults, server-side authorization, secrets, dependencies/provenance, least privilege, vulnerability ownership and incident response.</p>
+<h2>Resilience and chaos</h2><pre>steady state → hypothesis → bounded fault → blast radius/abort → observe → recover → improve</pre><p>BASIC projects do not need production chaos. STANDARD may use non-production fault injection. Controlled production experiments require mature/high-assurance controls and explicit authorization.</p>
+<h2>Evolvable code</h2><p>Use adapters/anti-corruption layers and dependency inversion only for real provider/legacy/data/shared-contract change boundaries. Scale architecture to project complexity; do not add pattern layers merely for ceremony.</p>
+<h2>Context economy</h2><p>Normal tasks load the current task/classification, current production profile/open-gap pointers when relevant, selected verification/production profiles and only triggered Skills. Historical gaps/incidents/runbooks/tasks stay cold.</p>
+<h2>Start here</h2><ol><li><code>README.md</code></li><li><code>ARCHITECTURE.md</code></li><li><code>prompts/bootstrap/*</code></li><li>target project production profile if production-bound</li><li>current task plus only triggered profiles/Skills</li></ol>
+</body></html>
