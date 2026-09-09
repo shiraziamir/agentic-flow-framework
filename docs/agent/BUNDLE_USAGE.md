@@ -1,13 +1,14 @@
 # Agent Bundle Usage
 
 **Agent-facing document**  
-**Version:** 1.0  
+**Version:** 1.7  
 **Updated:** 2026-09-09T11:30:00Z
 
-A framework checkout can build a portable ZIP with:
+Build the portable ZIP from a framework checkout:
 
 ```bash
 python3 scripts/build_agent_bundle.py
+python3 scripts/test_build_agent_bundle.py
 ```
 
 Default output:
@@ -16,18 +17,26 @@ Default output:
 dist/agentic-flow-agent-bundle.zip
 ```
 
-Extract it into the target repository, preferably as:
+Extract the archive into the target repository, preferably as:
 
 ```text
 .agentic-flow/
 ```
 
-Then read:
+The ZIP exposes a root entrypoint:
 
 ```text
-.agentic-flow/docs/agent/START_HERE.md
+.agentic-flow/START_HERE.md
 ```
 
-The bundle deliberately excludes `docs/operator/`, `research/`, reader HTML, and cold project history. Those are useful for humans/audits but should not become normal coding-agent context.
+and a one-line operator handoff:
 
-The ZIP contains `BUNDLE_MANIFEST.json` with SHA-256 hashes for bundled files. Verify hashes when the bundle crosses trust boundaries.
+```text
+.agentic-flow/INSTALL_PROMPT.txt
+```
+
+The canonical copy also remains under `docs/agent/START_HERE.md`. If coding is already in progress, follow `docs/agent/MIDSTREAM_ADOPTION.md` before further product mutation.
+
+The bundle deliberately excludes `docs/operator/`, `docs/references/`, `docs/architecture/`, `research/`, reader HTML and cold project history. Those remain available in the full source repository but should not become normal coding-agent context.
+
+`BUNDLE_MANIFEST.json` records the framework version plus SHA-256 hash and byte count for each bundled source file. Verify hashes when the bundle crosses trust boundaries.
