@@ -1,17 +1,47 @@
 <!doctype html>
-<html lang="en" dir="ltr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Agentic Flow Framework v1.4</title><style>body{max-width:920px;margin:40px auto;padding:0 24px;font:17px/1.65 system-ui,sans-serif;color:#202124}code,pre{direction:ltr;text-align:left;background:#f6f8fa}pre{padding:16px;overflow:auto}table{border-collapse:collapse;width:100%}th,td{border:1px solid #ddd;padding:8px;vertical-align:top}h1,h2{line-height:1.2}.note{padding:12px 16px;background:#f6f8fa;border-left:4px solid #888}</style></head><body>
-<h1>Agentic Flow Framework</h1><p><strong>Reader-guide version:</strong> 1.4<br><strong>Updated:</strong> 2026-09-09T08:22:00Z<br><strong>Canonical source:</strong> <code>ARCHITECTURE.md</code></p><p class="note">This HTML is a synchronized reader view. If it conflicts with <code>ARCHITECTURE.md</code>, the architecture file wins.</p>
-<h2>Core idea</h2><blockquote>Durable project memory; disposable, high-quality working context.</blockquote><p>Keep tasks, evidence, decisions, architecture history, usage and execution history durable while loading only the current working set into ordinary agent sessions.</p>
-<h2>Risk-adaptive governance</h2><table><tr><th>Level</th><th>Use for</th><th>Flow</th></tr><tr><td>HIGH</td><td>Architecture, persistence, production/security/trust, durable data, major public contracts</td><td>Draft → supervisor → freeze → separate apply → execute → evidence → independent closure</td></tr><tr><td>MEDIUM</td><td>Bounded same-task correction</td><td>Owner-approved amendment → bounded apply → tests/evidence → independent closure</td></tr><tr><td>EVIDENCE_ONLY</td><td>Docs/evidence/test-contract correction with no new runtime authority</td><td>Durable approved amendment + hash/ref → update → closure check if material</td></tr></table><p>Source-of-truth, durable identity, STOP-before-scope-creep, no self-certification, no Task N+1 absorption, and “do not invent missing evidence” remain invariant.</p>
-<h2>Token and model efficiency</h2><pre>T0 deterministic/mechanical
-T1 cheap read-only discovery/partition
-T2 standard bounded execution
-T3 judgment/high-risk review</pre><p>Cheap workers may gather evidence only when the same acceptance quality can be preserved. <code>token-efficiency</code> warns on unjustified whole-repo scans, repeated rereads, full-history loading, huge raw logs, expensive models doing mechanical work, overlapping subagents, repeated failed loops, and budget overruns.</p><p>Observable usage may be recorded with <code>schemas/USAGE_EVENT.md</code> and <code>scripts/usage_ledger.py</code>. Unknown provider telemetry stays unknown rather than being guessed. Prompt caching may reduce cost/latency but is not assumed to reduce context occupancy.</p>
-<h2>Hot state vs cold history</h2><p><strong>Hot:</strong> current task/amendment, checkpoint/index, current budget/unresolved decisions, relevant modules/docs/skills. <strong>Cold:</strong> completed tasks, evidence, judgments, decisions, usage ledger, execution ledger, retrospectives, timeline and stories. Cold history is opened only for provenance, audit, regression, retrospective, storytelling or explicit user request.</p>
-<h2>Supervisor model</h2><p>A supervisor may be a human, separate model or cold session. Direct-access review inspects actual source/diff/tests. Evidence-only review uses a bounded evidence packet and marks inaccessible claims <code>UNVERIFIED_FROM_PACKET</code>. Expensive review results are stored as compact decisions, not transcripts or private reasoning.</p>
-<h2>Formal execution retrospective</h2><p>Long campaigns can maintain <code>.agentic/history/EXECUTION_LEDGER.jsonl</code>, a compact append-only boundary ledger defined by <code>schemas/EXECUTION_RETROSPECTIVE_LEDGER.md</code>. It records review, amendment, freeze, apply, STOP, evidence-ready and closure boundaries as short counters and references, never raw transcripts or duplicated evidence.</p><p>The cold <code>project-retrospective</code> skill can reconstruct timeline, task/amendment/review/STOP metrics, pre-closure defects, false-complete states prevented, implementation versus governance commits, test evolution, mutation/provider/token accounting where observable, deferred findings, governance overhead and process evolution.</p><pre>PROVEN FROM GIT / DURABLE ARTIFACTS
-RECONSTRUCTED FROM OWNER JOURNAL / RECEIPTS
-UNKNOWN / NOT LOGGED RELIABLY</pre><p>Incomplete early history stays incomplete; exact historical numbers are never fabricated.</p>
-<h2>Storytelling and self-branding</h2><p><code>project-storytelling</code> is separate from audit reconstruction. It turns proven/reconstructed history into architecture narratives, case studies, lessons learned and portfolio/self-branding content. When a retrospective exists, storytelling consumes that bounded report first instead of rereading the entire archive.</p>
-<h2>Documentation freshness</h2><p>Canonical/index/retrospective/story docs are versioned and timestamped. Material verified changes run <code>documentation-freshness</code>: update the authoritative source first, then synchronize reader views and generated adapters.</p>
-<h2>Start here</h2><ol><li><code>README.md</code></li><li><code>ARCHITECTURE.md</code></li><li>matching prompt under <code>prompts/bootstrap/</code></li><li>current task/amendment and only triggered skills</li></ol></body></html>
+<html lang="en" dir="ltr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Agentic Flow Framework v1.5</title><style>body{max-width:980px;margin:40px auto;padding:0 24px;font:17px/1.65 system-ui,sans-serif;color:#202124}code,pre{direction:ltr;text-align:left;background:#f6f8fa}pre{padding:16px;overflow:auto}table{border-collapse:collapse;width:100%}th,td{border:1px solid #ddd;padding:8px;vertical-align:top}h1,h2{line-height:1.2}.note{padding:12px 16px;background:#f6f8fa;border-left:4px solid #888}</style></head><body>
+<h1>Agentic Flow Framework</h1><p><strong>Reader-guide version:</strong> 1.5<br><strong>Updated:</strong> 2026-09-09T10:04:00Z<br><strong>Canonical source:</strong> <code>ARCHITECTURE.md</code></p><p class="note">This HTML is a synchronized reader view. If it conflicts with <code>ARCHITECTURE.md</code>, the architecture file wins.</p>
+<h2>Core invariants</h2><blockquote>Durable project memory; disposable, high-quality working context.</blockquote><blockquote>A claim may be no broader than the identified, current receipt that directly establishes it.</blockquote>
+<h2>Material lifecycle</h2><pre>REQUEST
+→ DRAFT TASK
+→ REVIEW DRAFT
+→ FREEZE
+→ APPLY AUTHORIZATION
+→ APPLY
+→ VERIFY + REALITY REPORT
+→ BLIND-SPOT / INDEPENDENT CLOSURE
+→ CHECKPOINT</pre>
+<h2>Engineering surface classification</h2><p>Material work is classified before verification:</p><pre>FRONTEND
+BACKEND
+SHARED
+DATA
+INFRA
+CI_CD
+TOOLING
+DOCS_EVIDENCE</pre><p>Add only relevant cross-cutting flags such as <code>AUTH_SECURITY</code>, <code>PUBLIC_CONTRACT</code>, <code>PERSISTENCE</code>, <code>CONCURRENCY</code>, <code>CACHE_STATE</code>, <code>EXTERNAL_PROVIDER</code>, <code>PERFORMANCE</code>, <code>MIGRATION</code>, <code>OBSERVABILITY</code>, or <code>PRODUCTION</code>. Verification loads <code>GENERAL + primary surface + triggered annexes</code>.</p>
+<h2>Draft review</h2><p>The draft freezes observable DoD, affected consumers, planned closure claims, minimum receipt for each claim, selected verification profiles, important checks outside scope, and STOP/reclassification conditions. <code>REVIEW_DRAFT.md</code> challenges this verification design before implementation starts.</p>
+<h2>Truth and receipt strength</h2><pre>OBSERVED
+DERIVED
+INFERRED
+UNKNOWN
+CONTRADICTED</pre><pre>IDENTITY
+→ STATIC
+→ BUILD
+→ FOCUSED_TEST
+→ PATH_PROOF
+→ INTEGRATION_CONTRACT
+→ LIVE_BEHAVIOR
+→ DEPLOYED_ARTIFACT
+→ EXHAUSTIVE_BOUNDED_NEGATIVE
+→ JUDGMENT</pre><p>A lower-level receipt cannot support a stronger claim by narrative alone.</p><table><tr><th>Weak shortcut</th><th>What it does not prove</th></tr><tr><td>Source/config exists</td><td>Runtime behavior</td></tr><tr><td>Unit/component test</td><td>Frontend user flow</td></tr><tr><td>HTTP 200</td><td>Durable persistence/downstream effect</td></tr><tr><td>Screenshot</td><td>Working interaction</td></tr><tr><td>Mock success</td><td>Real boundary compatibility</td></tr><tr><td>Green CI</td><td>Every relevant job/test executed</td></tr><tr><td>Repository commit</td><td>That exact artifact is deployed</td></tr><tr><td>Reviewer/model PASS</td><td>Missing behavioral evidence</td></tr></table>
+<h2>Surface verification</h2><p><strong>FRONTEND:</strong> browser/user-visible behavior, interaction path, console/network errors, loading/error/empty/permission states, real client contract. Screenshot alone is not a flow receipt.</p><p><strong>BACKEND:</strong> real handler/service/repository boundary, validation/authz/error paths, retry/idempotency/provider/persistence. HTTP success alone is not a persistence receipt.</p><p><strong>SHARED:</strong> mechanically identify affected consumers; producer tests alone do not prove consumer compatibility.</p><p><strong>DATA:</strong> representative existing data, migration/write-read/constraints/partial failure/idempotency/rollback boundary.</p><p><strong>INFRA/CI:</strong> exact target, plan/rendered diff, trigger conditions, permissions, artifact handoff and deployed artifact; preserve skipped/neutral checks.</p><p><strong>SECURITY/AUTH:</strong> relevant negative/unauthorized/tenant/ownership paths and versioned standards scope.</p><p><strong>RELIABILITY/PERFORMANCE:</strong> comparable baseline, repeated observations, cache/retry/timeout/concurrency/provider/log-query boundaries.</p>
+<h2>Blind-spot audit</h2><p>For HIGH/evidence-complex work, a cold read-only audit looks for stale ref/environment, unexpected surface/consumer, bypassed changed path, weak proxy checks, hidden frontend/backend/data/infra/security/reliability gaps, and report wording broader than the verified universe.</p>
+<h2>Independent review</h2><pre>task/DoD/classification
+→ actual diff/source
+→ raw receipts
+→ independent falsifying checks
+→ executor narrative last</pre><p>Reviewer output is <code>JUDGMENT</code>, not a substitute for runtime/persistence/deployment/security receipts.</p>
+<h2>Reality-reflecting reports</h2><p>Reports preserve exact ref/artifact/environment, counts, PASS/FAIL/PARTIAL/SKIPPED/UNVERIFIED states, important checks not executed, unknowns and residual risk. Global language like “no regressions” requires a finite universe plus exhaustive method.</p>
+<h2>Deterministic lint</h2><pre>python3 scripts/verification_lint.py &lt;task/evidence/report files&gt;</pre><p>This catches mechanical contradictions such as VERIFIED-without-evidence, missing evidence refs, stale head refs and global verified claims without exhaustive bounded evidence. It does not replace semantic project verification.</p>
+<h2>Context and history</h2><p>Load only the current task/classification, selected verification profiles and triggered skills. Completed tasks, reports, evidence, judgments, usage, retrospectives and stories remain cold and on-demand.</p>
+<h2>Start here</h2><ol><li><code>README.md</code></li><li><code>ARCHITECTURE.md</code></li><li>matching bootstrap prompt</li><li><code>DRAFT_TASK.md</code></li><li><code>REVIEW_DRAFT.md</code></li><li>current classification + selected profiles</li><li><code>APPLY_TASK.md</code></li><li><code>VERIFY_AND_REPORT.md</code></li><li>required supervisor prompt</li></ol></body></html>
