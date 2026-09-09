@@ -1,0 +1,46 @@
+version: 1
+module: checkout
+path: apps/web/src/features/checkout
+
+owns:
+  - checkout page
+  - payment orchestration UI
+
+public_contracts:
+  - packages/contracts/payment.ts
+  - packages/ui/checkout/index.ts
+
+direct_dependencies:
+  - cart
+  - identity
+
+context:
+  edit_modules: [checkout]
+  reference_modules: [cart, identity]
+  exclude:
+    - node_modules/**
+    - dist/**
+    - coverage/**
+    - '**/*.snap'
+    - full_lockfile_unless_dependency_task
+
+local_checks:
+  - npm run test:checkout
+  - npm run typecheck:checkout
+
+escalate_if:
+  - public_contract_changes
+  - shared_design_system_primitive_changes
+  - more_than_2_dependent_modules_affected
+  - tests_fail_outside_working_set
+
+handoff_contract:
+  return:
+    - conclusion
+    - files_read
+    - affected_modules
+    - evidence_refs
+    - failing_checks
+    - unresolved
+    - recommended_next_step
+  include_raw_transcript: false
