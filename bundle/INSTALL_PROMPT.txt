@@ -1,1 +1,1 @@
-Read .agentic-flow/docs/agent/START_HERE.md and adopt the framework for this repository. Do not start or change product work until adoption validation is complete. If work is already in progress, use MIDSTREAM_ADOPTION and preserve the current coding state.
+Read .agentic-flow/START_HERE.md and adopt Agentic Flow for this repository. Do not start or change product work until adoption validation is complete. If coding is already in progress, follow MIDSTREAM_ADOPTION before further mutation and preserve the current coding state.
