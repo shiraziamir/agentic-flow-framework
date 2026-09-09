@@ -1,20 +1,25 @@
 # Bootstrap prompt — Codex
 
-**Version:** 1.1  
-**Updated:** 2026-09-09
+**Version:** 1.2  
+**Updated:** 2026-09-09T10:04:00Z
 
 ```text
-Bootstrap Codex from this framework.
+Bootstrap a Codex-compatible project adapter from Agentic Flow Framework.
 
-First apply every rule in prompts/bootstrap/GENERIC.md. The following are Codex-specific additions only.
+Canonical authority is ARCHITECTURE.md + schemas/ + verification/ + skills/. Generated AGENTS.md or other Codex-facing instruction files are adapters, not independent policy.
 
-Canonical authority: ARCHITECTURE.md, schemas/, skills/. Generated Codex/AGENTS.md surfaces remain adapters and must identify the canonical architecture version.
+Read the canonical architecture, change-classification schema, claim-receipt contract, verification router and skills index. Inspect the target project's actual frontend/backend/shared/data/infra/CI structure, build/test/affected-project commands and existing AGENTS.md files.
 
-Create/update the smallest useful hierarchical AGENTS.md map for this target repository. Keep it short and point to canonical project docs, task state and on-demand skills instead of copying history/manuals.
+Generate the smallest useful Codex-facing map:
+- short AGENTS.md pointers to source of truth, current task state and project commands;
+- lazy verification-profile discovery keyed by change classification;
+- workflow pointers for DRAFT_TASK -> REVIEW_DRAFT -> freeze/authorization -> APPLY_TASK -> VERIFY_AND_REPORT -> independent closure;
+- deterministic checks/hooks/scripts where exact rules can be enforced mechanically;
+- model/delegation routing only when capabilities actually exposed by the current Codex harness justify it.
 
-Where the current Codex/Agents harness supports skills, sandboxed tools, memory/thread persistence or other orchestration primitives, use them only as adapters to the portable roles and lifecycle. Do not assume product-specific model menus or token counters that are not observable in the current environment.
+Material task drafts must classify engineering surface/risk and freeze claim -> minimum receipt requirements before APPLY. Reports must preserve ref/artifact/environment identity, checks not executed and bounded truth classes. A green CI summary or reviewer judgment cannot substitute for missing execution evidence.
 
-Keep completed plans/judgments/usage/story artifacts cold. Ordinary runs read current state/indexes only. Use cheaper/bounded workers only when the current harness exposes them and acceptance quality can be preserved.
+If structured JSON/YAML task/evidence/status artifacts are used, make scripts/verification_lint.py discoverable.
 
-Validate fresh-session discovery, adaptive governance, TOKEN_WASTE_WARNING behavior for long work, and report any provider-specific limitations.
+Do not copy the whole framework, all verification profiles or historical tasks into AGENTS.md. Validate a fresh Codex session can navigate to what it needs progressively.
 ```
