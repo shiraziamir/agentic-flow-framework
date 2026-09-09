@@ -1,6 +1,10 @@
 # Agentic Flow Framework
 
-A repository-first, tool-agnostic operating system for reliable coding agents.
+**Framework version:** 1.3  
+**Updated:** 2026-09-09  
+**Canonical policy:** [`ARCHITECTURE.md`](ARCHITECTURE.md)
+
+A repository-first, tool-agnostic operating system for reliable, cost-aware coding agents.
 
 > **Durable project memory; disposable, high-quality working context.**
 
@@ -8,46 +12,34 @@ This GitHub repository is the authoritative home of the framework. The old Googl
 
 ## What this solves
 
-Coding agents usually fail at scale for reasons beyond raw model intelligence: context pollution, giant instruction files, uncontrolled scope expansion, stale chat memory, expensive models doing mechanical work, weak evidence, and the same agent acting as author, executor and final judge.
+Coding agents often lose efficiency because of context pollution, giant instruction files, whole-repo scans, repeated rereads, expensive models doing mechanical discovery, stale chat memory, uncontrolled scope expansion, duplicated ceremony, weak evidence, and the same agent acting as author/executor/final judge.
 
-This framework adds a small control plane:
+Version 1.3 optimizes four things together:
 
-```text
-request
-→ draft task
-→ supervisor review
-→ freeze
-→ apply authorization
-→ bounded execution
-→ evidence packet
-→ independent closure review
-→ durable checkpoint
-→ fresh context
-```
+1. **quality/risk control** — evidence, STOP boundaries, independent judgment;
+2. **task-management efficiency** — governance proportional to risk;
+3. **token/cost efficiency** — small working sets, cheap read-only workers, usage/waste visibility;
+4. **durable but cold project memory** — history/decisions/usage remain reconstructible without being loaded on every task.
 
 ## Source of truth
 
-Read this first:
+Read/order of authority:
 
 1. [`ARCHITECTURE.md`](ARCHITECTURE.md) — **canonical policy, authority and lifecycle**.
-2. [`schemas/`](schemas/) — task, evidence and supervisor-decision contracts.
+2. [`schemas/`](schemas/) — task, amendment, evidence, supervisor and usage contracts.
 3. [`skills/`](skills/) — reusable on-demand procedures.
-4. The frozen task contract for the current task.
+4. Current approved/frozen task or amendment.
 5. Durable evidence and supervisor decisions.
 6. Generated vendor adapters.
 7. Conversation memory.
 
-**Vendor files are not authority.** `CLAUDE.md`, OpenCode config, Gemini context files, subagent definitions, or generated `AGENTS.md` variants are projections of the canonical architecture.
+**Vendor files are not policy authority.** `CLAUDE.md`, Gemini/OpenCode configuration, subagents and generated instruction files are projections of canonical policy and should identify the architecture version they were generated from.
 
 ## Quick start
 
-### 1. Clone or reference the framework
+### 1. Bootstrap the target project
 
-Make this repository available beside or inside the project you want an agent to work on.
-
-### 2. Bootstrap your agent
-
-Give the coding agent the matching bootstrap prompt:
+Make this repository available beside/inside the target project, then give the coding agent the matching bootstrap prompt:
 
 - [Generic](prompts/bootstrap/GENERIC.md)
 - [Claude Code](prompts/bootstrap/CLAUDE_CODE.md)
@@ -55,144 +47,167 @@ Give the coding agent the matching bootstrap prompt:
 - [OpenCode](prompts/bootstrap/OPENCODE.md)
 - [Gemini CLI](prompts/bootstrap/GEMINI_CLI.md)
 
-The bootstrap agent reads the **latest** canonical architecture and generates/updates the minimum vendor-specific files in the target repository. It must not copy the whole framework into permanent context or invent conflicting policy.
-
-Example after cloning:
+Example:
 
 ```text
 Read agentic-flow-framework/prompts/bootstrap/CLAUDE_CODE.md and apply it to this project.
 Do not execute product work yet; only bootstrap and validate the agent operating layer.
 ```
 
-### 3. Use the workflow prompts
+The bootstrap agent reads the latest canonical architecture and generates only the minimum vendor adapter. It must not copy the whole framework into permanent context.
 
-You do not have to hand-write lifecycle prompts each time:
+### 2. Classify governance before creating ceremony
 
-- [DRAFT TASK](prompts/workflow/DRAFT_TASK.md)
-- [AMEND TASK](prompts/workflow/AMEND_TASK.md)
-- [APPLY TASK](prompts/workflow/APPLY_TASK.md)
-- [BUILD EVIDENCE PACKET](prompts/workflow/BUILD_EVIDENCE_PACKET.md)
+Use the minimum level that preserves safety:
 
-A material task should move through:
+| Level | Use for | Lifecycle |
+|---|---|---|
+| `HIGH` | architecture, persistence, production/security/trust, durable data, major public contracts | draft → supervisor → freeze → separate apply → evidence → independent closure |
+| `MEDIUM` | bounded same-task correction | owner-approved amendment → bounded apply → tests/evidence → independent closure |
+| `EVIDENCE_ONLY` | docs/evidence/test-contract correction with no new runtime authority | durable approved amendment + hash/ref; no separate freeze/apply unless execution follows |
 
-```text
-DRAFT
-→ SUPERVISOR REVIEW
-→ AMEND if needed
-→ FREEZE
-→ APPLY AUTHORIZATION
-→ EXECUTION
-→ EVIDENCE_READY
-→ SUPERVISOR CLOSURE
-```
+The boundaries that remain mandatory are in [`ARCHITECTURE.md`](ARCHITECTURE.md) and [`schemas/AMENDMENT.md`](schemas/AMENDMENT.md).
 
-A draft is not execution permission. If execution later disproves scope or strategy, the executor must STOP and request amendment rather than silently rewrite the frozen task.
+### 3. Draft/apply a material task
 
-### 4. Choose a supervisor
+Use:
 
-The supervisor may be a person, a different model, or a separate cold session/harness. Independence is a **role/property of the review**, not a model brand.
+- [`prompts/workflow/DRAFT_TASK.md`](prompts/workflow/DRAFT_TASK.md)
+- [`schemas/TASK_CONTRACT.md`](schemas/TASK_CONTRACT.md)
+- [`prompts/workflow/APPLY_TASK.md`](prompts/workflow/APPLY_TASK.md)
 
-#### Supervisor with direct repo/tool access — preferred
+A draft is not execution permission. If execution disproves scope/strategy/prerequisites, STOP and classify an amendment instead of silently rewriting the task.
 
-Use [the direct-access supervisor prompt](prompts/supervisor/DIRECT_ACCESS.md).
+### 4. Review with a separate supervisor
 
-A separate human/model/session reads the actual frozen contract, diff, source, tests and evidence and remains **read-only during the review pass**. It should try to falsify claims, not merely restate the executor's report.
+#### Direct repository/tool access — preferred for high assurance
 
-#### Supervisor without repo access
+Use [`prompts/supervisor/DIRECT_ACCESS.md`](prompts/supervisor/DIRECT_ACCESS.md). The separate human/model/session inspects actual source/diff/tests/evidence and stays read-only during the review pass.
 
-Use [the evidence-only supervisor prompt](prompts/supervisor/EVIDENCE_ONLY.md).
+#### Evidence-only supervisor
 
-The executor supplies a packet conforming to [`schemas/EVIDENCE_PACKET.md`](schemas/EVIDENCE_PACKET.md): commit/ref identity, changed paths, diff/patch artifact, commands/results, DoD matrix, failures, live receipts, unresolved facts and residual risk.
+Use [`prompts/supervisor/EVIDENCE_ONLY.md`](prompts/supervisor/EVIDENCE_ONLY.md). Supply [`schemas/EVIDENCE_PACKET.md`](schemas/EVIDENCE_PACKET.md). Anything not provable from the packet stays `UNVERIFIED_FROM_PACKET`.
 
-Anything the supervisor cannot verify from the packet stays `UNVERIFIED_FROM_PACKET`. Missing access never becomes confident approval.
+If an expensive/stronger model performs review, store the compact durable decision—not its transcript or private reasoning—under the project's judgment store. Future tasks read it only when a decision dependency exists.
 
-Supervisor decisions can be persisted using [`schemas/SUPERVISOR_DECISION.md`](schemas/SUPERVISOR_DECISION.md).
+## Token/context efficiency
 
-### 5. Keep lifecycle state durable
+For long, expensive or multi-agent work load [`token-efficiency`](skills/token-efficiency/SKILL.md).
 
-A target project may use the portable layout in [`schemas/PROJECT_LAYOUT.md`](schemas/PROJECT_LAYOUT.md):
+The hierarchy is:
 
 ```text
-.agentic/
-├── tasks/
-├── authorizations/
-├── evidence/
-├── judgments/
-└── checkpoints/
+mechanical/deterministic tools
+→ bounded affected/dependency graph
+→ cheap read-only discovery/partitions when checkable
+→ compact evidence handoff
+→ standard executor
+→ stronger judgment only on escalation
 ```
 
-If the project already has equivalent durable task/evidence locations, reuse them instead of creating shadow state.
+Never weaken DoD/tests/security just to save tokens.
 
-### 6. Close with evidence
+### Waste warnings
 
-Before material closure load `evidence-integrity`. High-risk work should additionally use an `independent-review` pass. Closure maps every frozen DoD item to a receipt. The executor prepares evidence; the supervisor decides closure.
+The agent must emit `TOKEN_WASTE_WARNING` when it observes material, unjustified patterns such as:
 
-## Skills: why only some fire often
+- whole-repo scan without dependency/scope reason;
+- repeated large-file rereads;
+- full historical task/judgment trail loaded during ordinary execution;
+- huge raw logs read instead of filtered slices;
+- strong/expensive model doing mainly mechanical discovery;
+- overlapping subagents scanning the same surface;
+- more than two failed loops without new discriminating evidence;
+- soft/hard task budget overrun.
 
-The Yara telemetry that inspired this project showed the strongest repeated **observed-association** signals mainly around:
+The warning names the evidence, a cheaper/smaller alternative, and the quality guard. Hard-budget breach or any quality tradeoff requires operator/judgment approval.
 
-- model routing/delegation;
-- diagnose-before-fix;
-- sibling/fix audit;
-- task-contract drafting/apply.
+### Usage ledger
 
-That does **not** imply the rest should be deleted. Skills are classified as:
+When usage counters are observable, record privacy-safe events with [`schemas/USAGE_EVENT.md`](schemas/USAGE_EVENT.md) and the portable CLI:
 
-- **CORE** — expected to recur;
-- **COMMON** — broad but task-family-specific;
-- **RISK_TRIGGERED** — intentionally rare (live stack, mutation proof, concurrency/stress);
-- **EXPERIMENTAL** — requires evidence before promotion.
+```bash
+python3 scripts/usage_ledger.py record \
+  --task-id TASK-123 \
+  --phase EXECUTION \
+  --role EXECUTION_TIER \
+  --provider anthropic \
+  --model '<observable-model>' \
+  --source API_USAGE \
+  --input-tokens 12000 \
+  --output-tokens 1800
 
-A concurrency skill that activates once in 100 tasks may be exactly correct. Frequency is not causal usefulness. See [`skills/00_INDEX.md`](skills/00_INDEX.md).
+python3 scripts/usage_ledger.py report --task-id TASK-123
+python3 scripts/usage_ledger.py report
+```
+
+Only record values the provider/harness exposes. Missing telemetry is **unknown, not zero**. Cost is optional because hosted products/providers expose billing differently.
 
 ## Large frontend / monorepo workflow
 
-Do not solve context limits by feeding a larger model the whole repository.
+Do not solve context limits by feeding a bigger model the entire repository.
 
 ```text
 mechanical dependency/affected graph
-→ small EDIT/REFERENCE/EXCLUDED/CHECK sets
+→ EDIT/REFERENCE/EXCLUDED/CHECK sets
 → cheap read-only discovery child
-→ compact evidence handoff
-→ standard coding tier
-→ strong judgment only on escalation
+→ compact handoff
+→ bounded implementation
+→ local/affected tests
+→ stronger judgment only on escalation
 ```
 
-Use [`context-curation`](skills/context-curation/SKILL.md) and [`model-routing`](skills/model-routing/SKILL.md). Prefer project graphs, TypeScript project references, import graphs, or build-system affected sets over LLM-wide scans.
+Use [`context-curation`](skills/context-curation/SKILL.md), [`model-routing`](skills/model-routing/SKILL.md), and `token-efficiency` when cost/context is material.
 
-## Model tiers
+## Skills and why rare use can be correct
 
-Semantic roles are portable:
+See [`skills/00_INDEX.md`](skills/00_INDEX.md).
 
-```text
-T0 deterministic
-T1 cheap read-only
-T2 standard execution
-T3 judgment
-```
+Yara telemetry showed repeated observed-association mainly around task contracts, model routing, diagnose-before-fix, and sibling/fix auditing. Those are broad procedures. Risk-specific skills such as live verification, mutation proof, or concurrency/stress should be rare if their risks are rare.
 
-Map them to models your current harness actually exposes. Model names are configuration, not authority. Benchmark cheap routing on frozen fixtures before making it a default.
+Do not rank skills by activation count alone. Use eligible-trigger denominator, activation correctness, outcome/evidence quality, rework/regression impact, token/cost effect when observable, and controlled fixtures for causal claims.
+
+## Durable project state without history pollution
+
+Recommended target layout: [`schemas/PROJECT_LAYOUT.md`](schemas/PROJECT_LAYOUT.md).
+
+Normal execution reads **hot state** only: current task/amendment/checkpoint/index and directly relevant docs. Completed tasks, judgments, evidence, usage events and stories are **cold history** and are loaded only on provenance/audit/regression/storytelling triggers.
+
+This makes it possible to preserve expensive supervisor decisions and a full project trail without making each new agent pay to reread that trail.
+
+## Project history, storytelling and self-branding
+
+When the user later asks for the story of the project, architecture evolution, case study, lessons learned or portfolio/self-branding material, load [`project-storytelling`](skills/project-storytelling/SKILL.md).
+
+It starts from compact indexes/timeline and opens raw historical artifacts only for claims that need deeper proof. Generated stories stay under a cold `stories/` location and never become permanent coding-agent context.
+
+## Documentation freshness
+
+Canonical/index/story documents should carry a version and update date/time. Material verified changes use [`documentation-freshness`](skills/documentation-freshness/SKILL.md) before closure. Update the authoritative source first, then regenerate/synchronize projections/adapters.
+
+OpenAI's published Codex harness experience similarly treats repository docs/plans as versioned system-of-record artifacts, uses progressive disclosure, and performs recurring doc-gardening rather than relying on chat history.
 
 ## Repository map
 
 ```text
-ARCHITECTURE.md          canonical source of truth
-schemas/                 task/evidence/judgment/durable-layout contracts
+ARCHITECTURE.md          canonical policy/source of truth
+schemas/                 task/amendment/evidence/supervisor/usage contracts
 skills/                  portable on-demand skills
-prompts/bootstrap/       prompts that generate vendor adapters
-prompts/workflow/        executable lifecycle prompts
+prompts/bootstrap/       generate vendor adapters from latest architecture
+prompts/workflow/        draft/amend/apply/evidence workflows
 prompts/supervisor/      independent review prompts
-templates/               routing/context examples
-research/                dated source research, not policy
+scripts/                 portable local control-plane utilities
+research/                dated primary-source research, not policy
+templates/               optional examples
 adapters/                 adapter-generation guidance
 ```
 
-## Updating the framework
+## Research basis
 
-Research notes may inform changes, but policy changes belong in `ARCHITECTURE.md`, schemas, and skills. Generated adapters should then be regenerated.
+Current dated research notes:
 
-Prefer current primary sources: official vendor documentation, official engineering reports, standards/compiler/build-system documentation. Label inference and uncertainty.
+- [`research/2026-09-09-context-model-routing.md`](research/2026-09-09-context-model-routing.md)
+- [`research/2026-09-09-bootstrap-supervision.md`](research/2026-09-09-bootstrap-supervision.md)
+- [`research/2026-09-09-adaptive-governance-token-efficiency.md`](research/2026-09-09-adaptive-governance-token-efficiency.md)
 
-## Primary-source basis
-
-The design is derived from Yara's real agent-control workflow and checked against current primary material including OpenAI's harness-engineering report, Claude Code documentation for skills/subagents/cost controls, OpenCode's rules/skills documentation, Gemini CLI context-file documentation, and the Agent Skills ecosystem. Dated evidence belongs under `research/`.
+Prefer primary/current sources: official vendor docs, official engineering reports, standards/compiler/build-system documentation. Product-specific model names/defaults/pricing/CLI behavior must be rechecked when they materially affect a decision.
