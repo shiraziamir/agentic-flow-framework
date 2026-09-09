@@ -1,7 +1,7 @@
 # Agentic Flow Framework
 
-**Framework version:** 1.3  
-**Updated:** 2026-09-09  
+**Framework version:** 1.4  
+**Updated:** 2026-09-09T08:22:00Z  
 **Canonical policy:** [`ARCHITECTURE.md`](ARCHITECTURE.md)
 
 A repository-first, tool-agnostic operating system for reliable, cost-aware coding agents.
@@ -14,19 +14,20 @@ This GitHub repository is the authoritative home of the framework. The old Googl
 
 Coding agents often lose efficiency because of context pollution, giant instruction files, whole-repo scans, repeated rereads, expensive models doing mechanical discovery, stale chat memory, uncontrolled scope expansion, duplicated ceremony, weak evidence, and the same agent acting as author/executor/final judge.
 
-Version 1.3 optimizes four things together:
+Version 1.4 optimizes five things together:
 
 1. **quality/risk control** — evidence, STOP boundaries, independent judgment;
 2. **task-management efficiency** — governance proportional to risk;
 3. **token/cost efficiency** — small working sets, cheap read-only workers, usage/waste visibility;
-4. **durable but cold project memory** — history/decisions/usage remain reconstructible without being loaded on every task.
+4. **durable but cold project memory** — history/decisions/usage remain reconstructible without being loaded on every task;
+5. **audit-grade project reconstruction** — compact execution ledger + on-demand retrospective/storytelling instead of permanent long-history context.
 
 ## Source of truth
 
 Read/order of authority:
 
 1. [`ARCHITECTURE.md`](ARCHITECTURE.md) — **canonical policy, authority and lifecycle**.
-2. [`schemas/`](schemas/) — task, amendment, evidence, supervisor and usage contracts.
+2. [`schemas/`](schemas/) — task, amendment, evidence, supervisor, usage and history contracts.
 3. [`skills/`](skills/) — reusable on-demand procedures.
 4. Current approved/frozen task or amendment.
 5. Durable evidence and supervisor decisions.
@@ -143,6 +144,8 @@ python3 scripts/usage_ledger.py report
 
 Only record values the provider/harness exposes. Missing telemetry is **unknown, not zero**. Cost is optional because hosted products/providers expose billing differently.
 
+Current primary sources support this design: Anthropic documents separate usage counters for uncached input, cache creation/read, output and tool usage; its tool-context guidance recommends lazy tool search, programmatic/batched tool calling, prompt caching and context editing for different sources of context bloat. OpenAI's agent-first harness report similarly uses short maps plus versioned active/completed plans instead of permanent giant history in context. citeturn438345search1turn438345search4turn438345search0
+
 ## Large frontend / monorepo workflow
 
 Do not solve context limits by feeding a bigger model the entire repository.
@@ -171,30 +174,79 @@ Do not rank skills by activation count alone. Use eligible-trigger denominator, 
 
 Recommended target layout: [`schemas/PROJECT_LAYOUT.md`](schemas/PROJECT_LAYOUT.md).
 
-Normal execution reads **hot state** only: current task/amendment/checkpoint/index and directly relevant docs. Completed tasks, judgments, evidence, usage events and stories are **cold history** and are loaded only on provenance/audit/regression/storytelling triggers.
+Normal execution reads **hot state** only: current task/amendment/checkpoint/index and directly relevant docs. Completed tasks, judgments, evidence, usage events, the execution ledger, retrospectives and stories are **cold history** and are loaded only on provenance/audit/regression/storytelling triggers.
 
-This makes it possible to preserve expensive supervisor decisions and a full project trail without making each new agent pay to reread that trail.
+This preserves expensive supervisor decisions and a full project trail without making each new agent pay to reread that trail.
+
+## Formal execution retrospective
+
+For long campaigns/rescues/migrations, use a compact append-only boundary ledger rather than waiting until the end to excavate everything from scratch:
+
+- schema: [`schemas/EXECUTION_RETROSPECTIVE_LEDGER.md`](schemas/EXECUTION_RETROSPECTIVE_LEDGER.md)
+- cold skill: [`skills/project-retrospective/SKILL.md`](skills/project-retrospective/SKILL.md)
+- prompt: [`prompts/workflow/BUILD_PROJECT_RETROSPECTIVE.md`](prompts/workflow/BUILD_PROJECT_RETROSPECTIVE.md)
+
+Recommended project file:
+
+```text
+.agentic/history/EXECUTION_LEDGER.jsonl
+```
+
+Append only meaningful boundaries such as review, amendment, freeze, apply, STOP, evidence-ready and closure. Each row contains short counters/pointers—not narrative, raw logs, prompts or transcripts.
+
+The final retrospective can then reconstruct, where evidence permits:
+
+```text
+tasks closed
+amendment loops
+independent reviews
+pre-closure defects caught
+STOP conditions triggered
+false-complete states prevented
+implementation commits
+evidence/governance commits
+tests and suite-count evolution
+production/testenv mutations
+provider calls/spend/token usage
+deferred findings
+governance overhead and method evolution
+```
+
+Every historical claim is classified as:
+
+```text
+PROVEN FROM GIT / DURABLE ARTIFACTS
+RECONSTRUCTED FROM OWNER JOURNAL / RECEIPTS
+UNKNOWN / NOT LOGGED RELIABLY
+```
+
+Early incomplete logging is reported honestly; exact counts are never fabricated.
 
 ## Project history, storytelling and self-branding
 
-When the user later asks for the story of the project, architecture evolution, case study, lessons learned or portfolio/self-branding material, load [`project-storytelling`](skills/project-storytelling/SKILL.md).
+`project-retrospective` and `project-storytelling` are deliberately separate.
 
-It starts from compact indexes/timeline and opens raw historical artifacts only for claims that need deeper proof. Generated stories stay under a cold `stories/` location and never become permanent coding-agent context.
+- `project-retrospective` is audit-grade reconstruction: timeline, metrics, truth classes, governance value/overhead.
+- `project-storytelling` turns verified/reconstructed evidence into architecture narrative, case study, lessons learned and portfolio/self-branding content.
+
+When a retrospective exists, storytelling should consume that bounded report/index first instead of rereading all completed tasks and judgments.
+
+Generated retrospectives live under cold `retrospectives/`; generated stories under cold `stories/`. Neither becomes permanent coding-agent context.
 
 ## Documentation freshness
 
-Canonical/index/story documents should carry a version and update date/time. Material verified changes use [`documentation-freshness`](skills/documentation-freshness/SKILL.md) before closure. Update the authoritative source first, then regenerate/synchronize projections/adapters.
+Canonical/index/retrospective/story documents should carry a version and update timestamp. Material verified changes use [`documentation-freshness`](skills/documentation-freshness/SKILL.md) before closure. Update the authoritative source first, then regenerate/synchronize projections/adapters.
 
-OpenAI's published Codex harness experience similarly treats repository docs/plans as versioned system-of-record artifacts, uses progressive disclosure, and performs recurring doc-gardening rather than relying on chat history.
+OpenAI's published Codex harness experience similarly treats repository docs/plans as versioned system-of-record artifacts, uses progressive disclosure, and performs recurring doc-gardening rather than relying on chat history. citeturn438345search0
 
 ## Repository map
 
 ```text
 ARCHITECTURE.md          canonical policy/source of truth
-schemas/                 task/amendment/evidence/supervisor/usage contracts
+schemas/                 task/amendment/evidence/supervisor/usage/history contracts
 skills/                  portable on-demand skills
 prompts/bootstrap/       generate vendor adapters from latest architecture
-prompts/workflow/        draft/amend/apply/evidence workflows
+prompts/workflow/        draft/amend/apply/evidence/usage/retrospective workflows
 prompts/supervisor/      independent review prompts
 scripts/                 portable local control-plane utilities
 research/                dated primary-source research, not policy
