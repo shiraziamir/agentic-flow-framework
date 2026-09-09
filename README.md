@@ -144,7 +144,13 @@ python3 scripts/usage_ledger.py report
 
 Only record values the provider/harness exposes. Missing telemetry is **unknown, not zero**. Cost is optional because hosted products/providers expose billing differently.
 
-Current primary sources support this design: Anthropic documents separate usage counters for uncached input, cache creation/read, output and tool usage; its tool-context guidance recommends lazy tool search, programmatic/batched tool calling, prompt caching and context editing for different sources of context bloat. OpenAI's agent-first harness report similarly uses short maps plus versioned active/completed plans instead of permanent giant history in context. citeturn438345search1turn438345search4turn438345search0
+Current primary sources support this design: Anthropic documents separate usage counters for uncached input, cache creation/read and output tokens, and its tool-context guidance recommends lazy tool search, programmatic/batched tool calling, prompt caching and context editing for different sources of context bloat. OpenAI's agent-first harness report similarly uses short maps plus versioned active/completed plans instead of permanent giant history in context.
+
+Primary links:
+
+- https://platform.claude.com/docs/en/manage-claude/usage-cost-api
+- https://platform.claude.com/docs/en/agents-and-tools/tool-use/manage-tool-context
+- https://openai.com/index/harness-engineering/
 
 ## Large frontend / monorepo workflow
 
@@ -237,7 +243,7 @@ Generated retrospectives live under cold `retrospectives/`; generated stories un
 
 Canonical/index/retrospective/story documents should carry a version and update timestamp. Material verified changes use [`documentation-freshness`](skills/documentation-freshness/SKILL.md) before closure. Update the authoritative source first, then regenerate/synchronize projections/adapters.
 
-OpenAI's published Codex harness experience similarly treats repository docs/plans as versioned system-of-record artifacts, uses progressive disclosure, and performs recurring doc-gardening rather than relying on chat history. citeturn438345search0
+OpenAI's published Codex harness experience similarly treats repository docs/plans as versioned system-of-record artifacts, uses progressive disclosure, and performs recurring doc-gardening rather than relying on chat history.
 
 ## Repository map
 
@@ -261,5 +267,6 @@ Current dated research notes:
 - [`research/2026-09-09-context-model-routing.md`](research/2026-09-09-context-model-routing.md)
 - [`research/2026-09-09-bootstrap-supervision.md`](research/2026-09-09-bootstrap-supervision.md)
 - [`research/2026-09-09-adaptive-governance-token-efficiency.md`](research/2026-09-09-adaptive-governance-token-efficiency.md)
+- [`research/2026-09-09-execution-retrospective.md`](research/2026-09-09-execution-retrospective.md)
 
 Prefer primary/current sources: official vendor docs, official engineering reports, standards/compiler/build-system documentation. Product-specific model names/defaults/pricing/CLI behavior must be rechecked when they materially affect a decision.
