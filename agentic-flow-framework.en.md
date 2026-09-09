@@ -1,7 +1,7 @@
 # Agentic Flow Framework — English Reader Guide
 
-**Reader-guide version:** 1.3  
-**Updated:** 2026-09-09  
+**Reader-guide version:** 1.4  
+**Updated:** 2026-09-09T08:22:00Z  
 **Canonical source of truth:** [`ARCHITECTURE.md`](ARCHITECTURE.md)
 
 This document is a synchronized reader-facing guide. If it conflicts with `ARCHITECTURE.md`, the architecture file wins.
@@ -72,9 +72,10 @@ Cold history:
 - evidence packets;
 - architecture decisions;
 - token/cost ledger;
-- project timeline and generated stories.
+- append-only execution ledger;
+- retrospectives, project timeline and generated stories.
 
-Cold history is opened only for provenance, audit, regression analysis, retrospective or explicit user request.
+Cold history is opened only for provenance, audit, regression analysis, retrospective, storytelling or explicit user request.
 
 ## Supervisors
 
@@ -87,23 +88,50 @@ If an expensive model performs judgment, preserve the compact decision artifact 
 
 ## Skills
 
-Skills are on-demand procedures. The router default is 0–3 load-bearing skills, not the whole shelf. Broad skills may activate frequently; risk-triggered skills are expected to be rare.
+Skills are on-demand procedures. The router default is 0–3 load-bearing skills, not the whole shelf. Broad skills may activate frequently; risk-triggered and history skills are expected to be rare.
 
-See `skills/00_INDEX.md`. New v1.3 skills include:
+See `skills/00_INDEX.md`. Key control-plane skills include:
 
 - `token-efficiency`
 - `documentation-freshness`
+- `project-retrospective`
 - `project-storytelling`
+
+## Execution retrospective
+
+Long rescues/campaigns can keep a compact cold boundary ledger at:
+
+```text
+.agentic/history/EXECUTION_LEDGER.jsonl
+```
+
+Schema: `schemas/EXECUTION_RETROSPECTIVE_LEDGER.md`.
+
+It records meaningful boundaries—review, amendment, freeze, apply, STOP, evidence-ready, closure—with short counters and refs. It does not duplicate diffs, raw logs, model transcripts or task narratives.
+
+When requested, `project-retrospective` reconstructs an audit-grade report containing timeline, task/amendment/review/STOP metrics, pre-closure defects, false-complete states prevented, implementation versus governance commits, tests/suite evolution, mutations/provider usage where observable, deferred findings, governance overhead and method evolution.
+
+Historical facts are explicitly classified:
+
+```text
+PROVEN FROM GIT / DURABLE ARTIFACTS
+RECONSTRUCTED FROM OWNER JOURNAL / RECEIPTS
+UNKNOWN / NOT LOGGED RELIABLY
+```
+
+Unknown remains unknown; early incomplete logging never receives fabricated precision.
 
 ## Project storytelling and self-branding
 
-`project-storytelling` is explicitly cold/on-demand. When requested, it reconstructs project history, architecture evolution, engineering decisions, incidents, measurable advantages and portfolio/self-branding material from compact indexes first, opening raw artifacts only when a claim needs deeper verification.
+`project-storytelling` is a separate reader-facing layer. It turns proven/reconstructed history into architecture narratives, case studies, lessons learned and portfolio/self-branding material.
 
-Generated stories remain reader artifacts, not coding-agent standing context.
+When a retrospective exists, storytelling consumes that bounded report and its refs first, instead of loading the full historical archive again.
+
+Generated retrospectives/stories remain cold reader artifacts, not coding-agent standing context.
 
 ## Documentation freshness
 
-Canonical and index documents carry versions and update dates. Material verified changes trigger `documentation-freshness`: update the authoritative source first, then synchronize reader guides and generated vendor adapters.
+Canonical and index documents carry versions and update timestamps. Material verified changes trigger `documentation-freshness`: update the authoritative source first, then synchronize reader guides and generated vendor adapters.
 
 ## Start here
 
