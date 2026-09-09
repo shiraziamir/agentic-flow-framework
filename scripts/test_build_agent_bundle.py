@@ -18,7 +18,16 @@ def main() -> None:
         root = Path(temp_dir)
         put(root, "VERSION", "1.7\n")
         put(root, "ARCHITECTURE.md", "# architecture\n")
+        put(root, "bundle/README.md", "# bundle readme\n")
+        put(root, "bundle/BEST_PRACTICES_USED.en.txt", "best practices\n")
         put(root, "docs/agent/START_HERE.md", "# start\n")
+        put(root, "docs/agent/MIDSTREAM_ADOPTION.md", "# midstream\n")
+        put(root, "docs/agent/TASK_WORKFLOW_DRAFT_REVIEW_APPLY_VERIFY.md", "# workflow\n")
+        put(root, "docs/agent/TOKEN_EFFICIENT_WORKFLOW.md", "# token\n")
+        put(root, "docs/operator/USING_PYTHON_TOOLS.en.md", "# python tools\n")
+        put(root, "docs/operator/USING_PYTHON_TOOLS.fa.md", "# python tools fa\n")
+        put(root, "docs/architecture/WHY.md", "# why\n")
+        put(root, "docs/references/PRIMARY_SOURCES.md", "# sources\n")
 
         for rel in [
             "schemas/X.md",
@@ -30,18 +39,20 @@ def main() -> None:
             "prompts/supervisor/Z.md",
             "templates/X.yaml",
             "scripts/verification_lint.py",
+            "scripts/test_verification_lint.py",
             "scripts/production_readiness_lint.py",
+            "scripts/test_production_readiness_lint.py",
+            "scripts/build_agent_bundle.py",
+            "scripts/test_build_agent_bundle.py",
             "scripts/usage_ledger.py",
         ]:
             put(root, rel)
 
         for rel in [
-            "docs/operator/SECRET.md",
-            "docs/references/SOURCES.md",
-            "docs/architecture/WHY.md",
             "research/R.md",
             "agentic-flow-framework.fa.html",
             "retrospectives/R.md",
+            "stories/S.md",
         ]:
             put(root, rel)
 
@@ -51,28 +62,44 @@ def main() -> None:
 
         assert manifest["framework_version"] == "1.7"
         assert manifest["entrypoint"] == "START_HERE.md"
+        assert manifest["operator_entrypoint"] == "README.md"
         assert "docs/agent/START_HERE.md" in selected
-        assert "docs/operator/SECRET.md" not in selected
-        assert "docs/references/SOURCES.md" not in selected
-        assert "docs/architecture/WHY.md" not in selected
+        assert "docs/operator/USING_PYTHON_TOOLS.en.md" in selected
+        assert "docs/architecture/WHY.md" in selected
+        assert "docs/references/PRIMARY_SOURCES.md" in selected
+        assert "scripts/build_agent_bundle.py" in selected
         assert "research/R.md" not in selected
+        assert "retrospectives/R.md" not in selected
+        assert "stories/S.md" not in selected
 
         with zipfile.ZipFile(output) as zf:
             names = set(zf.namelist())
-            assert "agentic-flow/BUNDLE_MANIFEST.json" in names
-            assert "agentic-flow/START_HERE.md" in names
-            assert "agentic-flow/INSTALL_PROMPT.txt" in names
-            assert "agentic-flow/ARCHITECTURE.md" in names
-            assert "agentic-flow/docs/agent/START_HERE.md" in names
-            assert not any("/docs/operator/" in name for name in names)
-            assert not any("/docs/references/" in name for name in names)
+            required = {
+                "agentic-flow/README.md",
+                "agentic-flow/START_HERE.md",
+                "agentic-flow/INSTALL_PROMPT.txt",
+                "agentic-flow/BEST_PRACTICES_USED.en.txt",
+                "agentic-flow/PRIMARY_SOURCES.md",
+                "agentic-flow/BUNDLE_MANIFEST.json",
+                "agentic-flow/ARCHITECTURE.md",
+                "agentic-flow/docs/agent/TASK_WORKFLOW_DRAFT_REVIEW_APPLY_VERIFY.md",
+                "agentic-flow/docs/agent/TOKEN_EFFICIENT_WORKFLOW.md",
+                "agentic-flow/docs/operator/USING_PYTHON_TOOLS.en.md",
+                "agentic-flow/docs/references/PRIMARY_SOURCES.md",
+            }
+            assert required <= names
             assert not any("/research/" in name for name in names)
+            assert not any("/retrospectives/" in name for name in names)
+            assert not any("/stories/" in name for name in names)
 
             bundled_manifest = json.loads(
                 zf.read("agentic-flow/BUNDLE_MANIFEST.json").decode("utf-8")
             )
             assert bundled_manifest == manifest
             assert zf.read("agentic-flow/START_HERE.md") == b"# start\n"
+            assert zf.read("agentic-flow/README.md") == b"# bundle readme\n"
+            assert zf.read("agentic-flow/BEST_PRACTICES_USED.en.txt") == b"best practices\n"
+            assert zf.read("agentic-flow/PRIMARY_SOURCES.md") == b"# sources\n"
             assert b"MIDSTREAM_ADOPTION" in zf.read("agentic-flow/INSTALL_PROMPT.txt")
 
         print("bundle builder self-test: PASS")
