@@ -1,23 +1,25 @@
 # Agent instructions for this repository
 
-**Map version:** 1.3  
-**Updated:** 2026-09-09
+**Map version:** 1.4  
+**Updated:** 2026-09-09T10:04:00Z
 
 This repository is the authoritative home of Agentic Flow Framework. The old Google Drive folder is archival only.
 
 ## Read order
 
 1. `ARCHITECTURE.md` — canonical source of truth.
-2. Current relevant schema: task/amendment/evidence/usage/supervisor.
-3. `skills/00_INDEX.md`; load only skill bodies whose triggers actually fire.
-4. Only the research/template/bootstrap/workflow file relevant to the task.
+2. Current relevant schema: task/amendment/change-classification/claim/evidence/report/usage/supervisor.
+3. `verification/00_INDEX.md`; load only GENERAL + the classified primary surface + triggered annexes.
+4. `skills/00_INDEX.md`; load only skill bodies whose triggers actually fire.
+5. Only the research/template/bootstrap/workflow file relevant to the task.
 
-Do not preload HTML renderings, completed-task history, judgment history, usage ledger, stories, or the full skill shelf.
+Do not preload HTML renderings, all verification profiles, completed-task history, judgment history, usage ledger, stories, or the full skill shelf.
 
 ## Authority
 
 - Canonical architecture/policy: `ARCHITECTURE.md`.
-- Durable data contracts: `schemas/`.
+- Durable data/truth contracts: `schemas/`.
+- Surface-specific verification: `verification/`.
 - Portable procedures: `skills/`.
 - English/Persian reader files are synchronized explanations, not higher authority.
 - `research/` stores dated evidence, not independent policy.
@@ -27,22 +29,38 @@ Do not preload HTML renderings, completed-task history, judgment history, usage 
 ## Operating rules
 
 - Classify governance before applying ceremony: HIGH / MEDIUM / EVIDENCE_ONLY.
-- Preserve source-of-truth, durable identity/hash, STOP-before-scope-creep, no self-certification, no silent Task N+1, and no invented missing evidence at every governance level.
+- Classify material engineering surface/risk before freezing verification: FRONTEND / BACKEND / SHARED / DATA / INFRA / CI_CD / TOOLING / DOCS_EVIDENCE + triggered cross-cutting flags.
+- A material draft defines planned closure claims and minimum receipt for each claim before APPLY.
+- Use `DRAFT_TASK → REVIEW_DRAFT → freeze/authorize → APPLY_TASK → VERIFY_AND_REPORT → required independent closure` for HIGH material work.
+- A claim may be no broader than the identified current receipt that directly establishes it.
+- Preserve `OBSERVED / DERIVED / INFERRED / UNKNOWN / CONTRADICTED` and exact PASS/FAIL/PARTIAL/SKIPPED/UNVERIFIED states.
+- Never silently equate static source, unit tests, screenshots, HTTP success, CI green, commit presence or reviewer approval with stronger runtime/persistence/deployment/security claims.
+- If APPLY discovers a new material surface/consumer/risk or cannot meet a frozen receipt requirement, STOP and amend/reclassify.
+- Preserve source-of-truth, durable identity/hash, no self-certification, no silent Task N+1 and no invented missing evidence.
 - Keep always-on context small; hot state only unless a history/audit/story trigger fires.
 - For long/cost-sensitive work use `token-efficiency`; warn visibly on material waste/budget overrun.
 - Use cheap read-only workers only when acceptance quality can be preserved and checked.
-- Strong/expensive supervisor outcomes are stored as compact cold decision artifacts, not transcripts/reasoning.
-- Do not make a reviewer mutate the work it judges in the same review pass.
-- Do not silently amend frozen HIGH task scope/strategy during APPLY.
+- Strong/expensive supervisor outcomes are compact cold decision artifacts, not transcripts/reasoning.
+- Reviewers remain read-only in the same review pass; direct reviewers prefer task/diff/raw receipts before executor narrative.
 
 ## Update discipline
 
 - One concept has one authoritative home. Link rather than duplicate long policy.
 - Material framework changes use current primary sources and distinguish verified facts from recommendations.
-- Canonical/index/reader docs carry version and update date; run documentation freshness after material policy/workflow changes.
+- Canonical/index/reader docs carry version and update timestamp; run documentation freshness after material policy/workflow changes.
 - Preserve RTL for Persian prose and LTR for code/commands/paths/identifiers/YAML/URLs.
 - Do not claim model/tool behavior from memory when current vendor documentation can verify it.
 - Do not equate observed skill/model-route association with causality without controlled comparison.
+
+## Mechanical validation
+
+Use deterministic checks for deterministic rules. Structured JSON/YAML task/evidence/status artifacts may be checked with:
+
+```bash
+python3 scripts/verification_lint.py <artifact...>
+```
+
+The linter catches mechanical contradictions; it does not replace semantic/project verification or independent review.
 
 ## Repository mutation
 
