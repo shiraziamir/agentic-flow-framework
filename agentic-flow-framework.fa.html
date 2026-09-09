@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>چارچوب Agentic Flow — نسخه 1.1</title>
+<style>
+:root{font-family:Tahoma,"Segoe UI",system-ui,sans-serif;line-height:1.9;color:#172033;background:#f7f8fb}body{margin:0}.wrap{max-width:1050px;margin:auto;padding:42px 24px 80px}article{background:#fff;border:1px solid #e4e7ec;border-radius:18px;padding:38px;box-shadow:0 8px 30px rgba(20,30,55,.06)}h1,h2,h3{line-height:1.45;color:#101828}h1{font-size:2.2rem;margin-top:0}h2{margin-top:2.4rem;padding-top:.4rem;border-top:1px solid #eef0f4}code,pre{direction:ltr;text-align:left;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}code{background:#f2f4f7;padding:.12em .35em;border-radius:5px;unicode-bidi:isolate}pre{background:#111827;color:#f8fafc;padding:18px;border-radius:12px;overflow:auto;white-space:pre}blockquote{border-right:4px solid #667085;margin:1.4rem 0;padding:.5rem 1rem;background:#f8fafc}table{border-collapse:collapse;width:100%;display:block;overflow:auto;direction:rtl}th,td{border:1px solid #dfe3e8;padding:9px 12px;text-align:right;vertical-align:top}th{background:#f6f8fa}.meta{color:#667085}.callout{background:#f5f7ff;border:1px solid #d7ddff;padding:16px 18px;border-radius:12px}.warn{background:#fff8e8;border-color:#f7d58b}.good{background:#edfdf3;border-color:#a6e5bc}a{color:#175cd3}ul,ol{padding-right:1.4rem}</style>
+</head>
+<body><main class="wrap"><article>
+<h1>چارچوب Agentic Flow</h1>
+<p class="meta"><strong>نسخه 1.1 — ۹ سپتامبر ۲۰۲۶</strong><br>یک چارچوب مستقل از ابزار برای مهندسی قابل‌اعتماد با Coding Agentها.</p>
+<blockquote><strong>حافظه‌ی پایدار برای پروژه؛ context کاری کوتاه‌عمر، تمیز و باکیفیت برای Agent.</strong></blockquote>
+
+<h2>۱. مسئله‌ای که این چارچوب حل می‌کند</h2>
+<p>در کارهای طولانی Agentic، مشکل اصلی همیشه ضعف مدل نیست. بسیاری از شکست‌ها از control plane ضعیف می‌آیند: instructionهای دائمی و بزرگ، خواندن بی‌دلیل کل repository، اتکا به حافظه‌ی chat، بزرگ شدن پنهانی scope، مبهم بودن authority، نگه‌داشتن evidence فقط در گفتگو و این‌که یک Agent هم نویسنده‌ی task باشد، هم اجراکننده و هم قاضی نهایی.</p>
+<p>بنابراین هدف فقط «کم کردن token» نیست. هدف مهندسی، افزایش <strong>نسبت signal به context</strong>، محدود کردن authority، escalation صریح و ساختن state قابل‌بازیابی است.</p>
+<pre>REQUEST
+  ↓
+TASK CONTRACT
+  ↓
+REVIEW / FREEZE
+  ↓
+APPLY AUTHORIZATION
+  ↓
+BOUNDED EXECUTION
+  ↓
+VERIFICATION + RECEIPTS
+  ↓
+INDEPENDENT REVIEW (بر اساس ریسک)
+  ↓
+CLOSURE → DURABLE CHECKPOINT → SAFE CONTEXT RESET</pre>
+
+<h2>۲. اصول اصلی</h2>
+<ol>
+<li>Repository و durable state از حافظه‌ی conversation معتبرترند.</li>
+<li>هر rule فقط یک خانه‌ی authoritative داشته باشد؛ به‌جای کپی، link بده.</li>
+<li>instruction دائمی کوتاه باشد؛ procedureها به‌صورت Skill فقط هنگام نیاز load شوند.</li>
+<li>Definition of Done قبل از implementation نوشته شود.</li>
+<li>Draft کردن task مجوز اجرا نیست.</li>
+<li>Executor به‌صورت خودکار قاضی نهایی نیست.</li>
+<li>مدل قوی‌تر capability بیشتر دارد، نه authority یا حقیقت جادویی.</li>
+<li>Execution می‌تواند retry شود؛ strategy و scope نباید silently تغییر کنند.</li>
+<li>STOP/BLOCKED نتیجه‌ی معتبر است وقتی prerequisite وجود ندارد.</li>
+<li>Verification باید متناسب با ریسک receipt تولید کند.</li>
+<li>Context در semantic boundary پایدار reset شود، نه صرفاً با یک عدد token.</li>
+<li>Exploration سنگین باید در child context جدا انجام شود.</li>
+<li>Ruleهای deterministic تا جای ممکن در script/hook/CI enforce شوند.</li>
+</ol>
+
+<h2>۳. معماری instruction و authority</h2>
+<pre>POLICY / engineering constitution
+        ↓
+AGENTS.md — نقشه‌ی کوتاه + invariantهای ضروری
+        ↓
+Task contract
+        ↓
+SKILL.mdهای on-demand
+        ↓
+Vendor adapter — CLAUDE.md / GEMINI.md / hook / tool config</pre>
+<p>گزارش Harness Engineering اوپن‌اِی‌آی یک تجربه‌ی واقعی را شرح می‌دهد: یک <code>AGENTS.md</code> بسیار بزرگ context مفید task و code را کنار می‌زد و به‌مرور stale می‌شد. راهکار عملی آن‌ها تبدیل فایل root به یک نقشه‌ی کوتاه برای رسیدن به documentation ساختاریافته بود. این framework همان الگو را دنبال می‌کند.</p>
+
+<h2>۴. Task Contract و Skill Routing</h2>
+<p>Task باید contract قابل اجرا باشد، نه یک prompt مبهم. حداقل باید goal/symptom، فرضیه‌ها، scope، non-scope، baseline، uncertainty، Definition of Done، محدوده‌ی mutation، evidence لازم، stop condition و escalation condition را مشخص کند.</p>
+<p>Skill یک procedure قابل استفاده‌ی مجدد است. default پیشنهادی برای شروع: <strong>۰ تا ۳ Skill واقعاً load-bearing</strong> برای هر task. این عدد قانون جهانی نیست و بعداً باید با داده‌ی واقعی پروژه تنظیم شود.</p>
+<div class="callout"><strong>Author ≠ Judge.</strong> برای کارهای مهم، draft → review/freeze → apply را جدا نگه دار. اگر هنگام اجرا evidence نشان داد contract غلط است، task را متوقف و amend کن؛ خودسرانه آن را بازنویسی نکن.</div>
+
+<h2>۵. مهندسی Context</h2>
+<p>مستندات فعلی Anthropic صراحتاً context را working memory می‌دانند و هشدار می‌دهند context بزرگ‌تر الزاماً نتیجه‌ی بهتر نمی‌دهد. تاریخچه‌ی prompt، documentهای بازیابی‌شده، tool definitionها و tool resultها همه برای یک window رقابت می‌کنند.</p>
+<pre>CORE_CONTEXT
+  policy پایدار + task contract + module map
+
+WORKING_SET
+  فایل‌ها/ماژول‌هایی که اجازه‌ی edit دارند
+
+REFERENCE_SET
+  interface/contractهای لازم برای فهم کار
+
+EXCLUDED_SET
+  ماژول‌های بی‌ربط، خروجی generated، dependency tree و log خام بزرگ</pre>
+<p>یک context window بسیار بزرگ مجوز خواندن monorepo کامل نیست. در بسیاری از taskهای مهندسی، fresh session در یک boundary پایدار از carry کردن history قدیمی بهتر است.</p>
+<div class="callout warn"><strong>Prompt Cache مساوی Context Compression نیست.</strong> Anthropic صریحاً می‌گوید cache-read و cache-creation input همچنان در context window حساب می‌شوند. Cache برای هزینه و latency مفید است، نه برای توجیه session بی‌انتها.</div>
+
+<h2>۶. پروژه‌های Frontend بزرگ و ماژولار</h2>
+<p>در frontend/monorepo بزرگ، working set Agent باید از dependency graph مکانیکی به دست بیاید، نه از این‌که مدل کل repo را بخواند. Nx با <code>affected</code> از Git و project graph برای محاسبه‌ی حداقل projectهای تحت تأثیر استفاده می‌کند. TypeScript Project References هم برای تقسیم برنامه‌ی بزرگ به projectهای کوچک‌تر با boundary و build order مشخص طراحی شده است.</p>
+<pre>mechanical affected graph
+        ↓
+module context contract
+        ↓
+cheap read-only discovery agent(s)
+        ↓
+standard executor روی یک module محدود
+        ↓
+module-local test/typecheck
+        ↓
+گسترش verification فقط اگر shared contract لازم کند</pre>
+<h3>Module Context Contract</h3>
+<pre>module: checkout
+edit_modules: [checkout]
+reference_modules: [cart, identity]
+public_contracts:
+  - packages/contracts/payment.ts
+exclude:
+  - node_modules/**
+  - dist/**
+  - coverage/**
+local_checks:
+  - npm run test:checkout
+  - npm run typecheck:checkout
+escalate_if:
+  - public_contract_changes
+  - tests_fail_outside_working_set</pre>
+<p>برای file discovery، inventory import/export، خلاصه‌سازی build log، دسته‌بندی test failure و scanهای تکراری از child agent جدا استفاده کن. خروجی به parent محدود باشد:</p>
+<pre>CONCLUSION
+FILES_READ
+AFFECTED_MODULES
+EVIDENCE_REFS
+FAILING_CHECKS
+UNRESOLVED
+RECOMMENDED_NEXT_STEP</pre>
+<p>Parallelism لزوماً ارزان‌تر نیست. چند Agent که همان ۵۰ فایل را دوباره می‌خوانند می‌توانند از یک inventory pass ارزان هزینه‌ی بیشتری بسازند.</p>
+
+<h2>۷. Model Routing</h2>
+<p><strong>بله، تقسیم کار بین مدل‌های ارزان‌تر و قوی‌تر یک الگوی عملی و مستند است.</strong> Routing باید بر اساس uncertainty و blast radius باشد، نه فقط طول prompt.</p>
+<table><thead><tr><th>Tier</th><th>نوع کار</th><th>Authority</th></tr></thead><tbody>
+<tr><td>T0 Deterministic</td><td>dependency graph، grep/AST، lint، typecheck، test selection، format</td><td>script/CI</td></tr>
+<tr><td>T1 Cheap Read-only</td><td>discovery، inventory، log summary، classification تکراری</td><td>معمولاً بدون mutation</td></tr>
+<tr><td>T2 Standard Executor</td><td>feature محدود، refactor ماژولی، test، bug fix bounded</td><td>edit محدود به contract</td></tr>
+<tr><td>T3 Judgment</td><td>architecture، diagnosis مبهم، cross-module contract، security/data، closure پرریسک</td><td>decision/review؛ mutation فقط صریح</td></tr>
+</tbody></table>
+<h3>Claude Code</h3>
+<pre>T1 → Haiku: exploration/inventory فقط read-only
+T2 → Sonnet: coding و execution معمولی
+T3 → Opus: architecture و judgment</pre>
+<p>Explore agent داخلی Claude Code نمونه‌ی واقعی همین الگوست: context جدا، toolهای read-only و Haiku. راهنمای هزینه‌ی Anthropic هم routing کارهای ساده‌ی subagent به مدل ارزان‌تر را توصیه می‌کند.</p>
+<h3>OpenAI API custom harness</h3>
+<pre>T1 → GPT-5.6 Luna
+T2 → GPT-5.6 Terra
+T3 → GPT-5.6 Sol</pre>
+<p>این mapping برای harness مبتنی بر API است و نباید فرض کرد محصول hosted Codex دقیقاً همان menu یا billing را دارد.</p>
+<h3>OpenCode</h3>
+<p>OpenCode model override را برای agent و command پشتیبانی می‌کند و child session جدا دارد؛ بنابراین cheap explorer / standard executor / stronger reviewer را می‌توان مستقیم پیاده کرد.</p>
+<h3>Escalation Triggerها</h3>
+<pre>UNKNOWN_ROOT_CAUSE
+CROSS_MODULE_PUBLIC_CONTRACT_CHANGE
+SECURITY_OR_AUTH_CHANGE
+DATABASE_OR_DURABLE_DATA_CHANGE
+&gt;2 FAILED_EXECUTION_LOOPS
+TESTS_FAIL_OUTSIDE_WORKING_SET
+DEPENDENCY_GRAPH_EXPANDS_MATERIALLY
+ARCHITECTURAL_REQUIREMENT_AMBIGUITY
+CHEAP_MODEL_LOW_CONFIDENCE_OR_CONFLICTING_EVIDENCE
+HIGH_RISK_CLOSURE</pre>
+<p>در escalation، task/evidence packet فشرده را منتقل کن؛ نه conversation کامل مدل ارزان.</p>
+<div class="callout"><strong>Same-family routing راحت است ولی تضمین کیفیت نیست.</strong> روی fixtureهای frozen، ورودی/tool/acceptance gate یکسان را با tier ارزان و استاندارد اجرا کن و quality، rework، regression، latency و cost را مقایسه کن.</div>
+
+<h2>۸. بررسی Skill Telemetry یارا</h2>
+<p>بررسی branch <code>claude</code> یارا نشان داد خروجی‌ای که فرستادی یک مشکل شناخته‌شده‌ی identifier fragmentation دارد. canonical ID باید basename بدون <code>.md</code> باشد، ولی telemetry تاریخی هر دو فرم را دارد. کد report هم raw string را group می‌کند و در نتیجه آن‌ها را Skillهای جدا نمایش می‌دهد.</p>
+<p>بعد از normalization، ۱۴ row دیده‌شده در گزارش شما به <strong>۱۲ Skill canonical</strong> تبدیل می‌شوند. دو جفت شکسته:</p>
+<pre>yara_01_live_verify_against_real_stack
+  normalized: triggered 2, applied 1
+
+yara_eval_02_evaluating_a_test
+  normalized: triggered 3, applied 3</pre>
+<p>قوی‌ترین signalهای مثبت در همان sample، فقط در سطح <strong>observed association</strong>:</p>
+<pre>model-routing-and-delegation : 3
+diagnose-before-fix          : 2
+yara_06_fix_the_fix          : 2
+craft-and-apply-task          : 1</pre>
+<div class="callout warn">این اعداد causality را ثابت نمی‌کنند. طراحی telemetry یارا درست عمل کرده که observed behavior/effect را از controlled causal proof جدا کرده است.</div>
+<p>همچنین <code>--last 100</code> یعنی آخرین حداکثر ۱۰۰ task ID موجود در event log، نه الزاماً آخرین ۱۰۰ task واقعی پروژه. فایل خام <code>_audit/SKILL_EVENTS.jsonl</code> local/gitignored است و از GitHub نمی‌شود aggregate را مستقل دوباره محاسبه کرد.</p>
+<p>اصلاح پیشنهادی: historical log append-only را دست نزن؛ هنگام read/report ID را canonicalize کن و coverage telemetry و eligible-trigger denominator را هم report کن.</p>
+<pre>def canonical_skill_id(value: str) -&gt; str:
+    return value[:-3] if value.endswith('.md') else value</pre>
+<p>Skillهای کم‌استفاده را فقط به‌خاطر sample کوچک حذف نکن؛ آن‌ها را cold/lazy نگه دار و برای حذف یا promote کردن از fixture کنترل‌شده استفاده کن.</p>
+
+<h2>۹. Verification و Evidence</h2>
+<table><thead><tr><th>Evidence</th><th>مثال</th></tr></thead><tbody>
+<tr><td>CLAIM</td><td>«احتمالاً کار می‌کند»</td></tr><tr><td>STATIC_RECEIPT</td><td>file/line/diff/config</td></tr><tr><td>TEST_RECEIPT</td><td>test نام‌دار + نتیجه</td></tr><tr><td>LIVE_RECEIPT</td><td>مشاهده‌ی real stack</td></tr><tr><td>MUTATION_PROOF</td><td>break → fail → restore → pass</td></tr><tr><td>INDEPENDENT_REVIEW</td><td>audit یا reproduction با context سرد/read-only</td></tr>
+</tbody></table>
+<p>برای پروژه‌ی کم‌ریسک governance سبک کافی است؛ برای production، multi-tenant، security و data-sensitive از draft/freeze/apply، reviewer مستقل و evidence قوی‌تر استفاده کن.</p>
+
+<h2>۱۰. Starter Policy</h2>
+<pre>context_policy:
+  root_instruction_target_lines: 120
+  default_edit_modules: 1
+  default_reference_modules: 2
+  raw_log_to_model: false
+  semantic_reset_after_closed_task: true
+
+routing:
+  deterministic_first: true
+  cheap_readonly_for: [discovery, inventory, log_summarization, classification]
+  standard_executor_for: [localized_feature_work, module_scoped_refactor, tests]
+  judgment_tier_for: [cross_module_contract_change, architecture, security, ambiguous_root_cause, high_risk_closure]
+
+escalation:
+  execution_retry_limit_before_judgment: 2
+  expand_scope_only_with_evidence: true
+  transfer_raw_conversation: false
+
+verification:
+  use_affected_graph_when_available: true
+  run_local_checks_first: true
+  broaden_tests_on_shared_contract_change: true</pre>
+<p>اعداد بالا starting default هستند، نه قانون. با fixture واقعی rework، regression، escalation، verification completeness، latency و cost per accepted task را اندازه بگیر و policy را tune کن.</p>
+
+<h2>۱۱. منابع اولیه و معتبر</h2>
+<ul>
+<li><a href="https://openai.com/index/harness-engineering/">OpenAI — Harness Engineering</a></li>
+<li><a href="https://openai.com/index/unrolling-the-codex-agent-loop/">OpenAI — Unrolling the Codex agent loop</a></li>
+<li><a href="https://platform.claude.com/docs/en/build-with-claude/context-windows">Anthropic — Context windows</a></li>
+<li><a href="https://platform.claude.com/docs/en/agents-and-tools/tool-use/manage-tool-context">Anthropic — Manage tool context</a></li>
+<li><a href="https://code.claude.com/docs/en/subagents">Claude Code — Subagents</a></li>
+<li><a href="https://code.claude.com/docs/en/costs">Claude Code — Manage costs</a></li>
+<li><a href="https://opencode.ai/docs/agents">OpenCode — Agents</a></li>
+<li><a href="https://nx.dev/docs/features/ci-features/affected">Nx — affected projects</a></li>
+<li><a href="https://www.typescriptlang.org/docs/handbook/project-references">TypeScript — Project References</a></li>
+</ul>
+<p class="good callout"><strong>اصل نهایی:</strong> workflow خوب لازم نیست Agent حافظه‌ی طولانی‌مدت داشته باشد؛ پروژه باید حافظه‌ی durable داشته باشد و Agent هر بار context کاری تمیز، محدود و باکیفیت بگیرد.</p>
+</article></main></body></html>
