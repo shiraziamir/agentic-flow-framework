@@ -1,15 +1,20 @@
 # Bootstrap prompt — Codex
 
+**Version:** 1.1  
+**Updated:** 2026-09-09
+
 ```text
-Bootstrap a Codex-compatible operating layer from this framework.
+Bootstrap Codex from this framework.
 
-Canonical authority remains ARCHITECTURE.md, schemas/, and skills/.
+First apply every rule in prompts/bootstrap/GENERIC.md. The following are Codex-specific additions only.
 
-Inspect existing AGENTS.md files and repository structure. Create/update a concise root AGENTS.md as a map, not a manual. Use hierarchical AGENTS.md only where a subtree has genuinely different local rules.
+Canonical authority: ARCHITECTURE.md, schemas/, skills/. Generated Codex/AGENTS.md surfaces remain adapters and must identify the canonical architecture version.
 
-Expose the canonical task-contract, evidence, model-routing and supervisor workflow through repository-visible files. Preserve durable plans/evidence so a new Codex session can resume without chat history.
+Create/update the smallest useful hierarchical AGENTS.md map for this target repository. Keep it short and point to canonical project docs, task state and on-demand skills instead of copying history/manuals.
 
-If the harness supports isolated agents/worktrees, use them for independent review or bounded parallel work. Otherwise preserve separation through separate sessions and immutable evidence packets.
+Where the current Codex/Agents harness supports skills, sandboxed tools, memory/thread persistence or other orchestration primitives, use them only as adapters to the portable roles and lifecycle. Do not assume product-specific model menus or token counters that are not observable in the current environment.
 
-Never copy the whole framework into AGENTS.md. Never let generated instructions override ARCHITECTURE.md. Report all generated adapters and validation results.
+Keep completed plans/judgments/usage/story artifacts cold. Ordinary runs read current state/indexes only. Use cheaper/bounded workers only when the current harness exposes them and acceptance quality can be preserved.
+
+Validate fresh-session discovery, adaptive governance, TOKEN_WASTE_WARNING behavior for long work, and report any provider-specific limitations.
 ```
