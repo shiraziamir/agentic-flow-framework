@@ -1,7 +1,7 @@
 # Portable Skills Index
 
-**Version:** 1.1  
-**Updated:** 2026-09-09
+**Version:** 1.2  
+**Updated:** 2026-09-09T08:22:00Z
 
 Do not preload the shelf. Default: **0–3 load-bearing skills per task**. A fourth skill should be exceptional and justified by a distinct trigger.
 
@@ -28,7 +28,8 @@ Do not preload the shelf. Default: **0–3 load-bearing skills per task**. A fou
 | `research-with-provenance` | current external/vendor evidence materially affects a decision |
 | `epistemic-decision` | consequential choice remains uncertain after evidence gathering |
 | `documentation-freshness` | material verified change may make canonical/index/user docs stale |
-| `project-storytelling` | user explicitly requests history, architecture narrative, case study, retrospective, or self-branding |
+| `project-retrospective` | explicit audit/work-reconstruction/governance-analysis request needs timeline, metrics and truth classes from cold durable history |
+| `project-storytelling` | user explicitly requests history narrative, architecture story, case study or self-branding; prefer retrospective outputs as input when available |
 
 ## RISK_TRIGGERED
 
@@ -48,7 +49,7 @@ Do not preload the shelf. Default: **0–3 load-bearing skills per task**. A fou
 
 Yara's recent skill telemetry showed the strongest repeated **observed-association** signals around model routing/delegation, diagnosis-before-fix, sibling/fix audit, and task-contract workflows. That supports making them easy to discover, but it does not establish causality.
 
-Rarely triggered skills are not automatically weak. A concurrency/stress, live-path, or mutation-proof procedure may correctly activate only once in many tasks. Risk-triggered skills should stay cold until their specific risk exists.
+Rarely triggered skills are not automatically weak. A concurrency/stress, live-path, mutation-proof, retrospective, or storytelling procedure may correctly activate only once in many tasks. Risk-triggered and history-oriented skills should stay cold until their specific trigger exists.
 
 Promotion/retirement should consider:
 
@@ -70,7 +71,8 @@ Promotion/retirement should consider:
 7. Use `evidence-integrity` before material closure.
 8. Use `documentation-freshness` when verified work changes architecture/capability/workflow/docs.
 9. Use `independent-review` when independence is part of the assurance argument.
-10. `project-storytelling` is explicitly cold/on-demand and never part of normal execution context.
-11. Do not self-activate a newly discovered skill inside a frozen HIGH task when it would materially alter strategy/scope; STOP/classify/amend first.
+10. `project-retrospective` and `project-storytelling` are explicitly cold/on-demand and never part of normal execution context.
+11. Prefer `project-retrospective` first when exact timeline/metrics/governance reconstruction is needed; `project-storytelling` may consume that bounded reconstruction instead of rereading all raw history.
+12. Do not self-activate a newly discovered skill inside a frozen HIGH task when it would materially alter strategy/scope; STOP/classify/amend first.
 
 Canonical skill IDs are directory names, lowercase kebab-case, with no `.md` suffix.
