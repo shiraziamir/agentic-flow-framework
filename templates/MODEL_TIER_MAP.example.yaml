@@ -1,0 +1,40 @@
+version: 1
+# Map ROLE tiers to concrete models in agent-specific adapters.
+# Do not make vendor/model names the authority model itself.
+
+tiers:
+  deterministic:
+    model: null
+    mutation: scripted_only
+    examples: [dependency_graph, grep, ast_query, lint, typecheck, test_selection]
+
+  cheap_readonly:
+    mutation: none
+    examples: [discovery, inventory, log_summarization, classification]
+    escalation_on:
+      - unknown_root_cause
+      - conflicting_evidence
+      - public_contract_change
+
+  standard_execution:
+    mutation: scoped
+    examples: [localized_feature, module_refactor, tests]
+    escalation_on:
+      - cross_module_change
+      - repeated_failure
+      - security_or_auth
+      - durable_data_change
+
+  judgment:
+    mutation: explicit_only
+    examples: [architecture, ambiguous_debugging, high_risk_review, closure]
+
+adapters:
+  claude_code_example:
+    cheap_readonly: haiku
+    standard_execution: sonnet
+    judgment: opus
+  openai_api_example:
+    cheap_readonly: gpt-5.6-luna
+    standard_execution: gpt-5.6-terra
+    judgment: gpt-5.6-sol
