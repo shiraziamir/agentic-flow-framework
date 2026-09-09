@@ -1,45 +1,222 @@
 # Agentic Flow Framework — English Reader Guide
 
-**Reader-guide version:** 1.4  
-**Updated:** 2026-09-09T08:22:00Z  
+**Reader-guide version:** 1.5  
+**Updated:** 2026-09-09T10:04:00Z  
 **Canonical source of truth:** [`ARCHITECTURE.md`](ARCHITECTURE.md)
 
-This document is a synchronized reader-facing guide. If it conflicts with `ARCHITECTURE.md`, the architecture file wins.
+This is a synchronized reader-facing guide. If it conflicts with `ARCHITECTURE.md`, the architecture file wins.
 
 ## Core idea
 
 > Durable project memory; disposable, high-quality working context.
 
-The framework separates project memory from agent working memory. Tasks, evidence, decisions, architecture changes, usage telemetry and project history remain durable; ordinary agent runs load only the current working set and pointers they actually need.
+Version 1.5 adds another invariant:
 
-## Risk-adaptive task governance
+> A claim may be no broader than the identified, current receipt that directly establishes it.
 
-### HIGH
-Architecture, persistence, production/security/trust, durable data, or material public-contract work:
+The framework separates task authority, implementation, verification and judgment so reports describe observed reality rather than agent confidence.
 
-```text
-DRAFT → SUPERVISOR → FREEZE → SEPARATE APPLY → EXECUTE → EVIDENCE → INDEPENDENT CLOSURE
-```
+## Material task lifecycle
 
-### MEDIUM
-Bounded correction inside an existing task:
+For HIGH-risk work:
 
 ```text
-OWNER-APPROVED AMENDMENT → BOUNDED APPLY → TESTS/EVIDENCE → INDEPENDENT CLOSURE
+REQUEST
+→ DRAFT TASK
+→ REVIEW DRAFT
+→ FREEZE
+→ SEPARATE APPLY AUTHORIZATION
+→ APPLY
+→ VERIFY + REALITY REPORT
+→ BLIND-SPOT / INDEPENDENT CLOSURE
+→ CHECKPOINT
 ```
 
-### EVIDENCE_ONLY
-Docs, evidence or test-contract correction that grants no new runtime authority:
+MEDIUM and EVIDENCE_ONLY governance remain lighter where risk permits, but source-of-truth, durable identity, STOP-before-scope-creep, no invented evidence and bounded reporting remain invariant.
+
+## Classify engineering surface before verification
+
+Material work uses a primary surface:
 
 ```text
-DURABLE APPROVED AMENDMENT + HASH/REF → UPDATE → CLOSURE CHECK IF MATERIAL
+FRONTEND
+BACKEND
+SHARED
+DATA
+INFRA
+CI_CD
+TOOLING
+DOCS_EVIDENCE
 ```
 
-Source-of-truth, durable identity, STOP-before-scope-creep, no self-certification, no Task N+1 absorption, and “do not invent missing evidence” remain invariant at every level.
+plus cross-cutting flags such as security/auth, persistence, public contract, cache, concurrency, external provider, performance, migration, observability and production.
 
-## Model and token efficiency
+Verification is selected lazily:
 
-Semantic routing:
+```text
+GENERAL
++ primary surface
++ only triggered cross-cutting annexes
+```
+
+Classification should use actual dependency/contracts/project-graph evidence when possible. A file in a frontend directory can still be a SHARED/PUBLIC_CONTRACT change if multiple consumers depend on it.
+
+## Draft review is verification-design review
+
+Before APPLY, the task freezes:
+
+- observable goal and DoD;
+- affected consumers/systems/environments;
+- planned closure claims;
+- minimum receipt required for each claim;
+- selected verification profiles;
+- important checks intentionally not required;
+- STOP/reclassification/escalation conditions.
+
+`prompts/workflow/REVIEW_DRAFT.md` challenges this design before implementation begins.
+
+## Claim truth and verification ladder
+
+Material statements use:
+
+```text
+OBSERVED
+DERIVED
+INFERRED
+UNKNOWN
+CONTRADICTED
+```
+
+Verification ladder:
+
+```text
+IDENTITY
+→ STATIC
+→ BUILD
+→ FOCUSED_TEST
+→ PATH_PROOF
+→ INTEGRATION_CONTRACT
+→ LIVE_BEHAVIOR
+→ DEPLOYED_ARTIFACT
+→ EXHAUSTIVE_BOUNDED_NEGATIVE
+→ JUDGMENT
+```
+
+A lower rung cannot support a stronger claim by narrative alone.
+
+Examples:
+
+```text
+source/config exists        != runtime behavior
+unit/component test         != frontend user flow
+HTTP 200                    != durable persistence
+screenshot                  != working interaction
+mock success                != real boundary compatibility
+CI green                    != every relevant test/job executed
+repository commit           != deployed artifact
+reviewer/model approval     != underlying behavioral receipt
+```
+
+Global language such as `all`, `none`, `no regressions`, `secure`, `fully tested`, `nothing else` requires a named finite universe plus exhaustive method. Otherwise narrow the report.
+
+## Surface verification
+
+### FRONTEND
+
+For user-visible claims use browser/user interaction at the real rendered surface. Check applicable console/network errors, loading/error/empty/permission states, frontend API-client contract and visual/accessibility semantics when claimed. A screenshot proves a state, not a flow.
+
+### BACKEND
+
+Verify at the handler/service/repository boundary appropriate to the claim. Include relevant validation, authz/tenant paths, errors, timeout/retry/idempotency, provider behavior and persistence. HTTP success alone is not a durable-state receipt.
+
+### SHARED / PUBLIC CONTRACT
+
+Mechanically find affected consumers where possible. Test/build consumers as well as producer. Type compatibility does not automatically prove runtime serialization/protocol compatibility; exercise real boundary/client code for contract claims where practical.
+
+### DATA
+
+Verify representative existing data, migration behavior, durable write/read, constraints, partial failure, idempotency and rollback/restore boundary. A migration file or clean empty DB is not sufficient for production-shaped migration claims.
+
+### INFRA / CI_CD
+
+Verify exact target environment, plan/rendered diff, identity/permissions, trigger/branch conditions, artifact handoff and deployed artifact. Green CI can include skipped/neutral checks; report what actually ran.
+
+### SECURITY / AUTH
+
+Check relevant negative/unauthorized/tenant/ownership paths and the actual trust boundary. Standards coverage must name the standard/version/requirement; functional success alone is not a security receipt.
+
+### RELIABILITY / PERFORMANCE
+
+Use comparable baseline/treatment methodology, repeated measurements where variance matters and explicit cache/retry/timeout/concurrency/provider/log-query boundaries.
+
+## Blind-spot audit
+
+For HIGH/evidence-complex MEDIUM closure or broad claims, `blind-spot-audit` challenges common false-complete paths:
+
+```text
+wrong/stale ref or environment
+unexpected surface/consumer
+cache/mock/fallback bypass
+passing test that never executes changed code
+weaker proxy replacing frozen gate
+frontend hidden console/error-state gap
+backend authz/transaction/retry gap
+shared consumer/contract gap
+data migration/rollback/idempotency gap
+infra/CI skipped stage or artifact mismatch
+security negative-path omission
+flaky/racy/performance methodology gap
+global report wording beyond checked universe
+reviewer judgment used as missing behavioral evidence
+```
+
+## Independent review
+
+Preferred direct-access review order reduces anchoring:
+
+```text
+frozen task/DoD/classification
+→ actual diff/source
+→ raw receipts/checks
+→ independent falsifying checks
+→ executor narrative last
+```
+
+Review independence can range from self-review hygiene to a cold same-model session or a cold different-model/human review. Reviewer output is `JUDGMENT`; it cannot manufacture missing runtime evidence.
+
+## Reality-reflecting reports
+
+Use `schemas/STATUS_REPORT.md` and `schemas/EVIDENCE_PACKET.md`.
+
+Reports identify repository ref, artifact/environment when relevant, exact checks/counts, checks not executed, known failures, unknowns and residual risk.
+
+Prefer:
+
+```text
+128/128 required tests passed at commit abc123.
+Browser flows A/B passed in testenv X.
+Production deployment was not checked.
+```
+
+not:
+
+```text
+Everything is good; no regressions.
+```
+
+## Deterministic lint
+
+Structured JSON artifacts, or YAML when PyYAML is installed, can be mechanically checked:
+
+```bash
+python3 scripts/verification_lint.py <task/evidence/report files>
+```
+
+It catches mechanical contradictions such as VERIFIED-without-evidence, missing evidence refs, stale head refs, receipt below frozen minimum, DoD PASS without receipt and verified global claims without exhaustive bounded evidence. Semantic sufficiency still requires project verification and judgment.
+
+## Model/token efficiency
+
+Semantic routing remains:
 
 ```text
 T0 deterministic/mechanical
@@ -48,96 +225,22 @@ T2 standard bounded execution
 T3 judgment/high-risk review
 ```
 
-Use the cheapest reliable tier whose output can meet the same acceptance bar. Cheap workers may gather evidence; they do not reduce DoD, tests, security or review requirements.
+Use cheap workers only when the same acceptance bar can be preserved and checked. Keep all verification profiles, historical tasks and judgments out of standing context; load only what current classification/risks require.
 
-For long/cost-sensitive work use `skills/token-efficiency/SKILL.md`. The agent should warn on unjustified whole-repo scans, repeated rereads, full-history loading, huge raw logs, strong models doing mechanical work, overlapping subagents, repeated failed loops, or budget overruns.
+## Cold history and storytelling
 
-When the provider/harness exposes usage, record privacy-safe counters in `.agentic/usage/events.jsonl` using `schemas/USAGE_EVENT.md` and `scripts/usage_ledger.py`. Missing telemetry is unknown, not zero.
-
-Prompt caching is a cost/latency optimization, not automatic context compression. Prefer small working sets, lazy tool/skill discovery, batched tool operations, filtered log artifacts, compact subagent handoffs and semantic resets.
-
-## Hot state and cold history
-
-Hot state for ordinary work:
-
-- current task/amendment;
-- current checkpoint/index;
-- current budget/unresolved decisions;
-- relevant modules/docs/skills only.
-
-Cold history:
-
-- completed tasks;
-- supervisor judgments;
-- evidence packets;
-- architecture decisions;
-- token/cost ledger;
-- append-only execution ledger;
-- retrospectives, project timeline and generated stories.
-
-Cold history is opened only for provenance, audit, regression analysis, retrospective, storytelling or explicit user request.
-
-## Supervisors
-
-A supervisor may be a human, a separate model, or a cold independent session.
-
-- **Direct-access supervisor:** inspects real source/diff/tests/evidence and remains read-only during review.
-- **Evidence-only supervisor:** reviews a bounded evidence packet and marks inaccessible claims `UNVERIFIED_FROM_PACKET`.
-
-If an expensive model performs judgment, preserve the compact decision artifact with timestamp/version/evidence refs—not its chain-of-thought or full transcript.
-
-## Skills
-
-Skills are on-demand procedures. The router default is 0–3 load-bearing skills, not the whole shelf. Broad skills may activate frequently; risk-triggered and history skills are expected to be rare.
-
-See `skills/00_INDEX.md`. Key control-plane skills include:
-
-- `token-efficiency`
-- `documentation-freshness`
-- `project-retrospective`
-- `project-storytelling`
-
-## Execution retrospective
-
-Long rescues/campaigns can keep a compact cold boundary ledger at:
-
-```text
-.agentic/history/EXECUTION_LEDGER.jsonl
-```
-
-Schema: `schemas/EXECUTION_RETROSPECTIVE_LEDGER.md`.
-
-It records meaningful boundaries—review, amendment, freeze, apply, STOP, evidence-ready, closure—with short counters and refs. It does not duplicate diffs, raw logs, model transcripts or task narratives.
-
-When requested, `project-retrospective` reconstructs an audit-grade report containing timeline, task/amendment/review/STOP metrics, pre-closure defects, false-complete states prevented, implementation versus governance commits, tests/suite evolution, mutations/provider usage where observable, deferred findings, governance overhead and method evolution.
-
-Historical facts are explicitly classified:
-
-```text
-PROVEN FROM GIT / DURABLE ARTIFACTS
-RECONSTRUCTED FROM OWNER JOURNAL / RECEIPTS
-UNKNOWN / NOT LOGGED RELIABLY
-```
-
-Unknown remains unknown; early incomplete logging never receives fabricated precision.
-
-## Project storytelling and self-branding
-
-`project-storytelling` is a separate reader-facing layer. It turns proven/reconstructed history into architecture narratives, case studies, lessons learned and portfolio/self-branding material.
-
-When a retrospective exists, storytelling consumes that bounded report and its refs first, instead of loading the full historical archive again.
-
-Generated retrospectives/stories remain cold reader artifacts, not coding-agent standing context.
-
-## Documentation freshness
-
-Canonical and index documents carry versions and update timestamps. Material verified changes trigger `documentation-freshness`: update the authoritative source first, then synchronize reader guides and generated vendor adapters.
+Completed tasks, classifications, reports, evidence, judgments, usage, execution ledger, retrospectives and stories remain cold. On-demand `project-retrospective` reconstructs audit-grade history; `project-storytelling` converts bounded evidence into architecture narrative/case study/self-branding without making raw history permanent coding context.
 
 ## Start here
 
 1. `README.md`
 2. `ARCHITECTURE.md`
-3. matching bootstrap prompt under `prompts/bootstrap/`
-4. current task/amendment and only the skills it triggers
+3. matching `prompts/bootstrap/*`
+4. `DRAFT_TASK.md`
+5. `REVIEW_DRAFT.md`
+6. current task + classified verification profiles + triggered skills only
+7. `APPLY_TASK.md`
+8. `VERIFY_AND_REPORT.md`
+9. required supervisor prompt
 
-Research evidence lives under `research/` and is dated; it informs policy but does not override the canonical architecture.
+Dated primary-source evidence for this update is under `research/2026-09-09-verification-blind-spots.md`.
