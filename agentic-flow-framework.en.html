@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Agentic Flow Framework v1.1</title>
+<style>
+:root{font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;line-height:1.65;color:#172033;background:#f7f8fb}body{margin:0}.wrap{max-width:1050px;margin:auto;padding:42px 24px 80px}article{background:#fff;border:1px solid #e4e7ec;border-radius:18px;padding:38px;box-shadow:0 8px 30px rgba(20,30,55,.06)}h1,h2,h3{line-height:1.25;color:#101828}h1{font-size:2.35rem;margin-top:0}h2{margin-top:2.4rem;padding-top:.4rem;border-top:1px solid #eef0f4}h3{margin-top:1.6rem}code,pre{direction:ltr;text-align:left;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}code{background:#f2f4f7;padding:.12em .35em;border-radius:5px}pre{background:#111827;color:#f8fafc;padding:18px;border-radius:12px;overflow:auto;white-space:pre}blockquote{border-left:4px solid #667085;margin:1.4rem 0;padding:.5rem 1rem;background:#f8fafc}table{border-collapse:collapse;width:100%;display:block;overflow:auto}th,td{border:1px solid #dfe3e8;padding:9px 12px;text-align:left;vertical-align:top}th{background:#f6f8fa}.meta{color:#667085}.callout{background:#f5f7ff;border:1px solid #d7ddff;padding:16px 18px;border-radius:12px}.warn{background:#fff8e8;border-color:#f7d58b}.good{background:#edfdf3;border-color:#a6e5bc}a{color:#175cd3}ul,ol{padding-left:1.4rem}</style>
+</head>
+<body><main class="wrap"><article>
+<h1>Agentic Flow Framework</h1>
+<p class="meta"><strong>Version 1.1 · 2026-09-09</strong><br>A repository-first, tool-agnostic framework for reliable engineering with coding agents.</p>
+<blockquote><strong>Durable project memory; disposable, high-quality working context.</strong></blockquote>
+
+<h2>1. What this framework solves</h2>
+<p>Long agent sessions often fail because of control-plane problems rather than raw model intelligence: oversized permanent instructions, whole-repository scans, stale chat memory, silent scope expansion, evidence that lives only in conversation, and one agent acting as author, executor and judge.</p>
+<p>The goal is therefore not simply “use fewer tokens.” The engineering target is a higher <strong>signal-to-context ratio</strong>, bounded authority, explicit escalation and restart-safe state.</p>
+<pre>REQUEST
+  ↓
+TASK CONTRACT
+  ↓
+REVIEW / FREEZE
+  ↓
+APPLY AUTHORIZATION
+  ↓
+BOUNDED EXECUTION
+  ↓
+VERIFICATION + RECEIPTS
+  ↓
+INDEPENDENT REVIEW (risk-based)
+  ↓
+CLOSURE → DURABLE CHECKPOINT → SAFE CONTEXT RESET</pre>
+
+<h2>2. Core principles</h2>
+<ol>
+<li>Repository/durable state beats conversation memory.</li>
+<li>One rule has one authoritative home; link instead of copying policy.</li>
+<li>Keep always-on instructions short; load procedures as on-demand skills.</li>
+<li>Write Definition of Done before implementation.</li>
+<li>Drafting is not execution authority.</li>
+<li>The executor is not automatically the final judge.</li>
+<li>A stronger model means more capability, not magical truth or authority.</li>
+<li>Execution may retry; strategy and scope may not silently mutate.</li>
+<li>STOP/BLOCKED is a valid outcome when prerequisites are missing.</li>
+<li>Verification must produce receipts proportional to risk.</li>
+<li>Reset context at durable semantic boundaries, not arbitrary token counts.</li>
+<li>Heavy exploration belongs in isolated child contexts.</li>
+<li>Deterministic rules belong in scripts/hooks/CI where practical.</li>
+</ol>
+
+<h2>3. Instruction and authority architecture</h2>
+<pre>POLICY / engineering constitution
+        ↓
+AGENTS.md — short map + essential invariants
+        ↓
+Task contract
+        ↓
+On-demand SKILL.md procedures
+        ↓
+Vendor adapter — CLAUDE.md / GEMINI.md / hooks / tool config</pre>
+<p>OpenAI’s Harness Engineering report documents a real failure mode from a giant <code>AGENTS.md</code>: it crowded useful task/code context and became stale. The successful pattern was a concise map into structured repository documentation. The framework follows that pattern.</p>
+
+<h2>4. Task contract and skill routing</h2>
+<p>A task is an executable contract, not a vague prompt. It should name goal/symptom, hypotheses, scope, non-scope, baseline, uncertainties, Definition of Done, allowed mutation surface, required evidence, stop conditions and escalation conditions.</p>
+<p>Skills are reusable procedures. Recommended starting default: <strong>0–3 load-bearing skills</strong> per task. Each skill should define purpose, triggers, non-triggers, input/output contracts, mutation authority, dependencies, evidence requirements and fail-closed behavior.</p>
+<div class="callout"><strong>Author ≠ judge.</strong> For material work, separate draft → review/freeze → apply. If evidence proves the task contract wrong during execution, stop and amend instead of silently rewriting it.</div>
+
+<h2>5. Context engineering</h2>
+<p>Anthropic’s current documentation treats context as working memory and explicitly warns that more context is not automatically better. Prompt history, retrieved documents, tool definitions and tool results all compete for the same window.</p>
+<pre>CORE_CONTEXT
+  stable policy + task contract + module map
+
+WORKING_SET
+  files/modules allowed to change
+
+REFERENCE_SET
+  interfaces/contracts required to understand the task
+
+EXCLUDED_SET
+  unrelated modules, generated output, dependency trees, huge raw logs</pre>
+<p>A one-million-token window is capacity, not permission to load a monorepo. A fresh session at a durable task boundary is often cleaner than carrying an old history forward.</p>
+<div class="callout warn"><strong>Prompt caching is not compression.</strong> Anthropic documents that cache-read/cache-creation input still counts toward the context window. Use caching for cost and latency, not as a justification for polluted long-lived sessions.</div>
+
+<h2>6. Large modular frontend / monorepo pattern</h2>
+<p>Use a mechanical dependency graph to define the agent working set before asking the model to reason. Nx <code>affected</code> uses Git plus its project graph to calculate the minimum impacted project set. TypeScript Project References are designed to split a large program into smaller projects with explicit boundaries and build order.</p>
+<pre>mechanical affected graph
+        ↓
+module context contract
+        ↓
+cheap read-only discovery agent(s)
+        ↓
+standard executor for one bounded module
+        ↓
+module-local tests/typecheck
+        ↓
+expand verification only when shared contracts require it</pre>
+<h3>Module context contract</h3>
+<pre>module: checkout
+edit_modules: [checkout]
+reference_modules: [cart, identity]
+public_contracts:
+  - packages/contracts/payment.ts
+exclude:
+  - node_modules/**
+  - dist/**
+  - coverage/**
+local_checks:
+  - npm run test:checkout
+  - npm run typecheck:checkout
+escalate_if:
+  - public_contract_changes
+  - tests_fail_outside_working_set</pre>
+<p>Use child contexts for file discovery, import/export inventory, log reduction, test-failure classification and repetitive scans. Return only a bounded evidence packet:</p>
+<pre>CONCLUSION
+FILES_READ
+AFFECTED_MODULES
+EVIDENCE_REFS
+FAILING_CHECKS
+UNRESOLVED
+RECOMMENDED_NEXT_STEP</pre>
+<p>Parallelism protects the parent context but does not automatically reduce total cost. Multiple agents repeatedly reading the same 50 files can be more expensive than one cheap inventory pass.</p>
+
+<h2>7. Model routing</h2>
+<p>Routing simple bounded work to cheaper models is an officially supported and practical pattern. Route by <strong>uncertainty and blast radius</strong>, not merely prompt length.</p>
+<table><thead><tr><th>Tier</th><th>Use</th><th>Authority</th></tr></thead><tbody>
+<tr><td>T0 Deterministic</td><td>dependency graph, grep/AST, lint, typecheck, test selection, formatting</td><td>scripts/CI</td></tr>
+<tr><td>T1 Cheap read-only</td><td>discovery, inventory, log summarization, repetitive classification</td><td>normally no mutation</td></tr>
+<tr><td>T2 Standard executor</td><td>localized feature, module refactor, tests, bounded bug fix</td><td>scoped edits</td></tr>
+<tr><td>T3 Judgment</td><td>architecture, ambiguous diagnosis, cross-module contracts, security/data, high-risk closure</td><td>decision/review; mutation explicit</td></tr>
+</tbody></table>
+<h3>Claude Code</h3>
+<pre>T1 → Haiku: read-only exploration/inventory
+T2 → Sonnet: normal coding/execution
+T3 → Opus: architecture/judgment</pre>
+<p>Claude Code’s built-in Explore agent is a concrete production-oriented example: separate context, read-only tools and Haiku. Anthropic’s cost guidance also recommends cheaper model routing for simple subagent work.</p>
+<h3>OpenAI API custom harness</h3>
+<pre>T1 → GPT-5.6 Luna
+T2 → GPT-5.6 Terra
+T3 → GPT-5.6 Sol</pre>
+<p>This mapping is for a custom API harness. Do not assume the hosted Codex product exposes the same menu or billing behavior.</p>
+<h3>OpenCode</h3>
+<p>OpenCode supports per-agent/per-command model overrides and child sessions, making a cheap explorer / standard executor / stronger reviewer topology straightforward.</p>
+<h3>Escalation</h3>
+<pre>UNKNOWN_ROOT_CAUSE
+CROSS_MODULE_PUBLIC_CONTRACT_CHANGE
+SECURITY_OR_AUTH_CHANGE
+DATABASE_OR_DURABLE_DATA_CHANGE
+&gt;2 FAILED_EXECUTION_LOOPS
+TESTS_FAIL_OUTSIDE_WORKING_SET
+DEPENDENCY_GRAPH_EXPANDS_MATERIALLY
+ARCHITECTURAL_REQUIREMENT_AMBIGUITY
+CHEAP_MODEL_LOW_CONFIDENCE_OR_CONFLICTING_EVIDENCE
+HIGH_RISK_CLOSURE</pre>
+<p>On escalation transfer the compact task/evidence packet, not the cheap model’s full conversation.</p>
+
+<h2>8. Yara skill telemetry audit</h2>
+<p>Inspection of Yara’s <code>claude</code> branch confirms that the supplied skill report contains a known identifier-fragmentation issue. The canonical ID is a bare basename without <code>.md</code>, while historical events contain both forms. The report implementation groups the raw string, so the two forms render as different skills.</p>
+<p>After normalization, the 14 displayed rows in the supplied report collapse to <strong>12 canonical skill IDs</strong>. Two fragmented pairs are:</p>
+<pre>yara_01_live_verify_against_real_stack
+  normalized total: triggered 2, applied 1
+
+yara_eval_02_evaluating_a_test
+  normalized total: triggered 3, applied 3</pre>
+<p>The strongest positive <em>observed-association</em> signals in the supplied sample are:</p>
+<pre>model-routing-and-delegation : 3
+diagnose-before-fix          : 2
+yara_06_fix_the_fix          : 2
+craft-and-apply-task          : 1</pre>
+<div class="callout warn">These are not causal proofs. Yara’s own telemetry design correctly separates observed behavior/effects from controlled causality.</div>
+<p>Also, <code>--last 100</code> selects the latest up-to-100 distinct task IDs that exist in the skill-event log; it is not automatically equivalent to the last 100 project tasks. The raw <code>_audit/SKILL_EVENTS.jsonl</code> is gitignored/local, so GitHub alone cannot independently recompute the aggregate.</p>
+<p>Recommended reporting fix: canonicalize identifiers at read/report time rather than rewriting the append-only historical log, and add instrumentation coverage and eligible-trigger denominators.</p>
+<pre>def canonical_skill_id(value: str) -&gt; str:
+    return value[:-3] if value.endswith('.md') else value</pre>
+
+<h2>9. Verification and governance</h2>
+<p>Evidence strength should be explicit:</p>
+<table><thead><tr><th>Class</th><th>Example</th></tr></thead><tbody>
+<tr><td>CLAIM</td><td>“this should work”</td></tr><tr><td>STATIC_RECEIPT</td><td>file/line/diff/config</td></tr><tr><td>TEST_RECEIPT</td><td>named test + result</td></tr><tr><td>LIVE_RECEIPT</td><td>real-stack observation</td></tr><tr><td>MUTATION_PROOF</td><td>break → fail → restore → pass</td></tr><tr><td>INDEPENDENT_REVIEW</td><td>cold/read-only audit or reproduction</td></tr>
+</tbody></table>
+<p>Use minimal governance for low-risk repositories, standard governance for normal engineering, and draft/freeze/apply + independent review + strong evidence for high-assurance/security/production work.</p>
+
+<h2>10. Starter policy</h2>
+<pre>context_policy:
+  root_instruction_target_lines: 120
+  default_edit_modules: 1
+  default_reference_modules: 2
+  raw_log_to_model: false
+  semantic_reset_after_closed_task: true
+
+routing:
+  deterministic_first: true
+  cheap_readonly_for: [discovery, inventory, log_summarization, classification]
+  standard_executor_for: [localized_feature_work, module_scoped_refactor, tests]
+  judgment_tier_for: [cross_module_contract_change, architecture, security, ambiguous_root_cause, high_risk_closure]
+
+escalation:
+  execution_retry_limit_before_judgment: 2
+  expand_scope_only_with_evidence: true
+  transfer_raw_conversation: false
+
+verification:
+  use_affected_graph_when_available: true
+  run_local_checks_first: true
+  broaden_tests_on_shared_contract_change: true</pre>
+<p>The numeric values are starting defaults, not universal laws. Benchmark them on frozen project fixtures and measure rework, regressions, escalation rate, verification completeness, latency and cost per accepted task.</p>
+
+<h2>11. Primary sources</h2>
+<ul>
+<li><a href="https://openai.com/index/harness-engineering/">OpenAI — Harness Engineering</a></li>
+<li><a href="https://openai.com/index/unrolling-the-codex-agent-loop/">OpenAI — Unrolling the Codex agent loop</a></li>
+<li><a href="https://platform.claude.com/docs/en/build-with-claude/context-windows">Anthropic — Context windows</a></li>
+<li><a href="https://platform.claude.com/docs/en/agents-and-tools/tool-use/manage-tool-context">Anthropic — Manage tool context</a></li>
+<li><a href="https://code.claude.com/docs/en/subagents">Claude Code — Subagents</a></li>
+<li><a href="https://code.claude.com/docs/en/costs">Claude Code — Manage costs</a></li>
+<li><a href="https://opencode.ai/docs/agents">OpenCode — Agents</a></li>
+<li><a href="https://nx.dev/docs/features/ci-features/affected">Nx — affected projects</a></li>
+<li><a href="https://www.typescriptlang.org/docs/handbook/project-references">TypeScript — Project References</a></li>
+</ul>
+<p class="good callout"><strong>Closing principle:</strong> the ideal agentic workflow does not require long-lived agent memory. It requires durable project memory and disposable, high-quality working context.</p>
+</article></main></body></html>
