@@ -1,7 +1,7 @@
 # Target Project Durable Layout
 
-**Schema version:** 1.1  
-**Updated:** 2026-09-09
+**Schema version:** 1.2  
+**Updated:** 2026-09-09T08:22:00Z
 
 A target project may use this portable durable state layout. Names can be adapted, but responsibilities should remain distinct. Projects that already have equivalent stores should reuse them instead of creating shadow state.
 
@@ -24,7 +24,9 @@ A target project may use this portable durable state layout. Names can be adapte
 │   └── SUMMARY.md             # compact aggregate, timestamped/versioned
 ├── checkpoints/               # durable resume boundaries
 ├── history/
+│   ├── EXECUTION_LEDGER.jsonl # append-only boundary facts; never preloaded
 │   └── PROJECT_TIMELINE.md    # compact dated milestones, not full receipts
+├── retrospectives/            # on-demand audit/work-reconstruction reports
 ├── stories/                   # on-demand case studies/self-branding artifacts
 └── README.md
 ```
@@ -38,18 +40,25 @@ Normal execution may preload only:
 - current task/amendment and directly relevant evidence/decision pointers;
 - canonical architecture/instructions required for the current scope.
 
-It must **not** recursively read completed tasks, all judgments, all evidence, the usage ledger, or project stories unless a trigger requires history/audit/provenance.
+It must **not** recursively read completed tasks, all judgments, all evidence, the usage ledger, execution ledger, retrospectives, or project stories unless a trigger requires history/audit/provenance.
 
 ## Cold-history rule
 
-Completed task/evidence/judgment/usage/story artifacts stay durable and indexed. They are opened on demand for:
+Completed task/evidence/judgment/usage/retrospective/story artifacts stay durable and indexed. They are opened on demand for:
 
 - regression or decision provenance;
 - audit/compliance;
 - architecture history;
-- project retrospective/storytelling/self-branding;
+- execution retrospective/work reconstruction;
+- project storytelling/self-branding;
 - token/cost analysis;
 - explicit user request.
+
+## Execution ledger
+
+Use [`EXECUTION_RETROSPECTIVE_LEDGER.md`](EXECUTION_RETROSPECTIVE_LEDGER.md) for compact boundary entries such as draft review, amendment, freeze, apply start, STOP, evidence-ready, closure review and close.
+
+The ledger stores pointers and small counters, not narrative. It exists so final retrospectives do not require excavating every artifact from scratch. It is append-only in spirit and COLD by default.
 
 ## Artifact rules
 
@@ -58,5 +67,6 @@ Completed task/evidence/judgment/usage/story artifacts stay durable and indexed.
 - Evidence files hold observable receipts, not confident summaries only.
 - Judgment files identify review mode: `DIRECT_ACCESS` or `EVIDENCE_ONLY`, model/provider when observable, timestamp, decision, evidence refs, and validity boundary.
 - Usage telemetry records only observable counters/flags; missing telemetry is unknown, not zero.
+- Retrospective metrics classify facts as `PROVEN`, `RECONSTRUCTED`, or `UNKNOWN`; early incomplete history is never backfilled with invented precision.
 - `CURRENT.md` is a recovery pointer, not a second task board or policy source.
-- Canonical/index/story documents carry version and `Updated` timestamp/date.
+- Canonical/index/retrospective/story documents carry version and `Updated` timestamp/date.
