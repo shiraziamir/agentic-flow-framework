@@ -101,8 +101,12 @@ def build(root: Path, output: Path) -> dict:
         primary_sources = (root / "docs/references/PRIMARY_SOURCES.md").read_bytes()
         install_prompt = (
             "Read .agentic-flow/START_HERE.md and adopt Agentic Flow for this repository. "
-            "Do not start or change product work until adoption validation is complete. "
-            "If coding is already in progress, follow MIDSTREAM_ADOPTION before further mutation.\n"
+            "Inspect the project read-only first. Use STRICT_PREVIEW mutation approval unless "
+            "the existing project profile explicitly says otherwise. Before each mutation batch, "
+            "report current state, proposed state, affected files/resources, impact, planned checks, "
+            "rollback/recovery when relevant, and out-of-scope boundaries; then wait for explicit "
+            "APPROVE/APPLY. If coding is already in progress, follow MIDSTREAM_ADOPTION before "
+            "further mutation and preserve current edits.\n"
         ).encode("utf-8")
 
         _write(zf, "agentic-flow/README.md", operator_readme)

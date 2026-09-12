@@ -1,7 +1,7 @@
 # Project Profile Config Schema
 
-**Schema version:** 1.0  
-**Updated:** 2026-09-09T11:30:00Z
+**Schema version:** 1.1  
+**Updated:** 2026-09-12
 
 A target project should keep one small, durable project-level profile, typically `.agentic/PROJECT_PROFILE.yaml`. It declares baseline operating intent and guardrails. It is not a proof that the project satisfies them.
 
@@ -43,6 +43,13 @@ security:
   secret_scanning: REQUIRED|OPTIONAL|NOT_APPLICABLE
   least_privilege: REQUIRED|OPTIONAL|NOT_APPLICABLE
 
+agent_mutation_policy:
+  mode: STRICT_PREVIEW|MATERIAL_CHANGES_ONLY|BOUNDED_AUTONOMY
+  group_related_changes_into_batches: true|false
+  require_current_vs_proposed_state: true|false
+  require_planned_checks_before_apply: true|false
+  require_rollback_for_material_changes: true|false
+
 agent_environment_policy:
   local: AUTO_ALLOWED|OWNER_APPROVAL|DENIED
   ephemeral_test: AUTO_ALLOWED|OWNER_APPROVAL|DENIED
@@ -64,10 +71,28 @@ temporary_overrides:
   require_compensating_control: true
 ```
 
+## Mutation approval policy
+
+Use `schemas/MUTATION_APPROVAL_POLICY.md`.
+
+Recommended default for first adoption or an operator who wants explicit control:
+
+```yaml
+agent_mutation_policy:
+  mode: STRICT_PREVIEW
+  group_related_changes_into_batches: true
+  require_current_vs_proposed_state: true
+  require_planned_checks_before_apply: true
+  require_rollback_for_material_changes: true
+```
+
+Under `STRICT_PREVIEW`, read-only discovery is allowed without a mutation approval. Before each bounded mutation batch, the agent reports current state, proposed state, affected files/resources, impacts, planned checks, rollback/recovery when relevant, and explicit out-of-scope boundaries; then waits for `APPROVE`/`APPLY`.
+
 ## Rules
 
 1. This file describes the baseline; current receipts determine reality.
 2. A baseline requirement must not be silently switched off during a task. Use `schemas/TEMPORARY_OVERRIDE.md`.
 3. `NOT_APPLICABLE` requires a durable rationale when the capability would normally be expected for the selected readiness tier.
 4. Agent permissions are an upper bound, not automatic authority. Task/governance/environment authorization can further restrict them.
-5. Keep this profile concise. Detailed policy remains in canonical framework/project docs and production profiles.
+5. Mutation approval and environment authorization are separate: approval to edit source does not authorize production mutation.
+6. Keep this profile concise. Detailed policy remains in canonical framework/project docs and production profiles.

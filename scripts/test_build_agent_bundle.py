@@ -24,10 +24,13 @@ def main() -> None:
         put(root, "docs/agent/MIDSTREAM_ADOPTION.md", "# midstream\n")
         put(root, "docs/agent/TASK_WORKFLOW_DRAFT_REVIEW_APPLY_VERIFY.md", "# workflow\n")
         put(root, "docs/agent/TOKEN_EFFICIENT_WORKFLOW.md", "# token\n")
+        put(root, "docs/operator/CLONE_AND_ADOPT.md", "# clone and adopt\n")
         put(root, "docs/operator/USING_PYTHON_TOOLS.en.md", "# python tools\n")
         put(root, "docs/operator/USING_PYTHON_TOOLS.fa.md", "# python tools fa\n")
         put(root, "docs/architecture/WHY.md", "# why\n")
         put(root, "docs/references/PRIMARY_SOURCES.md", "# sources\n")
+        put(root, "schemas/MUTATION_APPROVAL_POLICY.md", "# strict preview\n")
+        put(root, "prompts/bootstrap/CLONE_AND_ADOPT.md", "# clone prompt\n")
 
         for rel in [
             "schemas/X.md",
@@ -64,6 +67,9 @@ def main() -> None:
         assert manifest["entrypoint"] == "START_HERE.md"
         assert manifest["operator_entrypoint"] == "README.md"
         assert "docs/agent/START_HERE.md" in selected
+        assert "docs/operator/CLONE_AND_ADOPT.md" in selected
+        assert "schemas/MUTATION_APPROVAL_POLICY.md" in selected
+        assert "prompts/bootstrap/CLONE_AND_ADOPT.md" in selected
         assert "docs/operator/USING_PYTHON_TOOLS.en.md" in selected
         assert "docs/architecture/WHY.md" in selected
         assert "docs/references/PRIMARY_SOURCES.md" in selected
@@ -84,8 +90,11 @@ def main() -> None:
                 "agentic-flow/ARCHITECTURE.md",
                 "agentic-flow/docs/agent/TASK_WORKFLOW_DRAFT_REVIEW_APPLY_VERIFY.md",
                 "agentic-flow/docs/agent/TOKEN_EFFICIENT_WORKFLOW.md",
+                "agentic-flow/docs/operator/CLONE_AND_ADOPT.md",
                 "agentic-flow/docs/operator/USING_PYTHON_TOOLS.en.md",
                 "agentic-flow/docs/references/PRIMARY_SOURCES.md",
+                "agentic-flow/schemas/MUTATION_APPROVAL_POLICY.md",
+                "agentic-flow/prompts/bootstrap/CLONE_AND_ADOPT.md",
             }
             assert required <= names
             assert not any("/research/" in name for name in names)
@@ -100,7 +109,10 @@ def main() -> None:
             assert zf.read("agentic-flow/README.md") == b"# bundle readme\n"
             assert zf.read("agentic-flow/BEST_PRACTICES_USED.en.txt") == b"best practices\n"
             assert zf.read("agentic-flow/PRIMARY_SOURCES.md") == b"# sources\n"
-            assert b"MIDSTREAM_ADOPTION" in zf.read("agentic-flow/INSTALL_PROMPT.txt")
+            install_prompt = zf.read("agentic-flow/INSTALL_PROMPT.txt")
+            assert b"MIDSTREAM_ADOPTION" in install_prompt
+            assert b"STRICT_PREVIEW" in install_prompt
+            assert b"APPROVE/APPLY" in install_prompt
 
         print("bundle builder self-test: PASS")
 

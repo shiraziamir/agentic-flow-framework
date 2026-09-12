@@ -6,6 +6,8 @@
 
 Separate task design from implementation so scope, acceptance and verification are clear before mutation. The goal is not bureaucracy; the goal is to stop accidental scope growth and unsupported closure claims.
 
+Mutation authority is controlled separately by `schemas/MUTATION_APPROVAL_POLICY.md`. A project may require a compact current-vs-proposed preview before every mutation batch even after the task itself has been reviewed.
+
 ## 1. DRAFT
 
 Use:
@@ -61,7 +63,40 @@ For ordinary bounded work, project policy may allow the reviewed task itself to 
 
 Never treat a request for production access, a model recommendation or a reviewer suggestion as authority by itself.
 
-## 4. APPLY
+## 4. CHANGE PREVIEW / MUTATION APPROVAL
+
+Check `.agentic/PROJECT_PROFILE.yaml` and `schemas/MUTATION_APPROVAL_POLICY.md`.
+
+Under `STRICT_PREVIEW`, before each bounded mutation batch report:
+
+```text
+CURRENT STATE      what is true now
+PROPOSED STATE     what will be true after the batch
+WHY                reason for the change
+WILL CHANGE        files/resources expected to mutate
+IMPACT             behavior/API/security/data/operations impact
+VERIFY             planned tests/checks
+ROLLBACK/RECOVERY  when material
+OUT OF SCOPE       explicit boundary
+```
+
+Then stop and wait for explicit `APPROVE` / `APPLY`.
+
+Approval is limited to the previewed batch. Group tightly related edits into one batch when they share one purpose and verification boundary; do not create line-by-line approval spam.
+
+Task approval and mutation approval are distinct:
+
+```text
+TASK AUTHORIZATION
+= this work is allowed conceptually
+
+MUTATION APPROVAL
+= this specific bounded change is allowed now
+```
+
+Neither one automatically grants production/destructive authority.
+
+## 5. APPLY
 
 Use:
 
@@ -69,28 +104,29 @@ Use:
 prompts/workflow/APPLY_TASK.md
 ```
 
-Implement only inside the approved scope and strategy.
+Implement only inside the approved task scope **and**, where required, the approved mutation preview.
 
 During APPLY:
 
-- keep the exact repository/task/environment identity visible;
+- keep exact repository/task/environment identity visible;
 - run focused checks as soon as useful;
 - preserve existing project conventions unless the task explicitly changes them;
 - use the lowest environment that can prove the required behavior;
 - do not weaken a test, mock a real boundary, disable a control or broaden scope merely to get green output;
 - record new material facts that affect verification or production posture.
 
-If implementation discovers a materially new database, provider, public interface, production environment, security boundary, migration, durable-data requirement, operational dependency or architecture strategy:
+If implementation discovers a materially new database, provider, public interface, production environment, security boundary, migration, durable-data requirement, operational dependency, architecture strategy, or a materially different file/resource set than the approved preview:
 
 ```text
 STOP
-→ record evidence
-→ amend / reclassify the task
+→ record evidence / newly discovered current state
+→ amend / reclassify task if needed
+→ present revised change preview
 → review / authorize as required
 → continue only inside the new boundary
 ```
 
-## 5. VERIFY + REPORT
+## 6. VERIFY + REPORT
 
 Use:
 
@@ -126,6 +162,8 @@ scanner green       != secure
 reviewer PASS       != missing runtime receipt
 ```
 
+After mutation, report the actual delta against the approved preview. If something planned was not changed, or something changed unexpectedly, state it explicitly.
+
 Report exact reality:
 
 ```text
@@ -148,7 +186,7 @@ CONTRADICTED
 
 Do not hide skipped or unavailable checks.
 
-## 6. INDEPENDENT CLOSURE
+## 7. INDEPENDENT CLOSURE
 
 Use independent/cold closure when project risk, task classification or the evidence surface requires it.
 
@@ -156,6 +194,7 @@ The reviewer should prefer this order:
 
 ```text
 frozen task / project profile
+→ approved mutation preview(s)
 → actual diff / source
 → raw receipts / gaps
 → falsifying checks
@@ -164,12 +203,13 @@ frozen task / project profile
 
 Reviewer judgment can challenge evidence but cannot replace a missing behavioral receipt.
 
-## 7. CHECKPOINT
+## 8. CHECKPOINT
 
 At closure, preserve a compact durable checkpoint:
 
 - repository/artifact/environment identity;
 - task status;
+- approved mutation batch(es) when applicable;
 - verified claims and receipts;
 - checks not run;
 - open gaps / overrides;
@@ -187,4 +227,4 @@ risk up   → stronger draft/review/authorization/evidence
 risk down → lighter workflow
 ```
 
-The claim/receipt and scope boundaries still apply.
+However, if the project explicitly selects `STRICT_PREVIEW`, even a small mutation still gets a short preview and approval. Keep that preview compact and batch related edits.
