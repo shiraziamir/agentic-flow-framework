@@ -43,6 +43,13 @@ agent_mutation_policy:
   require_planned_checks_before_apply: true
   require_rollback_for_material_changes: true
 
+usage_reporting:
+  quota_snapshot: OPTIONAL
+  report_after_material_task: true
+  notify_operator: false
+  stale_after_seconds: 900
+  never_reduce_acceptance_quality: true
+
 agent_environment_policy:
   local: AUTO_ALLOWED
   ephemeral_test: AUTO_ALLOWED
