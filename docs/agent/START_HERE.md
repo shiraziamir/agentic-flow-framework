@@ -2,17 +2,49 @@
 
 **Agent-facing entrypoint.**
 
-The portable distribution also contains operator, architecture and source-reference documentation for humans. **Do not preload those files.** Read them only when the current task explicitly needs them.
+The framework may be available as a cloned repository, a sibling directory, or a portable `.agentic-flow/` distribution. Operator, architecture and source-reference documentation may be present, but **do not preload those files**. Read them only when the current task explicitly needs them.
 
 ## 1. Find the framework and project state
 
 1. Confirm the framework root containing `ARCHITECTURE.md` and `VERSION`.
 2. Read `ARCHITECTURE.md` first.
-3. Inspect repository state before mutation: branch/HEAD, dirty paths, current task/issue, existing agent instructions, build/test commands and any active environment changes.
+3. Inspect the target repository read-only before mutation: branch/HEAD, dirty paths, current task/issue, existing agent instructions, build/test commands and any active environment changes.
 4. Locate or propose the target project's `.agentic/PROJECT_PROFILE.yaml` using `schemas/PROJECT_PROFILE_CONFIG.md`.
-5. Use `verification/00_INDEX.md`, `production/00_INDEX.md`, and `skills/00_INDEX.md` as routers. Load detailed profiles/skills lazily.
+5. Determine the project's `agent_mutation_policy`. If none is defined during first adoption, use `STRICT_PREVIEW` as the safe default and ask the operator to persist/override it.
+6. Use `verification/00_INDEX.md`, `production/00_INDEX.md`, and `skills/00_INDEX.md` as routers. Load detailed profiles/skills lazily.
 
-## 2. If coding is already in progress
+If the framework is a sibling clone such as `../agentic-flow-framework`, framework paths are resolved from that root; project-owned `.agentic/` state stays in the target project.
+
+## 2. Mutation approval
+
+Read:
+
+```text
+schemas/MUTATION_APPROVAL_POLICY.md
+```
+
+Under `STRICT_PREVIEW`, read-only discovery does not need separate approval. Before every bounded mutation batch, report:
+
+```text
+CURRENT STATE
+PROPOSED STATE
+WHY
+WILL CHANGE
+IMPACT
+VERIFY
+ROLLBACK / RECOVERY when material
+OUT OF SCOPE
+```
+
+Then **STOP and wait for explicit `APPROVE` / `APPLY`** before mutating files, configuration, infrastructure, data, external systems or runtime state.
+
+Group tightly related edits into one bounded batch. Do not ask permission line-by-line unless the operator explicitly requests per-file approval.
+
+Approval is limited to the previewed batch. If implementation discovers a materially different file/resource, behavior, risk, environment, architecture strategy, dependency, public contract, security/data boundary or scope, STOP and present a revised preview before continuing.
+
+Mutation approval does not replace task authorization or environment authority. An approved source edit is not permission to mutate production.
+
+## 3. If coding is already in progress
 
 Read:
 
@@ -20,9 +52,9 @@ Read:
 docs/agent/MIDSTREAM_ADOPTION.md
 ```
 
-before changing product code. Preserve current valid work and do not fabricate prior framework review or authorization.
+before changing product code. Preserve current valid work and do not fabricate prior framework review or authorization. Treat existing dirty edits as observed current state, not as newly approved framework work.
 
-## 3. Practical task workflow
+## 4. Practical task workflow
 
 For a material task, read:
 
@@ -37,6 +69,7 @@ REQUEST
 → DRAFT
 → REVIEW
 → FREEZE / APPLY AUTHORIZATION when required
+→ CHANGE PREVIEW / MUTATION APPROVAL when policy requires
 → APPLY
 → VERIFY + REPORT
 → independent closure when required
@@ -47,10 +80,10 @@ Before material APPLY, define observable DoD, planned closure claims, minimum re
 If APPLY discovers a materially new provider, database, public contract, security/data/recovery boundary, production environment or architecture strategy:
 
 ```text
-STOP → evidence → amend/reclassify → review/authorize as required → continue
+STOP → evidence → amend/reclassify → revised change preview → review/authorize as required → continue
 ```
 
-## 4. Verification discipline
+## 5. Verification discipline
 
 A claim may not be stronger than its current receipt.
 
@@ -65,7 +98,9 @@ reviewer PASS        != missing runtime evidence
 
 Report exact `PASS / FAIL / PARTIAL / SKIPPED / UNVERIFIED` states and preserve `OBSERVED / DERIVED / INFERRED / UNKNOWN / CONTRADICTED` truth boundaries.
 
-## 5. Production-bound work
+When live/integration evidence depends on a runtime/environment, use `schemas/EVIDENCE_RECOVERY.md` to qualify the measuring environment and preserve stale/wrong-runtime evidence honestly.
+
+## 6. Production-bound work
 
 A task may close while the project still has operational gaps. Consult only the current project/production profile and triggered production profiles.
 
@@ -82,7 +117,7 @@ CLOSED
 
 Do not infer production readiness from configuration presence alone.
 
-## 6. Environment policy
+## 7. Environment policy
 
 Use the lowest environment that can directly establish the required claim:
 
@@ -97,7 +132,7 @@ LOCAL / HERMETIC
 
 A request for stronger access is not authorization. Production mutation follows the project's explicit authority path.
 
-## 7. Token/context efficiency
+## 8. Token/context efficiency
 
 For long, multi-agent, repository-wide or log-heavy work, read:
 
@@ -114,9 +149,11 @@ Default behavior:
 - compact evidence handoffs instead of transcripts;
 - stronger model judgment only for ambiguity, architecture, security, diagnosis or closure risk.
 
+`STRICT_PREVIEW` should batch related mutations so approval discipline does not become token/interaction spam.
+
 Acceptance quality must not be lowered merely to save tokens.
 
-## 8. Agent vs operator/reference files
+## 9. Agent vs operator/reference files
 
 Normal coding-agent context may use:
 
@@ -130,7 +167,7 @@ selected skills/
 current project/task/evidence files
 ```
 
-These are present in the distribution but **cold by default**:
+These are cold by default:
 
 ```text
 docs/operator/
@@ -140,24 +177,28 @@ PRIMARY_SOURCES.md
 BEST_PRACTICES_USED.en.txt
 ```
 
-Do not read all of them simply because they exist in the ZIP.
+Do not read all of them simply because they exist.
 
-## 9. Vendor adapter
+## 10. Vendor adapter
 
 Inspect existing `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, OpenCode configuration or equivalent before generating anything. Use the matching `prompts/bootstrap/*` file and create/update only the minimum adapter required by the current harness.
 
 Preserve valid project-specific rules. Report conflicts instead of silently overwriting them.
 
-## 10. Adoption completion
+## 11. Adoption completion
 
-Before product work begins/resumes, a fresh agent session should be able to discover without loading the whole framework:
+Before product work begins/resumes, return a concise read-only adoption receipt containing:
 
-- source of truth and framework version;
+- framework version/ref and location;
+- source of truth;
+- target project branch/HEAD/dirty paths;
 - current task/project profile/open gaps/overrides;
+- mutation approval mode;
 - build/test/deploy/rollback entrypoints or explicit gaps;
 - verification and production routers;
-- the DRAFT/REVIEW/APPLY/VERIFY workflow;
-- the relevant environment authority;
-- the token/context-efficiency path.
+- relevant environment authority;
+- unresolved conflicts.
 
-Return a concise adoption receipt and unresolved conflicts. Do not store chain-of-thought or raw transcripts as project state.
+Do not perform the first product mutation merely because adoption succeeded. Under `STRICT_PREVIEW`, present the first change preview and wait for explicit approval.
+
+Do not store chain-of-thought or raw transcripts as project state.
