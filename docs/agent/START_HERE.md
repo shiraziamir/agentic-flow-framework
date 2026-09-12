@@ -11,7 +11,8 @@ The framework may be available as a cloned repository, a sibling directory, or a
 3. Inspect the target repository read-only before mutation: branch/HEAD, dirty paths, current task/issue, existing agent instructions, build/test commands and any active environment changes.
 4. Locate or propose the target project's `.agentic/PROJECT_PROFILE.yaml` using `schemas/PROJECT_PROFILE_CONFIG.md`.
 5. Determine the project's `agent_mutation_policy`. If none is defined during first adoption, use `STRICT_PREVIEW` as the safe default and ask the operator to persist/override it.
-6. Use `verification/00_INDEX.md`, `production/00_INDEX.md`, and `skills/00_INDEX.md` as routers. Load detailed profiles/skills lazily.
+6. Check `usage_reporting`. If quota snapshots are enabled/optional and the current harness exposes trustworthy telemetry, route to `docs/agent/USAGE_AWARE_TASK_REPORTING.md`.
+7. Use `verification/00_INDEX.md`, `production/00_INDEX.md`, and `skills/00_INDEX.md` as routers. Load detailed profiles/skills lazily.
 
 If the framework is a sibling clone such as `../agentic-flow-framework`, framework paths are resolved from that root; project-owned `.agentic/` state stays in the target project.
 
@@ -132,7 +133,7 @@ LOCAL / HERMETIC
 
 A request for stronger access is not authorization. Production mutation follows the project's explicit authority path.
 
-## 8. Token/context efficiency
+## 8. Token/context and quota efficiency
 
 For long, multi-agent, repository-wide or log-heavy work, read:
 
@@ -151,7 +152,9 @@ Default behavior:
 
 `STRICT_PREVIEW` should batch related mutations so approval discipline does not become token/interaction spam.
 
-Acceptance quality must not be lowered merely to save tokens.
+If quota reporting is enabled, append one compact snapshot after each material task/checkpoint. For Claude Code use `scripts/claude_usage_snapshot.py` and `schemas/USAGE_QUOTA_SNAPSHOT.md`. Report both **used** and **remaining**, plus source/freshness. Missing telemetry stays unavailable.
+
+Acceptance quality must not be lowered merely to save tokens or quota.
 
 ## 9. Agent vs operator/reference files
 
@@ -194,6 +197,7 @@ Before product work begins/resumes, return a concise read-only adoption receipt 
 - target project branch/HEAD/dirty paths;
 - current task/project profile/open gaps/overrides;
 - mutation approval mode;
+- usage-reporting policy and whether current harness telemetry is available;
 - build/test/deploy/rollback entrypoints or explicit gaps;
 - verification and production routers;
 - relevant environment authority;
