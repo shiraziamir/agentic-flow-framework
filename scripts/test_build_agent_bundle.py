@@ -24,12 +24,16 @@ def main() -> None:
         put(root, "docs/agent/MIDSTREAM_ADOPTION.md", "# midstream\n")
         put(root, "docs/agent/TASK_WORKFLOW_DRAFT_REVIEW_APPLY_VERIFY.md", "# workflow\n")
         put(root, "docs/agent/TOKEN_EFFICIENT_WORKFLOW.md", "# token\n")
+        put(root, "docs/agent/USAGE_AWARE_TASK_REPORTING.md", "# usage reporting\n")
         put(root, "docs/operator/CLONE_AND_ADOPT.md", "# clone and adopt\n")
+        put(root, "docs/operator/CLAUDE_USAGE_NOTIFICATIONS.md", "# claude notifications\n")
         put(root, "docs/operator/USING_PYTHON_TOOLS.en.md", "# python tools\n")
         put(root, "docs/operator/USING_PYTHON_TOOLS.fa.md", "# python tools fa\n")
         put(root, "docs/architecture/WHY.md", "# why\n")
         put(root, "docs/references/PRIMARY_SOURCES.md", "# sources\n")
+        put(root, "docs/references/CLAUDE_USAGE_TELEMETRY.md", "# claude usage sources\n")
         put(root, "schemas/MUTATION_APPROVAL_POLICY.md", "# strict preview\n")
+        put(root, "schemas/USAGE_QUOTA_SNAPSHOT.md", "# quota schema\n")
         put(root, "prompts/bootstrap/CLONE_AND_ADOPT.md", "# clone prompt\n")
 
         for rel in [
@@ -48,6 +52,8 @@ def main() -> None:
             "scripts/build_agent_bundle.py",
             "scripts/test_build_agent_bundle.py",
             "scripts/usage_ledger.py",
+            "scripts/claude_usage_snapshot.py",
+            "scripts/test_claude_usage_snapshot.py",
         ]:
             put(root, rel)
 
@@ -67,13 +73,19 @@ def main() -> None:
         assert manifest["entrypoint"] == "START_HERE.md"
         assert manifest["operator_entrypoint"] == "README.md"
         assert "docs/agent/START_HERE.md" in selected
+        assert "docs/agent/USAGE_AWARE_TASK_REPORTING.md" in selected
         assert "docs/operator/CLONE_AND_ADOPT.md" in selected
+        assert "docs/operator/CLAUDE_USAGE_NOTIFICATIONS.md" in selected
         assert "schemas/MUTATION_APPROVAL_POLICY.md" in selected
+        assert "schemas/USAGE_QUOTA_SNAPSHOT.md" in selected
+        assert "docs/references/CLAUDE_USAGE_TELEMETRY.md" in selected
         assert "prompts/bootstrap/CLONE_AND_ADOPT.md" in selected
         assert "docs/operator/USING_PYTHON_TOOLS.en.md" in selected
         assert "docs/architecture/WHY.md" in selected
         assert "docs/references/PRIMARY_SOURCES.md" in selected
         assert "scripts/build_agent_bundle.py" in selected
+        assert "scripts/claude_usage_snapshot.py" in selected
+        assert "scripts/test_claude_usage_snapshot.py" in selected
         assert "research/R.md" not in selected
         assert "retrospectives/R.md" not in selected
         assert "stories/S.md" not in selected
@@ -90,11 +102,17 @@ def main() -> None:
                 "agentic-flow/ARCHITECTURE.md",
                 "agentic-flow/docs/agent/TASK_WORKFLOW_DRAFT_REVIEW_APPLY_VERIFY.md",
                 "agentic-flow/docs/agent/TOKEN_EFFICIENT_WORKFLOW.md",
+                "agentic-flow/docs/agent/USAGE_AWARE_TASK_REPORTING.md",
                 "agentic-flow/docs/operator/CLONE_AND_ADOPT.md",
+                "agentic-flow/docs/operator/CLAUDE_USAGE_NOTIFICATIONS.md",
                 "agentic-flow/docs/operator/USING_PYTHON_TOOLS.en.md",
                 "agentic-flow/docs/references/PRIMARY_SOURCES.md",
+                "agentic-flow/docs/references/CLAUDE_USAGE_TELEMETRY.md",
                 "agentic-flow/schemas/MUTATION_APPROVAL_POLICY.md",
+                "agentic-flow/schemas/USAGE_QUOTA_SNAPSHOT.md",
                 "agentic-flow/prompts/bootstrap/CLONE_AND_ADOPT.md",
+                "agentic-flow/scripts/claude_usage_snapshot.py",
+                "agentic-flow/scripts/test_claude_usage_snapshot.py",
             }
             assert required <= names
             assert not any("/research/" in name for name in names)
