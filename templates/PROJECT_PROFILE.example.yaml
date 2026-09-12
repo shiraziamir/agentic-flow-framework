@@ -1,6 +1,6 @@
 profile_version: 1
 project_id: example-service
-updated_at: 2026-09-12T00:00:00Z
+updated_at: 2026-09-13T00:00:00Z
 
 codebase_scale: MEDIUM
 readiness_tier: STANDARD
@@ -20,6 +20,16 @@ quality:
     - UNIT
     - INTEGRATION
     - CONTRACT
+
+execution_readiness:
+  required_for_behavior_changes: true
+  minimum_capability: EPHEMERAL_INTEGRATION
+  real_application_runtime: REQUIRED_WHEN_AFFECTED
+  real_database: REQUIRED_WHEN_AFFECTED
+  real_migrations: REQUIRED_WHEN_AFFECTED
+  real_external_boundary: CONTROLLED_SUBSTITUTE_ALLOWED
+  mock_only_closure: DENIED_FOR_INTEGRATION_OR_STRONGER
+  when_unavailable: BLOCK_AND_REQUEST_ENVIRONMENT
 
 operations:
   metrics: REQUIRED

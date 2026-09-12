@@ -1,292 +1,155 @@
 # Agentic Flow Framework
 
-**Framework version:** 1.7  
-**Updated:** 2026-09-12  
-**Canonical policy:** [`ARCHITECTURE.md`](ARCHITECTURE.md)
+**Framework version:** 1.8
+**Updated:** 2026-09-13
+**Status:** an evidence-oriented operating framework; see [validation status](docs/VALIDATION_STATUS.md)
+**Persian:** [راهنمای جامع فارسی](docs/GUIDE.fa.md)
 
-A repository-first, vendor-neutral operating framework for reliable, cost-aware and production-operable coding agents.
+Agentic Flow is a repository-first, vendor-neutral way to make coding-agent work reviewable, bounded and honest about what is known.
 
-> Durable project memory; disposable working context.
+> Coding quickly is not the hard part. The hard part is knowing what was authorized, what changed, what was actually exercised, what the evidence proves, and what remains unknown.
 
-> A claim may be no broader than the receipt that establishes it.
+## Why this repository exists
 
-## Recommended use: clone the framework
+A normal chat-driven coding-agent session can end in a plausible but false-complete state:
 
-The normal distribution path is the Git repository itself:
+- the agent silently broadens scope;
+- a passing mock is reported as proof of a real integration;
+- implementation, approval and closure happen in one context;
+- runtime or deployment claims are inferred from code or CI;
+- the next person must reconstruct decisions from chat history;
+- production gaps disappear behind the phrase “done.”
 
-```bash
-git clone https://github.com/shiraziamir/agentic-flow-framework.git
+Agentic Flow moves the durable parts of the work into the repository: a project profile, frozen task contract, mutation policy, evidence receipts, explicit gaps and review decisions. Conversation remains disposable working context.
+
+Read the short rationale in [Why Agentic Flow](docs/WHY_AGENTIC_FLOW.md).
+
+## What changes compared with ordinary agent use
+
+| Ordinary agent use | Agentic Flow |
+|---|---|
+| prompt/chat is the practical source of truth | repository contracts and current refs are the durable source of truth |
+| one agent often plans, codes, approves and closes | Designer proposes, Manager freezes/reviews, Executor implements |
+| “tests pass” is treated as a general completion signal | each claim is bounded by the receipt that directly establishes it |
+| mocks may stand in for real behavior without qualification | mock evidence closes only the modeled boundary |
+| access and approval are often conflated | task, mutation and environment authority are separate |
+| continuation requires replaying history | compact current state and context packets support handoff |
+
+This is more ceremony than an informal prompt for material work, but it is risk-adaptive: tiny/docs work can remain light. See the fuller [comparison](docs/COMPARISON.md).
+
+## What is evidence-based—and what is not yet proven
+
+The design draws on primary guidance from OpenAI, Anthropic, Google, Microsoft, GitHub, OWASP, NIST, SLSA, Playwright, Pact, PostgreSQL, Prometheus, OpenTelemetry and SRE/chaos-engineering sources. The concise [evidence map](docs/WHY_AGENTIC_FLOW.md#evidence-map) links each design idea to the repository’s full [primary-source index](docs/references/PRIMARY_SOURCES.md).
+
+Those sources support component practices such as explicit instructions, repository context, layered tests, protected branches, production-like validation, secure development and observable operations. They do **not** prove that this framework as a whole is superior, complete, or production-ready for every project. The repository currently has deterministic self-tests for its linters and portable bundle, plus documentation consistency checks; it does not yet have controlled comparative studies or broad field evidence. See [Validation Status](docs/VALIDATION_STATUS.md).
+
+## The operating model
+
+```text
+Operator intent
+→ Designer: contract proposal + evidence-constrained advisory
+→ Manager: review, freeze, authorize bounded work
+→ Executor: preflight, implement, test, commit/PR
+→ Manager: inspect exact diff/commit + raw receipts
+→ evidence-based closure / merge decision
 ```
+
+The advisory vocabulary is deliberate:
+
+- `MUST` — frozen/owner constraint or observed invariant;
+- `SHOULD` — evidence-backed recommendation, not authority;
+- `INVESTIGATE` — fact that must be established before mutation;
+- `AVOID` — likely failure pattern or design trap.
+
+For material code work, direct Git access with branch/PR isolation is preferred. The Designer reads an identified ref; the Executor changes a bounded branch; the Manager reviews the real PR head and relevant surrounding source. A [context packet](docs/operator/CONTEXT_PACKET.md) is available when a role lacks direct access, but is not equivalent to direct review for high-risk code.
+
+## Required execution environment
+
+An Executor that can edit code but cannot exercise the real changed path is not ready to close that behavior claim.
+
+```text
+LOCAL / HERMETIC
+→ EPHEMERAL TEST
+→ SHARED TEST
+→ STAGING / PRODUCTION-LIKE
+→ CONTROLLED PRODUCTION READ / CANARY
+→ PRODUCTION MUTATION
+```
+
+Use the lowest authorized environment that directly establishes the claim. For non-documentation behavior changes, the normal baseline is `LOCAL_REAL` or `EPHEMERAL_TEST`, with the real affected dependencies when needed. A mock-only pass may close a unit claim; it may not close integration, persistence, migration, user-flow, deployment or production claims.
+
+If an adequate environment is unavailable, report `UNVERIFIED` or `BLOCKED` and request the environment. Do not weaken the receipt while retaining the stronger claim. Environment access is separate from task and mutation authority; none of this grants production access.
+
+## Five-minute workflow
+
+1. Read this page and [Getting Started](docs/GETTING_STARTED.md).
+2. Clone/pin this framework beside the target repository, then ask the agent to begin at `docs/agent/START_HERE.md`.
+3. Create or map `.agentic/PROJECT_PROFILE.yaml` from [the template](templates/PROJECT_PROFILE.example.yaml). Keep `STRICT_PREVIEW` for first adoption.
+4. For material work, have the Designer draft the contract/advisory and the Manager freeze it. Use the copy-ready [Designer](prompts/operator/TASK_DESIGNER.md) and [Manager](prompts/operator/MANAGER_REVIEWER.md) prompts.
+5. Let the Executor preflight, implement on an isolated branch, exercise the changed path in an adequate environment, and provide exact receipts. The Manager reviews the actual commit/PR before closure.
+
+Try the worked [end-to-end task](docs/examples/END_TO_END_TASK.md).
+
+## Install/adopt
 
 Recommended layout:
 
 ```text
 workspace/
-├── agentic-flow-framework/
+├── agentic-flow-framework/   # pin to a reviewed commit/tag for higher assurance
 └── my-project/
 ```
 
-Then open `my-project/` with your coding agent and give it:
+Give the coding agent:
 
 ```text
 Adopt Agentic Flow for this repository.
 Framework source: ../agentic-flow-framework
-Start by reading ../agentic-flow-framework/docs/agent/START_HERE.md and ../agentic-flow-framework/ARCHITECTURE.md.
-Inspect this project read-only first.
-Use STRICT_PREVIEW mutation approval unless this project's existing .agentic/PROJECT_PROFILE.yaml explicitly says otherwise.
-Before every mutation batch, tell me the current state, proposed state, files/resources affected, impact, planned checks, rollback/recovery when relevant, and what remains out of scope. Then wait for my explicit APPROVE/APPLY before mutating.
-If coding is already in progress, follow MIDSTREAM_ADOPTION and preserve current edits.
+Read docs/agent/START_HERE.md and ARCHITECTURE.md from the framework.
+Inspect the target repository read-only first.
+Use STRICT_PREVIEW unless the existing project profile explicitly says otherwise.
+Do not treat task approval as mutation or environment authority.
+For behavior changes, verify that an authorized environment can exercise the real changed path; mock-only evidence must not close stronger claims.
+If work is already active, follow MIDSTREAM_ADOPTION and preserve current edits.
 ```
 
-A copy-ready version is in:
-
-[`prompts/bootstrap/CLONE_AND_ADOPT.md`](prompts/bootstrap/CLONE_AND_ADOPT.md)
-
-Human/operator walkthrough:
-
-[`docs/operator/CLONE_AND_ADOPT.md`](docs/operator/CLONE_AND_ADOPT.md)
-
-### Why clone is the default
-
-- the framework remains visible and versionable as normal Git content;
-- updates are explicit with `git fetch` / `git pull --ff-only` or a pinned commit/tag;
-- no one has to discover a separate Actions Artifact to start using the framework;
-- the target project's `.agentic/` state stays project-owned;
-- the coding agent can read framework files lazily without copying the whole framework into product source.
-
-For higher-assurance use, pin the framework to a reviewed commit/tag rather than automatically tracking the newest `main`.
-
-## Mutation approval modes
-
-The project profile may define:
-
-```text
-STRICT_PREVIEW
-MATERIAL_CHANGES_ONLY
-BOUNDED_AUTONOMY
-```
-
-See [`schemas/MUTATION_APPROVAL_POLICY.md`](schemas/MUTATION_APPROVAL_POLICY.md).
-
-Recommended first-adoption default:
-
-```text
-STRICT_PREVIEW
-```
-
-In this mode, read-only discovery is allowed, but every bounded mutation batch requires a compact preview:
-
-```text
-CURRENT STATE
-→ PROPOSED STATE
-→ WHY
-→ WILL CHANGE
-→ IMPACT
-→ VERIFY
-→ ROLLBACK / RECOVERY when material
-→ OUT OF SCOPE
-→ wait for APPROVE / APPLY
-```
-
-The agent should group tightly related edits into one batch instead of asking permission line-by-line. If implementation discovers a materially different change, it stops and asks again with a revised preview.
-
-Mutation approval does not authorize production access or destructive/data-sensitive operations; environment and task-governance rules remain separate.
-
-## Usage-aware task reporting
-
-A project may optionally request one quota snapshot after each **material task/checkpoint**:
-
-```yaml
-usage_reporting:
-  quota_snapshot: OPTIONAL
-  report_after_material_task: true
-  notify_operator: false
-  stale_after_seconds: 900
-  never_reduce_acceptance_quality: true
-```
-
-When supported by the current harness, task reports may end with:
-
-```text
-Usage
-- session: 15% used / 85% remaining
-- weekly: 23% used / 77% remaining
-- source: <observable source>
-- freshness: <live or cache age>
-```
-
-For Claude Code, use:
+Then follow [Getting Started](docs/GETTING_STARTED.md). The generated portable ZIP remains available for offline distribution:
 
 ```bash
-python3 scripts/claude_usage_snapshot.py
-```
-
-Source preference is:
-
-```text
-Claude Code statusLine rate_limits
-→ ~/.claude.json cachedUsageUtilization fallback
-→ UNAVAILABLE
-```
-
-The local cache is implementation-dependent and may change. Missing telemetry is never turned into a fake zero. Quota is an operator/routing signal—not task evidence and not permission to weaken verification.
-
-Guides:
-
-- [`docs/agent/USAGE_AWARE_TASK_REPORTING.md`](docs/agent/USAGE_AWARE_TASK_REPORTING.md)
-- [`docs/operator/CLAUDE_USAGE_NOTIFICATIONS.md`](docs/operator/CLAUDE_USAGE_NOTIFICATIONS.md)
-- [`schemas/USAGE_QUOTA_SNAPSHOT.md`](schemas/USAGE_QUOTA_SNAPSHOT.md)
-
-The normalized snapshot is intentionally transport-neutral, so Telegram, Slack, email or other operator notifications can consume the same values without duplicating provider-specific parsing.
-
-## GitHub Actions Artifact
-
-GitHub Actions still builds a portable ZIP as a release/checking output. That Artifact is stored under the workflow run in **GitHub Actions**, not committed into the repository file tree.
-
-The Artifact is useful for:
-
-- offline distribution;
-- reproducible release receipts;
-- manifest/hash verification;
-- CI proof that the portable package can be built from a clean checkout.
-
-It is optional for normal adoption; cloning the repository is the simpler default.
-
-Local bundle commands:
-
-```bash
-python3 scripts/test_build_agent_bundle.py
 python3 scripts/build_agent_bundle.py
 ```
 
-Default output:
+## Safety invariants
 
-```text
-dist/agentic-flow-agent-bundle.zip
-```
+- `STRICT_PREVIEW` requires a compact current/proposed-state preview before each bounded mutation batch.
+- Frozen task authority, mutation approval and environment access are separate.
+- Production mutation always requires explicit authority; this repository does not grant it.
+- A claim may be no broader than its current receipt.
+- The Executor does not self-certify material closure.
+- Missing evidence stays missing; it is not replaced by model confidence or a weaker proxy.
+- Task closure does not erase operational gaps.
 
-## If you use the portable bundle
+Canonical policy: [ARCHITECTURE.md](ARCHITECTURE.md). Durable schemas live in [schemas](schemas/), verification routes in [verification](verification/), and production profiles in [production](production/).
 
-Extract its `agentic-flow/` directory into the target repository as:
+## Documentation map
 
-```text
-.agentic-flow/
-```
+- [Getting Started](docs/GETTING_STARTED.md) — practical adoption path.
+- [Why Agentic Flow](docs/WHY_AGENTIC_FLOW.md) — problem, model and concise evidence map.
+- [Comparison](docs/COMPARISON.md) — trade-offs against ordinary and policy-only agent use.
+- [Validation Status](docs/VALIDATION_STATUS.md) — verified, partially verified and unproven claims.
+- [End-to-End Task](docs/examples/END_TO_END_TASK.md) — worked Designer → Manager → Executor flow.
+- [Comprehensive Persian Guide](docs/GUIDE.fa.md) — راهنمای مستقل و جامع فارسی.
+- [Designer/Manager Setup](docs/operator/DESIGNER_MANAGER_SETUP.md) — direct Git and role setup.
+- [Context Packet](docs/operator/CONTEXT_PACKET.md) — bounded alternative when direct access is unavailable.
+- [Agent entrypoint](docs/agent/START_HERE.md) — minimal agent-facing adoption route.
+- [Primary Sources](docs/references/PRIMARY_SOURCES.md) — full provenance index.
 
-Human/operator starts at:
-
-```text
-.agentic-flow/README.md
-```
-
-Coding agent starts at:
-
-```text
-.agentic-flow/START_HERE.md
-```
-
-The bundle includes operator/architecture/reference material for offline use, but those files remain cold by default for coding-agent context.
-
-## Practical task lifecycle
-
-For material changes:
-
-```text
-REQUEST
-→ DRAFT
-→ REVIEW
-→ FREEZE / APPLY AUTHORIZATION when required
-→ CHANGE PREVIEW / APPROVAL when policy requires
-→ APPLY
-→ VERIFY + REPORT
-→ optional usage quota snapshot
-→ independent closure when required
-```
-
-Practical explanation:
-
-[`docs/agent/TASK_WORKFLOW_DRAFT_REVIEW_APPLY_VERIFY.md`](docs/agent/TASK_WORKFLOW_DRAFT_REVIEW_APPLY_VERIFY.md)
-
-If the project uses `STRICT_PREVIEW`, task approval and mutation approval are related but distinct: the frozen task says what work is authorized conceptually; the change preview says what the agent is about to mutate now.
-
-## Token/context-efficient workflow
-
-Use deterministic tools for deterministic facts, small affected working sets, bounded log packets, cheap/read-only workers for mechanically checkable discovery, compact handoffs and stronger model judgment only for ambiguity/risk.
-
-Practical guide:
-
-[`docs/agent/TOKEN_EFFICIENT_WORKFLOW.md`](docs/agent/TOKEN_EFFICIENT_WORKFLOW.md)
-
-Token savings or low remaining quota may not silently lower acceptance quality.
-
-## Python helpers
-
-Operator guides:
-
-- [`docs/operator/USING_PYTHON_TOOLS.en.md`](docs/operator/USING_PYTHON_TOOLS.en.md)
-- [`docs/operator/USING_PYTHON_TOOLS.fa.md`](docs/operator/USING_PYTHON_TOOLS.fa.md)
-
-Main tools:
-
-```text
-verification_lint.py            task/evidence/status invariant checks
-production_readiness_lint.py    profile/gap invariant checks
-build_agent_bundle.py           portable ZIP + manifest builder
-usage_ledger.py                 observable usage-counter ledger
-claude_usage_snapshot.py        Claude Code session/weekly quota normalizer
-```
-
-These scripts check deterministic invariants or normalize observed telemetry. They do not replace behavioral tests, security review, deployment evidence or restore proof.
-
-## Project baseline and production reality
-
-A target project should normally maintain:
-
-```text
-.agentic/PROJECT_PROFILE.yaml
-```
-
-The project profile defines what **should** be true: testing policy, mutation-approval mode, optional usage reporting, readiness tier, environment permissions, operational/security requirements and pattern-selection policy.
-
-Reality is established by receipts and explicit operational gaps. Temporary exceptions use owned/expiring `TEMPORARY_OVERRIDE` artifacts instead of silently weakening the baseline.
-
-## Documentation routes
-
-Coding agent:
-
-[`docs/agent/START_HERE.md`](docs/agent/START_HERE.md)
-
-Operator:
-
-- [`docs/operator/CLONE_AND_ADOPT.md`](docs/operator/CLONE_AND_ADOPT.md)
-- [`docs/operator/CLAUDE_USAGE_NOTIFICATIONS.md`](docs/operator/CLAUDE_USAGE_NOTIFICATIONS.md)
-- [`docs/operator/OPERATOR_GUIDE.en.md`](docs/operator/OPERATOR_GUIDE.en.md)
-- [`docs/operator/OPERATOR_GUIDE.fa.md`](docs/operator/OPERATOR_GUIDE.fa.md)
-
-Architecture explanation:
-
-[`docs/architecture/WHY_AND_HOW.md`](docs/architecture/WHY_AND_HOW.md)
-
-Primary external sources:
-
-[`docs/references/PRIMARY_SOURCES.md`](docs/references/PRIMARY_SOURCES.md)
-
-Claude quota-telemetry provenance:
-
-[`docs/references/CLAUDE_USAGE_TELEMETRY.md`](docs/references/CLAUDE_USAGE_TELEMETRY.md)
-
-Canonical policy remains [`ARCHITECTURE.md`](ARCHITECTURE.md).
-
-## Release checks
-
-Local:
+## Repository checks
 
 ```bash
-python3 scripts/test_verification_lint.py
-python3 scripts/test_production_readiness_lint.py
-python3 scripts/test_claude_usage_snapshot.py
-python3 scripts/test_build_agent_bundle.py
+python3 -m unittest discover -s scripts -p 'test_*.py'
+python3 scripts/test_docs_onboarding.py
 python3 scripts/build_agent_bundle.py
 ```
 
-GitHub Actions rebuilds the bundle from a clean checkout, verifies version freshness, compiles the helpers, reruns self-tests, verifies manifest hashes/boundaries and publishes the ZIP + SHA-256 + manifest as an Actions Artifact.
+The checks validate deterministic repository invariants and packaging. They are not evidence that the framework improves real projects; that limitation is intentional and explicit.

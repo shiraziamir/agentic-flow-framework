@@ -2,6 +2,17 @@
 
 This is the portable distribution of Agentic Flow Framework.
 
+New operator route:
+
+```text
+docs/GETTING_STARTED.md
+docs/WHY_AGENTIC_FLOW.md
+docs/COMPARISON.md
+docs/VALIDATION_STATUS.md
+docs/GUIDE.fa.md
+docs/examples/END_TO_END_TASK.md
+```
+
 ## 1. Where to copy it
 
 Extract the **contents of the `agentic-flow/` directory** from the release ZIP into the target repository as:
@@ -85,6 +96,10 @@ DRAFT
 → optional usage quota snapshot
 → independent closure when required
 ```
+
+For material work, use separate Designer, Manager and Executor roles. Prefer direct Git access with an isolated Executor branch/PR and Manager review of the exact commit head. If a role lacks Git access, use `docs/operator/CONTEXT_PACKET.md` with explicit limitations.
+
+A behavior-changing Executor must have an authorized environment capable of exercising the real changed path. Mock-only evidence cannot close integration-or-stronger claims.
 
 Read:
 

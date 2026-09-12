@@ -1,7 +1,7 @@
 # Production Profile — Agent Environments
 
-**Version:** 1.0  
-**Updated:** 2026-09-09T11:30:00Z
+**Version:** 1.1
+**Updated:** 2026-09-13
 
 Goal: give agents enough real execution capability to verify code while preserving environment and production safety.
 
@@ -17,6 +17,35 @@ LOCAL / HERMETIC
 ```
 
 Use the lowest environment that can directly establish the required claim.
+
+## Execution-readiness gate
+
+For behavior-changing work, the Executor must have at least one authorized environment that can exercise the real changed path. Ability to edit, compile or run isolated mocks is not enough when closure claims cross a real boundary.
+
+Normal baseline for non-documentation work:
+
+```text
+LOCAL_REAL or EPHEMERAL_TEST
+```
+
+`LOCAL_REAL` means the relevant application runtime plus the affected real local dependencies (for example a disposable database/container and actual migrations). `EPHEMERAL_TEST` means an isolated, disposable integration environment with the relevant runtime and boundaries. Neither label grants access by itself.
+
+The requirement is claim-dependent:
+
+| Planned claim | Minimum meaningful environment/receipt |
+|---|---|
+| pure transformation behaves as specified | focused test may be sufficient |
+| service and database transaction interact correctly | real application + disposable real database integration |
+| migration preserves/transforms data correctly | actual migration engine against representative disposable data |
+| provider contract is honored | contract test plus approved sandbox/faithful controlled boundary as required |
+| user workflow works | running application and relevant real boundaries; browser/runtime receipt when applicable |
+| deployed behavior exists in target X | identified target environment + exact deployed artifact + live check |
+
+If the minimum environment is unavailable, record `UNVERIFIED` or `BLOCKED` and issue an environment request. Do not replace the claim with a weaker mock receipt while keeping the stronger wording.
+
+## Mock semantics
+
+Mocks/fakes are valuable for narrow, deterministic tests. They establish only the modeled boundary. A mock-only pass cannot close integration, persistence, migration, end-user, deployment or production claims. Pair it with real-boundary receipts when the planned claim crosses that boundary.
 
 ## Default policy
 

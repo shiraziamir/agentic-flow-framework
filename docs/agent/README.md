@@ -9,6 +9,7 @@
 - `BUNDLE_USAGE.md` — build/extract/use the portable distribution.
 - `ADOPTION_CHECKLIST.md` — adoption validation checklist.
 - `ADOPTION_RECEIPT_SCHEMA.md` — compact adoption receipt shape.
+- `IMPLEMENTATION_DESIGN_PREFLIGHT.md` — pre-mutation implementation shape and execution-readiness receipt.
 
 The portable ZIP may contain `docs/operator/`, `docs/architecture/` and `docs/references/` for offline use. Coding agents should **not preload them** unless a task explicitly needs them.
 

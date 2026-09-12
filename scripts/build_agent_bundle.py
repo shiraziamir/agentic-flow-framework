@@ -20,10 +20,7 @@ INCLUDE_FILES = {
     "bundle/BEST_PRACTICES_USED.en.txt",
 }
 INCLUDE_PREFIXES = (
-    "docs/agent/",
-    "docs/operator/",
-    "docs/architecture/",
-    "docs/references/",
+    "docs/",
     "schemas/",
     "verification/",
     "production/",
@@ -43,6 +40,7 @@ INCLUDE_SCRIPTS = {
     "scripts/usage_ledger.py",
     "scripts/claude_usage_snapshot.py",
     "scripts/test_claude_usage_snapshot.py",
+    "scripts/test_docs_onboarding.py",
 }
 EXCLUDE_PARTS = {"__pycache__", ".DS_Store"}
 ZIP_TIME = (2026, 9, 9, 0, 0, 0)

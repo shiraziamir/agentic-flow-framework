@@ -16,7 +16,7 @@ def put(root: Path, rel: str, text: str = "x") -> None:
 def main() -> None:
     with tempfile.TemporaryDirectory() as temp_dir:
         root = Path(temp_dir)
-        put(root, "VERSION", "1.7\n")
+        put(root, "VERSION", "1.8\n")
         put(root, "ARCHITECTURE.md", "# architecture\n")
         put(root, "bundle/README.md", "# bundle readme\n")
         put(root, "bundle/BEST_PRACTICES_USED.en.txt", "best practices\n")
@@ -32,6 +32,13 @@ def main() -> None:
         put(root, "docs/architecture/WHY.md", "# why\n")
         put(root, "docs/references/PRIMARY_SOURCES.md", "# sources\n")
         put(root, "docs/references/CLAUDE_USAGE_TELEMETRY.md", "# claude usage sources\n")
+        put(root, "docs/GETTING_STARTED.md", "# getting started\n")
+        put(root, "docs/WHY_AGENTIC_FLOW.md", "# why\n")
+        put(root, "docs/COMPARISON.md", "# comparison\n")
+        put(root, "docs/VALIDATION_STATUS.md", "# validation\n")
+        put(root, "docs/GUIDE.fa.md", "# persian guide\n")
+        put(root, "docs/examples/END_TO_END_TASK.md", "# example\n")
+        put(root, "docs/operator/CONTEXT_PACKET.md", "# context packet\n")
         put(root, "schemas/MUTATION_APPROVAL_POLICY.md", "# strict preview\n")
         put(root, "schemas/USAGE_QUOTA_SNAPSHOT.md", "# quota schema\n")
         put(root, "prompts/bootstrap/CLONE_AND_ADOPT.md", "# clone prompt\n")
@@ -54,6 +61,7 @@ def main() -> None:
             "scripts/usage_ledger.py",
             "scripts/claude_usage_snapshot.py",
             "scripts/test_claude_usage_snapshot.py",
+            "scripts/test_docs_onboarding.py",
         ]:
             put(root, rel)
 
@@ -69,7 +77,7 @@ def main() -> None:
         manifest = build(root, output)
         selected = {item["path"] for item in manifest["files"]}
 
-        assert manifest["framework_version"] == "1.7"
+        assert manifest["framework_version"] == "1.8"
         assert manifest["entrypoint"] == "START_HERE.md"
         assert manifest["operator_entrypoint"] == "README.md"
         assert "docs/agent/START_HERE.md" in selected
@@ -79,6 +87,10 @@ def main() -> None:
         assert "schemas/MUTATION_APPROVAL_POLICY.md" in selected
         assert "schemas/USAGE_QUOTA_SNAPSHOT.md" in selected
         assert "docs/references/CLAUDE_USAGE_TELEMETRY.md" in selected
+        assert "docs/GETTING_STARTED.md" in selected
+        assert "docs/GUIDE.fa.md" in selected
+        assert "docs/examples/END_TO_END_TASK.md" in selected
+        assert "docs/operator/CONTEXT_PACKET.md" in selected
         assert "prompts/bootstrap/CLONE_AND_ADOPT.md" in selected
         assert "docs/operator/USING_PYTHON_TOOLS.en.md" in selected
         assert "docs/architecture/WHY.md" in selected
@@ -86,6 +98,7 @@ def main() -> None:
         assert "scripts/build_agent_bundle.py" in selected
         assert "scripts/claude_usage_snapshot.py" in selected
         assert "scripts/test_claude_usage_snapshot.py" in selected
+        assert "scripts/test_docs_onboarding.py" in selected
         assert "research/R.md" not in selected
         assert "retrospectives/R.md" not in selected
         assert "stories/S.md" not in selected
@@ -108,11 +121,19 @@ def main() -> None:
                 "agentic-flow/docs/operator/USING_PYTHON_TOOLS.en.md",
                 "agentic-flow/docs/references/PRIMARY_SOURCES.md",
                 "agentic-flow/docs/references/CLAUDE_USAGE_TELEMETRY.md",
+                "agentic-flow/docs/GETTING_STARTED.md",
+                "agentic-flow/docs/WHY_AGENTIC_FLOW.md",
+                "agentic-flow/docs/COMPARISON.md",
+                "agentic-flow/docs/VALIDATION_STATUS.md",
+                "agentic-flow/docs/GUIDE.fa.md",
+                "agentic-flow/docs/examples/END_TO_END_TASK.md",
+                "agentic-flow/docs/operator/CONTEXT_PACKET.md",
                 "agentic-flow/schemas/MUTATION_APPROVAL_POLICY.md",
                 "agentic-flow/schemas/USAGE_QUOTA_SNAPSHOT.md",
                 "agentic-flow/prompts/bootstrap/CLONE_AND_ADOPT.md",
                 "agentic-flow/scripts/claude_usage_snapshot.py",
                 "agentic-flow/scripts/test_claude_usage_snapshot.py",
+                "agentic-flow/scripts/test_docs_onboarding.py",
             }
             assert required <= names
             assert not any("/research/" in name for name in names)

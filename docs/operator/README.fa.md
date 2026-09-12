@@ -3,6 +3,9 @@
 این پوشه برای انسان/اپراتور است و Agent برنامه‌نویس نباید آن را به‌صورت دائمی preload کند.
 
 - `OPERATOR_GUIDE.fa.md` — راهنمای عملی استفاده، Workflow تسک، Governance و مسیر ورود به Scriptها.
+- `DESIGNER_MANAGER_SETUP.md` — جدایی نقش‌ها، دسترسی مستقیم Git، branch/PR مستقل Executor و review واقعی Manager.
+- `CONTEXT_PACKET.md` — جایگزین محدود وقتی Designer یا Manager دسترسی مستقیم Git ندارد.
+- `../GUIDE.fa.md` — راهنمای جامع و مستقل فارسی با متن RTL و code blockهای LTR.
 - `USING_PYTHON_TOOLS.fa.md` — هدف، دستورها، محدودیت‌ها و Self-testهای ابزارهای Python.
 - `PROMPT_TASK_AGENT_SETUP.fa.md` — بهترین روش‌های Prompt، Task و Agent Setup.
 - `INSTALLATION_PROMPTS.fa.md` — Promptهای آماده برای نصب، پروژه Mature و Adoption وسط کار.
