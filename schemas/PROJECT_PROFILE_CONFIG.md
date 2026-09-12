@@ -1,6 +1,6 @@
 # Project Profile Config Schema
 
-**Schema version:** 1.1  
+**Schema version:** 1.2  
 **Updated:** 2026-09-12
 
 A target project should keep one small, durable project-level profile, typically `.agentic/PROJECT_PROFILE.yaml`. It declares baseline operating intent and guardrails. It is not a proof that the project satisfies them.
@@ -50,6 +50,13 @@ agent_mutation_policy:
   require_planned_checks_before_apply: true|false
   require_rollback_for_material_changes: true|false
 
+usage_reporting:
+  quota_snapshot: ENABLED|OPTIONAL|DISABLED
+  report_after_material_task: true|false
+  notify_operator: true|false
+  stale_after_seconds: <integer>
+  never_reduce_acceptance_quality: true
+
 agent_environment_policy:
   local: AUTO_ALLOWED|OWNER_APPROVAL|DENIED
   ephemeral_test: AUTO_ALLOWED|OWNER_APPROVAL|DENIED
@@ -88,6 +95,14 @@ agent_mutation_policy:
 
 Under `STRICT_PREVIEW`, read-only discovery is allowed without a mutation approval. Before each bounded mutation batch, the agent reports current state, proposed state, affected files/resources, impacts, planned checks, rollback/recovery when relevant, and explicit out-of-scope boundaries; then waits for `APPROVE`/`APPLY`.
 
+## Usage/quota reporting
+
+Use `schemas/USAGE_QUOTA_SNAPSHOT.md` and `docs/agent/USAGE_AWARE_TASK_REPORTING.md`.
+
+When enabled and the harness exposes trustworthy quota telemetry, append one compact usage snapshot after each **material task/checkpoint**, not after every trivial tool call. Missing telemetry must be reported as unavailable rather than fabricated.
+
+Quota information is an operator/routing signal only. Low quota may justify checkpointing or proposing deferral, but never silently skips required tests, security checks, evidence, or review.
+
 ## Rules
 
 1. This file describes the baseline; current receipts determine reality.
@@ -95,4 +110,5 @@ Under `STRICT_PREVIEW`, read-only discovery is allowed without a mutation approv
 3. `NOT_APPLICABLE` requires a durable rationale when the capability would normally be expected for the selected readiness tier.
 4. Agent permissions are an upper bound, not automatic authority. Task/governance/environment authorization can further restrict them.
 5. Mutation approval and environment authorization are separate: approval to edit source does not authorize production mutation.
-6. Keep this profile concise. Detailed policy remains in canonical framework/project docs and production profiles.
+6. Usage/quota values are telemetry, not task-completion evidence.
+7. Keep this profile concise. Detailed policy remains in canonical framework/project docs and production profiles.
