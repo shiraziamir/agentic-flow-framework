@@ -82,6 +82,7 @@ DRAFT
 → FREEZE / APPLY AUTHORIZATION when required
 → APPLY
 → VERIFY + REPORT
+→ optional usage quota snapshot
 → independent closure when required
 ```
 
@@ -97,6 +98,23 @@ For context and token efficiency read:
 docs/agent/TOKEN_EFFICIENT_WORKFLOW.md
 ```
 
+For optional per-task provider quota reporting read:
+
+```text
+docs/agent/USAGE_AWARE_TASK_REPORTING.md
+schemas/USAGE_QUOTA_SNAPSHOT.md
+```
+
+If Claude Code is the current harness, the bundle contains:
+
+```text
+scripts/claude_usage_snapshot.py
+docs/operator/CLAUDE_USAGE_NOTIFICATIONS.md
+docs/references/CLAUDE_USAGE_TELEMETRY.md
+```
+
+The helper reports session/weekly **used and remaining** percentages when they are actually observable. Missing telemetry is `UNAVAILABLE`, never fabricated. Quota is an operator/routing signal and must not weaken task verification.
+
 ## 5. Python tools
 
 Operator instructions for the deterministic Python helpers are here:
@@ -106,7 +124,7 @@ docs/operator/USING_PYTHON_TOOLS.en.md
 docs/operator/USING_PYTHON_TOOLS.fa.md
 ```
 
-These tools check mechanical invariants and build/verify the bundle. They do not replace behavioral tests, security judgment, restore drills, deployment verification, or human/independent review where required.
+These tools check mechanical invariants, normalize observable telemetry, and build/verify the bundle. They do not replace behavioral tests, security judgment, restore drills, deployment verification, or human/independent review where required.
 
 ## 6. Best practices and sources
 
