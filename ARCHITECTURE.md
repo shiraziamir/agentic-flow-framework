@@ -2,7 +2,7 @@
 
 **Status:** CANONICAL SOURCE OF TRUTH  
 **Version:** 1.7  
-**Updated:** 2026-09-09T12:40:00Z
+**Updated:** 2026-09-12
 
 Agentic Flow is a repository-first, vendor-neutral operating architecture for coding agents. This file is intentionally a **canonical map + invariant set**, not a giant always-on manual. Detailed rules live in the lower canonical layers and are loaded lazily.
 
@@ -86,7 +86,7 @@ A target project should normally maintain one small durable baseline such as:
 
 Use `schemas/PROJECT_PROFILE_CONFIG.md` and `templates/PROJECT_PROFILE.example.yaml`.
 
-The baseline defines expectations, not proof: project/readiness tier, testing policy, environment permissions, operational requirements and architecture-pattern decision policy. Runtime truth still requires receipts/gaps.
+The baseline defines expectations, not proof: project/readiness tier, testing policy, environment permissions, operational requirements, optional usage-reporting policy and architecture-pattern decision policy. Runtime truth still requires receipts/gaps.
 
 Temporary exceptions use `schemas/TEMPORARY_OVERRIDE.md`. Do not silently weaken the baseline. Material overrides record owner, reason, expiry, added risk, compensating controls, restore plan and restoration evidence.
 
@@ -137,7 +137,7 @@ DURABLE APPROVED AMENDMENT
 - Task N+1 is never silently absorbed;
 - missing evidence is never replaced by a plausible substitute;
 - report language cannot exceed receipt strength;
-- high-risk work cannot be downgraded merely to save time/tokens;
+- high-risk work cannot be downgraded merely to save time/tokens/quota;
 - implementation closure cannot hide open project/production gaps;
 - a temporary override cannot silently become the new baseline.
 
@@ -274,7 +274,7 @@ Patterns are tools, not mandatory layers. An agent may select small/local/revers
 
 Do not introduce Adapter/Repository/Factory/Strategy/CQRS/Saga/etc. merely to satisfy a checklist. Prefer the simplest architecture that protects the real volatility, failure, security or testability boundary.
 
-## Model routing and context efficiency
+## Model routing, context and quota efficiency
 
 Semantic tiers:
 
@@ -291,14 +291,21 @@ Practical execution guidance:
 
 ```text
 docs/agent/TOKEN_EFFICIENT_WORKFLOW.md
+docs/agent/USAGE_AWARE_TASK_REPORTING.md
 ```
 
 Normal agent context should contain only current task/profile pointers, relevant source, selected verification/production profiles and triggered skills. Do not preload operator docs, research, completed-task history, all judgments or the full skill/profile shelf. Emit `TOKEN_WASTE_WARNING` on material unjustified rereads/full-history/full-log scans/strong-model mechanical work/repeated loops/budget overrun.
 
+When a harness exposes trustworthy subscription/rate-limit utilization and the project enables quota reporting, append a compact snapshot after material task completion/checkpoints. Use `schemas/USAGE_QUOTA_SNAPSHOT.md`. Report used + remaining + source + freshness. Missing telemetry is `UNAVAILABLE`, never zero.
+
+Quota telemetry is an **operator/routing signal, not engineering evidence**. It may justify checkpointing, notifying an operator, or proposing to defer broad non-urgent exploration. It never authorizes skipping required tests/security/review, weakening a claim, or silently selecting an inadequate model.
+
+Vendor-specific acquisition stays isolated. For Claude Code, prefer status-line `rate_limits` telemetry when present; local `~/.claude.json cachedUsageUtilization` is only a best-effort implementation-dependent fallback.
+
 ## Operator / agent separation
 
 - `docs/agent/` — coding-agent adoption/execution material safe for lazy use.
-- `docs/operator/` — human installation, prompting, task-writing, Python-tool usage, agent setup and governance guidance. It may be physically present in the portable distribution but remains cold for normal coding-agent context.
+- `docs/operator/` — human installation, prompting, task-writing, Python-tool usage, agent setup, notifications and governance guidance. It may be physically present in the portable distribution but remains cold for normal coding-agent context.
 - `docs/architecture/` — reader explanations of how/why the system works; present for offline understanding, cold by default.
 - `docs/references/` — external provenance/reference index; present for offline traceability, cold by default.
 - `research/` — dated deeper research; not included in the default portable distribution and loaded only when explicitly needed.
@@ -309,7 +316,7 @@ A useful operator rule that must govern agents should be promoted into this cano
 
 Reviewer independence may be `SELF_REVIEW`, `COLD_SAME_MODEL`, or `COLD_DIFFERENT_MODEL_OR_HUMAN`. For direct-access review, prefer frozen task/profile → actual diff/source → raw receipts/gaps → independent falsifying checks → executor narrative last. A reviewer judgment does not replace missing behavior/deployment/restore/security receipts.
 
-Before material closure: map DoD/claims to current receipts, preserve exact PASS/FAIL/PARTIAL/SKIPPED/UNVERIFIED states, report checks not executed, update only actually-verified profile/gap state, and obtain required independent judgment. Task closure never implies the project has no operational gaps.
+Before material closure: map DoD/claims to current receipts, preserve exact PASS/FAIL/PARTIAL/SKIPPED/UNVERIFIED states, report checks not executed, update only actually-verified profile/gap state, and obtain required independent judgment. If enabled, append quota telemetry after the engineering status section. Task closure never implies the project has no operational gaps.
 
 ## Hot state, cold history and documentation
 
