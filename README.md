@@ -1,7 +1,7 @@
 # Agentic Flow Framework
 
 **Framework version:** 1.7  
-**Updated:** 2026-09-09T12:40:00Z  
+**Updated:** 2026-09-12  
 **Canonical policy:** [`ARCHITECTURE.md`](ARCHITECTURE.md)
 
 A repository-first, vendor-neutral operating framework for reliable, cost-aware and production-operable coding agents.
@@ -10,22 +10,117 @@ A repository-first, vendor-neutral operating framework for reliable, cost-aware 
 
 > A claim may be no broader than the receipt that establishes it.
 
-## Fastest use: portable bundle
+## Recommended use: clone the framework
 
-Build and self-test:
+The normal distribution path is the Git repository itself:
+
+```bash
+git clone https://github.com/shiraziamir/agentic-flow-framework.git
+```
+
+Recommended layout:
+
+```text
+workspace/
+├── agentic-flow-framework/
+└── my-project/
+```
+
+Then open `my-project/` with your coding agent and give it:
+
+```text
+Adopt Agentic Flow for this repository.
+Framework source: ../agentic-flow-framework
+Start by reading ../agentic-flow-framework/docs/agent/START_HERE.md and ../agentic-flow-framework/ARCHITECTURE.md.
+Inspect this project read-only first.
+Use STRICT_PREVIEW mutation approval unless this project's existing .agentic/PROJECT_PROFILE.yaml explicitly says otherwise.
+Before every mutation batch, tell me the current state, proposed state, files/resources affected, impact, planned checks, rollback/recovery when relevant, and what remains out of scope. Then wait for my explicit APPROVE/APPLY before mutating.
+If coding is already in progress, follow MIDSTREAM_ADOPTION and preserve current edits.
+```
+
+A copy-ready version is in:
+
+[`prompts/bootstrap/CLONE_AND_ADOPT.md`](prompts/bootstrap/CLONE_AND_ADOPT.md)
+
+Human/operator walkthrough:
+
+[`docs/operator/CLONE_AND_ADOPT.md`](docs/operator/CLONE_AND_ADOPT.md)
+
+### Why clone is the default
+
+- the framework remains visible and versionable as normal Git content;
+- updates are explicit with `git fetch` / `git pull --ff-only` or a pinned commit/tag;
+- no one has to discover a separate Actions Artifact to start using the framework;
+- the target project's `.agentic/` state stays project-owned;
+- the coding agent can read framework files lazily without copying the whole framework into product source.
+
+For higher-assurance use, pin the framework to a reviewed commit/tag rather than automatically tracking the newest `main`.
+
+## Mutation approval modes
+
+The project profile may define:
+
+```text
+STRICT_PREVIEW
+MATERIAL_CHANGES_ONLY
+BOUNDED_AUTONOMY
+```
+
+See [`schemas/MUTATION_APPROVAL_POLICY.md`](schemas/MUTATION_APPROVAL_POLICY.md).
+
+Recommended first-adoption default:
+
+```text
+STRICT_PREVIEW
+```
+
+In this mode, read-only discovery is allowed, but every bounded mutation batch requires a compact preview:
+
+```text
+CURRENT STATE
+→ PROPOSED STATE
+→ WHY
+→ WILL CHANGE
+→ IMPACT
+→ VERIFY
+→ ROLLBACK / RECOVERY when material
+→ OUT OF SCOPE
+→ wait for APPROVE / APPLY
+```
+
+The agent should group tightly related edits into one batch instead of asking permission line-by-line. If implementation discovers a materially different change, it stops and asks again with a revised preview.
+
+Mutation approval does not authorize production access or destructive/data-sensitive operations; environment and task-governance rules remain separate.
+
+## GitHub Actions Artifact
+
+GitHub Actions still builds a portable ZIP as a release/checking output. That Artifact is stored under the workflow run in **GitHub Actions**, not committed into the repository file tree.
+
+The Artifact is useful for:
+
+- offline distribution;
+- reproducible release receipts;
+- manifest/hash verification;
+- CI proof that the portable package can be built from a clean checkout.
+
+It is optional for normal adoption; cloning the repository is the simpler default.
+
+Local bundle commands:
 
 ```bash
 python3 scripts/test_build_agent_bundle.py
 python3 scripts/build_agent_bundle.py
 ```
 
-Output:
+Default output:
 
 ```text
 dist/agentic-flow-agent-bundle.zip
 ```
 
-Extract the `agentic-flow/` directory into a target repository as:
+## If you use the portable bundle
+
+Extract its `agentic-flow/` directory into the target repository as:
 
 ```text
 .agentic-flow/
@@ -43,46 +138,7 @@ Coding agent starts at:
 .agentic-flow/START_HERE.md
 ```
 
-Copy-ready prompt:
-
-```text
-Read .agentic-flow/START_HERE.md and adopt Agentic Flow for this repository.
-Do not start or change product work until adoption validation is complete.
-```
-
-If work is already active, `START_HERE.md` routes to `docs/agent/MIDSTREAM_ADOPTION.md` before further product mutation.
-
-## What the portable distribution contains
-
-The bundle is self-contained for both the operator and coding agent:
-
-```text
-README.md                          operator install/start instructions
-START_HERE.md                      coding-agent entrypoint
-INSTALL_PROMPT.txt                 copy-ready prompt
-BEST_PRACTICES_USED.en.txt         concise English practice summary
-ARCHITECTURE.md                    canonical architecture
-PRIMARY_SOURCES.md                 source/provenance convenience copy
-BUNDLE_MANIFEST.json               source hashes and byte counts
-
-docs/agent/                        agent adoption/execution guides
-docs/operator/                     human/operator guides
-docs/architecture/                 why/how explanations
-docs/references/                   primary-source index
-schemas/                            durable contracts
-verification/                       verification profiles
-production/                         production profiles
-skills/                             lazy procedures
-prompts/                            workflow/bootstrap/supervisor prompts
-templates/                          project examples
-scripts/                            deterministic helpers
-```
-
-`docs/operator/`, `docs/architecture/` and `docs/references/` are physically present for offline use but remain **cold by default** for the coding agent. Distribution completeness does not mean preload everything into model context.
-
-Deeper `research/`, reader HTML and cold history are not included in the default bundle.
-
-See [`docs/architecture/BUNDLE_BOUNDARY.md`](docs/architecture/BUNDLE_BOUNDARY.md).
+The bundle includes operator/architecture/reference material for offline use, but those files remain cold by default for coding-agent context.
 
 ## Practical task lifecycle
 
@@ -93,6 +149,7 @@ REQUEST
 → DRAFT
 → REVIEW
 → FREEZE / APPLY AUTHORIZATION when required
+→ CHANGE PREVIEW / APPROVAL when policy requires
 → APPLY
 → VERIFY + REPORT
 → independent closure when required
@@ -102,7 +159,7 @@ Practical explanation:
 
 [`docs/agent/TASK_WORKFLOW_DRAFT_REVIEW_APPLY_VERIFY.md`](docs/agent/TASK_WORKFLOW_DRAFT_REVIEW_APPLY_VERIFY.md)
 
-The workflow is risk-adaptive: high-risk work gets stronger review/authorization/evidence; small low-risk edits stay lightweight.
+If the project uses `STRICT_PREVIEW`, task approval and mutation approval are related but distinct: the frozen task says what work is authorized conceptually; the change preview says what the agent is about to mutate now.
 
 ## Token/context-efficient workflow
 
@@ -140,24 +197,9 @@ A target project should normally maintain:
 .agentic/PROJECT_PROFILE.yaml
 ```
 
-The project profile defines what **should** be true: testing policy, readiness tier, environment permissions, operational/security requirements and pattern-selection policy.
+The project profile defines what **should** be true: testing policy, mutation-approval mode, readiness tier, environment permissions, operational/security requirements and pattern-selection policy.
 
 Reality is established by receipts and explicit operational gaps. Temporary exceptions use owned/expiring `TEMPORARY_OVERRIDE` artifacts instead of silently weakening the baseline.
-
-## Core production concerns
-
-Production profiles cover:
-
-- build → immutable artifact → deploy → running identity → rollback/recovery;
-- metrics/logs/traces, SLI/SLO and actionable alerting;
-- RPO/RTO, backup/PITR and restore proof;
-- security-first SDLC and supply-chain provenance;
-- troubleshooting/runbooks;
-- AI-safe log analysis with log text treated as untrusted data;
-- resilience/chaos only with maturity, bounded blast radius and recovery controls;
-- evolvable architecture/patterns selected for real boundaries rather than checklists.
-
-> Backup enabled is not recoverability. Restore is the receipt.
 
 ## Documentation routes
 
@@ -167,6 +209,7 @@ Coding agent:
 
 Operator:
 
+- [`docs/operator/CLONE_AND_ADOPT.md`](docs/operator/CLONE_AND_ADOPT.md)
 - [`docs/operator/OPERATOR_GUIDE.en.md`](docs/operator/OPERATOR_GUIDE.en.md)
 - [`docs/operator/OPERATOR_GUIDE.fa.md`](docs/operator/OPERATOR_GUIDE.fa.md)
 
@@ -191,4 +234,4 @@ python3 scripts/test_build_agent_bundle.py
 python3 scripts/build_agent_bundle.py
 ```
 
-GitHub Actions then rebuilds the bundle from a clean repository checkout, verifies version freshness, compiles the helpers, reruns self-tests, verifies manifest hashes/boundaries and publishes the ZIP + SHA-256 + manifest as an Actions Artifact.
+GitHub Actions rebuilds the bundle from a clean checkout, verifies version freshness, compiles the helpers, reruns self-tests, verifies manifest hashes/boundaries and publishes the ZIP + SHA-256 + manifest as an Actions Artifact.
