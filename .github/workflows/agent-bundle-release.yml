@@ -72,9 +72,11 @@ jobs:
             scripts/verification_lint.py \
             scripts/production_readiness_lint.py \
             scripts/usage_ledger.py \
+            scripts/claude_usage_snapshot.py \
             scripts/build_agent_bundle.py \
             scripts/test_verification_lint.py \
             scripts/test_production_readiness_lint.py \
+            scripts/test_claude_usage_snapshot.py \
             scripts/test_build_agent_bundle.py
 
       - name: Run verification-lint self-tests
@@ -82,6 +84,9 @@ jobs:
 
       - name: Run production-readiness self-tests
         run: python3 scripts/test_production_readiness_lint.py
+
+      - name: Run Claude usage-snapshot self-tests
+        run: python3 scripts/test_claude_usage_snapshot.py
 
       - name: Run bundle-builder self-test
         run: python3 scripts/test_build_agent_bundle.py
@@ -118,13 +123,17 @@ jobs:
               'agentic-flow/docs/agent/MIDSTREAM_ADOPTION.md',
               'agentic-flow/docs/agent/TASK_WORKFLOW_DRAFT_REVIEW_APPLY_VERIFY.md',
               'agentic-flow/docs/agent/TOKEN_EFFICIENT_WORKFLOW.md',
+              'agentic-flow/docs/agent/USAGE_AWARE_TASK_REPORTING.md',
               'agentic-flow/docs/operator/OPERATOR_GUIDE.en.md',
               'agentic-flow/docs/operator/OPERATOR_GUIDE.fa.md',
+              'agentic-flow/docs/operator/CLAUDE_USAGE_NOTIFICATIONS.md',
               'agentic-flow/docs/operator/USING_PYTHON_TOOLS.en.md',
               'agentic-flow/docs/operator/USING_PYTHON_TOOLS.fa.md',
               'agentic-flow/docs/architecture/BUNDLE_BOUNDARY.md',
               'agentic-flow/docs/architecture/WHY_AND_HOW.md',
               'agentic-flow/docs/references/PRIMARY_SOURCES.md',
+              'agentic-flow/docs/references/CLAUDE_USAGE_TELEMETRY.md',
+              'agentic-flow/schemas/USAGE_QUOTA_SNAPSHOT.md',
               'agentic-flow/scripts/build_agent_bundle.py',
               'agentic-flow/scripts/test_build_agent_bundle.py',
               'agentic-flow/scripts/verification_lint.py',
@@ -132,6 +141,8 @@ jobs:
               'agentic-flow/scripts/production_readiness_lint.py',
               'agentic-flow/scripts/test_production_readiness_lint.py',
               'agentic-flow/scripts/usage_ledger.py',
+              'agentic-flow/scripts/claude_usage_snapshot.py',
+              'agentic-flow/scripts/test_claude_usage_snapshot.py',
           }
           forbidden_fragments = (
               '/research/',
@@ -217,6 +228,7 @@ jobs:
             echo "- Repository ref: \`${GITHUB_SHA}\`"
             echo "- Verification-lint self-tests: PASS"
             echo "- Production-readiness self-tests: PASS"
+            echo "- Claude usage-snapshot self-tests: PASS"
             echo "- Bundle-builder self-test: PASS"
             echo "- Full-checkout bundle manifest/hash/docs/boundary verification: PASS"
             echo
