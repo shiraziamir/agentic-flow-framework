@@ -1,7 +1,7 @@
 # Primary Sources and Engineering References
 
-**Version:** 1.0  
-**Updated:** 2026-09-09T11:30:00Z  
+**Version:** 1.1  
+**Updated:** 2026-09-12  
 **Purpose:** human/reference index; not always-on agent context.
 
 This file records the main external sources used to design Agentic Flow Framework. Canonical framework policy lives in `ARCHITECTURE.md`; these links are evidence/research inputs, not independent authority. Time-sensitive vendor behavior must be rechecked when it affects a decision.
@@ -16,12 +16,17 @@ This file records the main external sources used to design Agentic Flow Framewor
 | Anthropic | https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices | clarity, structured prompts, examples, agentic autonomy/safety, avoiding over-eager coding/test gaming |
 | Anthropic | https://platform.claude.com/docs/en/agents-and-tools/tool-use/manage-tool-context | tool/context bloat, lazy tool loading, context editing, batching/programmatic tool use |
 | Anthropic | https://platform.claude.com/docs/en/manage-claude/usage-cost-api | observable token/cache/usage accounting |
+| Claude Code | https://github.com/anthropics/claude-code/issues/88111 | current status-line `rate_limits.five_hour` / `seven_day` behavior and presence of `cachedUsageUtilization`; used only as time-sensitive harness evidence, not as a stable API guarantee |
+| Claude Code | https://github.com/anthropics/claude-code/issues/34301 | historical/current-session and weekly usage telemetry semantics and rate-limit source context |
+| Claude Code | https://github.com/anthropics/claude-code/issues/23078 | `/status`/`/usage` account-quota visibility and historical programmatic-access gap |
 | Anthropic | https://platform.claude.com/docs/en/test-and-evaluate/develop-tests | measurable success criteria, evaluation design and edge cases |
 | Anthropic | https://platform.claude.com/docs/en/managed-agents/define-outcomes | independent/outcome grading in separate context |
 | Google | https://ai.google.dev/gemini-api/docs/prompting-strategies | precise/direct prompts, consistent structure, critical instruction placement, long-context structuring |
 | Gemini CLI | https://google-gemini.github.io/gemini-cli/docs/cli/gemini-md.html | hierarchical project context files and modular imports |
 | OpenCode | https://opencode.ai/docs/rules | concise committed `AGENTS.md`, modular/lazy references and precedence |
 | OpenCode | https://opencode.ai/docs/skills | on-demand `SKILL.md` discovery/loading |
+
+For the stability classification of Claude Code quota sources, see `docs/references/CLAUDE_USAGE_TELEMETRY.md`.
 
 ## Verification, frontend, contracts and code boundaries
 

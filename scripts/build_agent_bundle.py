@@ -41,6 +41,8 @@ INCLUDE_SCRIPTS = {
     "scripts/build_agent_bundle.py",
     "scripts/test_build_agent_bundle.py",
     "scripts/usage_ledger.py",
+    "scripts/claude_usage_snapshot.py",
+    "scripts/test_claude_usage_snapshot.py",
 }
 EXCLUDE_PARTS = {"__pycache__", ".DS_Store"}
 ZIP_TIME = (2026, 9, 9, 0, 0, 0)

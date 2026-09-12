@@ -92,6 +92,53 @@ The agent should group tightly related edits into one batch instead of asking pe
 
 Mutation approval does not authorize production access or destructive/data-sensitive operations; environment and task-governance rules remain separate.
 
+## Usage-aware task reporting
+
+A project may optionally request one quota snapshot after each **material task/checkpoint**:
+
+```yaml
+usage_reporting:
+  quota_snapshot: OPTIONAL
+  report_after_material_task: true
+  notify_operator: false
+  stale_after_seconds: 900
+  never_reduce_acceptance_quality: true
+```
+
+When supported by the current harness, task reports may end with:
+
+```text
+Usage
+- session: 15% used / 85% remaining
+- weekly: 23% used / 77% remaining
+- source: <observable source>
+- freshness: <live or cache age>
+```
+
+For Claude Code, use:
+
+```bash
+python3 scripts/claude_usage_snapshot.py
+```
+
+Source preference is:
+
+```text
+Claude Code statusLine rate_limits
+→ ~/.claude.json cachedUsageUtilization fallback
+→ UNAVAILABLE
+```
+
+The local cache is implementation-dependent and may change. Missing telemetry is never turned into a fake zero. Quota is an operator/routing signal—not task evidence and not permission to weaken verification.
+
+Guides:
+
+- [`docs/agent/USAGE_AWARE_TASK_REPORTING.md`](docs/agent/USAGE_AWARE_TASK_REPORTING.md)
+- [`docs/operator/CLAUDE_USAGE_NOTIFICATIONS.md`](docs/operator/CLAUDE_USAGE_NOTIFICATIONS.md)
+- [`schemas/USAGE_QUOTA_SNAPSHOT.md`](schemas/USAGE_QUOTA_SNAPSHOT.md)
+
+The normalized snapshot is intentionally transport-neutral, so Telegram, Slack, email or other operator notifications can consume the same values without duplicating provider-specific parsing.
+
 ## GitHub Actions Artifact
 
 GitHub Actions still builds a portable ZIP as a release/checking output. That Artifact is stored under the workflow run in **GitHub Actions**, not committed into the repository file tree.
@@ -152,6 +199,7 @@ REQUEST
 → CHANGE PREVIEW / APPROVAL when policy requires
 → APPLY
 → VERIFY + REPORT
+→ optional usage quota snapshot
 → independent closure when required
 ```
 
@@ -169,7 +217,7 @@ Practical guide:
 
 [`docs/agent/TOKEN_EFFICIENT_WORKFLOW.md`](docs/agent/TOKEN_EFFICIENT_WORKFLOW.md)
 
-Token savings may not silently lower acceptance quality.
+Token savings or low remaining quota may not silently lower acceptance quality.
 
 ## Python helpers
 
@@ -185,9 +233,10 @@ verification_lint.py            task/evidence/status invariant checks
 production_readiness_lint.py    profile/gap invariant checks
 build_agent_bundle.py           portable ZIP + manifest builder
 usage_ledger.py                 observable usage-counter ledger
+claude_usage_snapshot.py        Claude Code session/weekly quota normalizer
 ```
 
-These scripts check deterministic invariants. They do not replace behavioral tests, security review, deployment evidence or restore proof.
+These scripts check deterministic invariants or normalize observed telemetry. They do not replace behavioral tests, security review, deployment evidence or restore proof.
 
 ## Project baseline and production reality
 
@@ -197,7 +246,7 @@ A target project should normally maintain:
 .agentic/PROJECT_PROFILE.yaml
 ```
 
-The project profile defines what **should** be true: testing policy, mutation-approval mode, readiness tier, environment permissions, operational/security requirements and pattern-selection policy.
+The project profile defines what **should** be true: testing policy, mutation-approval mode, optional usage reporting, readiness tier, environment permissions, operational/security requirements and pattern-selection policy.
 
 Reality is established by receipts and explicit operational gaps. Temporary exceptions use owned/expiring `TEMPORARY_OVERRIDE` artifacts instead of silently weakening the baseline.
 
@@ -210,6 +259,7 @@ Coding agent:
 Operator:
 
 - [`docs/operator/CLONE_AND_ADOPT.md`](docs/operator/CLONE_AND_ADOPT.md)
+- [`docs/operator/CLAUDE_USAGE_NOTIFICATIONS.md`](docs/operator/CLAUDE_USAGE_NOTIFICATIONS.md)
 - [`docs/operator/OPERATOR_GUIDE.en.md`](docs/operator/OPERATOR_GUIDE.en.md)
 - [`docs/operator/OPERATOR_GUIDE.fa.md`](docs/operator/OPERATOR_GUIDE.fa.md)
 
@@ -221,6 +271,10 @@ Primary external sources:
 
 [`docs/references/PRIMARY_SOURCES.md`](docs/references/PRIMARY_SOURCES.md)
 
+Claude quota-telemetry provenance:
+
+[`docs/references/CLAUDE_USAGE_TELEMETRY.md`](docs/references/CLAUDE_USAGE_TELEMETRY.md)
+
 Canonical policy remains [`ARCHITECTURE.md`](ARCHITECTURE.md).
 
 ## Release checks
@@ -230,6 +284,7 @@ Local:
 ```bash
 python3 scripts/test_verification_lint.py
 python3 scripts/test_production_readiness_lint.py
+python3 scripts/test_claude_usage_snapshot.py
 python3 scripts/test_build_agent_bundle.py
 python3 scripts/build_agent_bundle.py
 ```

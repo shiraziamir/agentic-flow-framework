@@ -186,6 +186,37 @@ CONTRADICTED
 
 Do not hide skipped or unavailable checks.
 
+### Optional usage/quota footer
+
+After the engineering status is complete, check the project's `usage_reporting` policy. If `quota_snapshot` is enabled/optional **and trustworthy telemetry is available**, append one compact footer using `schemas/USAGE_QUOTA_SNAPSHOT.md` and `docs/agent/USAGE_AWARE_TASK_REPORTING.md`.
+
+For Claude Code:
+
+```bash
+python3 <framework>/scripts/claude_usage_snapshot.py
+```
+
+Example:
+
+```text
+Usage
+- session: 15% used / 85% remaining
+- weekly: 23% used / 77% remaining
+- source: CLAUDE_STATUSLINE_RATE_LIMITS
+- freshness: current
+```
+
+If telemetry is missing:
+
+```text
+Usage
+- session: unavailable
+- weekly: unavailable
+- source: UNAVAILABLE
+```
+
+Quota reporting happens **after** claim/evidence reporting so it cannot be confused with task proof. Low quota can trigger an operator notification/checkpoint recommendation, but never silently reduces required verification.
+
 ## 7. INDEPENDENT CLOSURE
 
 Use independent/cold closure when project risk, task classification or the evidence surface requires it.
@@ -214,6 +245,7 @@ At closure, preserve a compact durable checkpoint:
 - checks not run;
 - open gaps / overrides;
 - unresolved risks;
+- usage quota snapshot when configured and observable;
 - next action if any.
 
 Do not store chain-of-thought or full transcripts as project state.
@@ -228,3 +260,5 @@ risk down → lighter workflow
 ```
 
 However, if the project explicitly selects `STRICT_PREVIEW`, even a small mutation still gets a short preview and approval. Keep that preview compact and batch related edits.
+
+Likewise, quota reporting defaults to **material task/checkpoint** cadence; do not spend extra tool calls/notifications on every trivial read or tiny interaction unless the operator explicitly asks for per-turn reporting.

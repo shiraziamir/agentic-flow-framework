@@ -2,7 +2,7 @@
 
 **Operator-facing. Coding agents should load this only when a task actually uses these tools.**
 
-The Python scripts in `scripts/` are deterministic helpers. Their purpose is to check facts that do not require model judgment and to build/verify the portable bundle.
+The Python scripts in `scripts/` are deterministic helpers. Their purpose is to check facts that do not require model judgment, normalize observable usage telemetry, and build/verify the portable bundle.
 
 They do **not** prove that an application is secure, production-ready, recoverable, correctly deployed, or behaviorally correct. Those claims still require the appropriate runtime/test/security/recovery receipts.
 
@@ -195,7 +195,79 @@ Default durable path:
 
 The ledger stores counters/metadata, not prompts, responses, reasoning or transcripts.
 
-## 5. Recommended local release check
+## 5. Claude Code session/weekly quota snapshot
+
+Script:
+
+```text
+scripts/claude_usage_snapshot.py
+```
+
+Purpose: normalize observable Claude Code subscription/rate-limit utilization so task reports or notifications can show both **used** and **remaining** percentages.
+
+Preferred source order:
+
+```text
+Claude Code statusLine rate_limits.five_hour / seven_day
+→ ~/.claude.json cachedUsageUtilization
+→ UNAVAILABLE
+```
+
+The local `~/.claude.json` cache is an implementation-dependent fallback, not a stable public API contract. The helper reports its source and cache age and never fabricates values.
+
+Normal local use:
+
+```bash
+python3 scripts/claude_usage_snapshot.py
+```
+
+Example:
+
+```json
+{
+  "source": "CLAUDE_JSON_CACHED_USAGE_UTILIZATION",
+  "source_age_seconds": 118,
+  "session": {
+    "used_percent": 15.0,
+    "remaining_percent": 85.0
+  },
+  "weekly": {
+    "used_percent": 23.0,
+    "remaining_percent": 77.0
+  }
+}
+```
+
+If you have captured a statusLine JSON payload:
+
+```bash
+python3 scripts/claude_usage_snapshot.py \
+  --statusline-json /path/to/statusline.json
+```
+
+Set the cache freshness threshold when needed:
+
+```bash
+python3 scripts/claude_usage_snapshot.py --max-cache-age 300
+```
+
+Self-test:
+
+```bash
+python3 scripts/test_claude_usage_snapshot.py
+```
+
+Expected result:
+
+```text
+claude_usage_snapshot self-tests: 3 scenarios PASS
+```
+
+The normalized contract is `schemas/USAGE_QUOTA_SNAPSHOT.md`. Practical task-report behavior is in `docs/agent/USAGE_AWARE_TASK_REPORTING.md`. Telegram/notification guidance is in `docs/operator/CLAUDE_USAGE_NOTIFICATIONS.md`.
+
+Quota telemetry is an operator/routing signal. It is **not** evidence that a task is correct or complete, and low remaining quota is not permission to skip required verification.
+
+## 6. Recommended local release check
 
 Before publishing framework changes:
 
@@ -204,17 +276,19 @@ python3 -m py_compile \
   scripts/verification_lint.py \
   scripts/production_readiness_lint.py \
   scripts/usage_ledger.py \
+  scripts/claude_usage_snapshot.py \
   scripts/build_agent_bundle.py
 
 python3 scripts/test_verification_lint.py
 python3 scripts/test_production_readiness_lint.py
+python3 scripts/test_claude_usage_snapshot.py
 python3 scripts/test_build_agent_bundle.py
 python3 scripts/build_agent_bundle.py
 ```
 
 Then let GitHub Actions rebuild and verify the bundle from a clean checkout.
 
-## 6. When to use scripts vs. an agent
+## 7. When to use scripts vs. an agent
 
 Use a script/tool for deterministic questions:
 
@@ -224,6 +298,7 @@ Do these hashes match?
 Is the version marker present?
 Is a VERIFIED claim missing evidence?
 Does the bundle contain the required file?
+What quota percentages did the harness/cache actually expose?
 ```
 
 Use agent/human judgment for questions such as:
@@ -234,6 +309,7 @@ Is this architecture appropriate?
 What is the likely root cause?
 Is this security risk acceptable?
 Does this restore drill demonstrate the required RPO/RTO?
+Should low remaining quota change scheduling/model routing for the next task?
 ```
 
 The rule is: automate deterministic truth; spend model judgment on ambiguity.

@@ -1,7 +1,7 @@
 # Reality-Reflecting Status Report
 
-**Schema version:** 1.0  
-**Updated:** 2026-09-09T10:04:00Z
+**Schema version:** 1.1  
+**Updated:** 2026-09-12
 
 Use for executor completion reports, closure packets, release notes, and any engineering status where overclaiming would matter.
 
@@ -31,6 +31,8 @@ checks:
   not_executed:
     - <important check intentionally/not-available, with reason>
 
+usage_quota: <optional schemas/USAGE_QUOTA_SNAPSHOT.md object or null>
+
 unexpected_findings:
   - <finding and disposition>
 known_failures:
@@ -53,6 +55,8 @@ next_state: EVIDENCE_READY|BLOCKED|AMENDMENT_REQUIRED|...
 7. Do not report `no regressions`, `secure`, `production-ready`, `fully tested`, or equivalent global language unless the claim universe and verification method justify it.
 8. If an exact acceptance gate was replaced with a proxy, report `PARTIAL/UNVERIFIED` unless the task was explicitly amended.
 9. New mutations after verification invalidate stale report evidence according to `schemas/CLAIM_RECEIPT.md`.
+10. If quota reporting is enabled, append one compact `usage_quota` snapshot after a material task/checkpoint using `schemas/USAGE_QUOTA_SNAPSHOT.md`; quota telemetry is not engineering evidence.
+11. Missing/stale quota telemetry is reported explicitly and must never be fabricated.
 
 ## Preferred human-readable shape
 
@@ -64,6 +68,7 @@ Checks executed
 Important checks not executed
 Failures / unexpected findings
 Unknowns / residual risk
+Usage quota (optional: used + remaining + source + freshness)
 Requested supervisor decision / next state
 ```
 

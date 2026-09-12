@@ -2,7 +2,7 @@
 
 **این فایل برای اپراتور است. Agent فقط زمانی آن را Load کند که Task واقعاً به این ابزارها نیاز داشته باشد.**
 
-اسکریپت‌های داخل `scripts/` برای بررسی‌های deterministic و ساخت/اعتبارسنجی Bundle هستند. هدف این است که چیزهایی که با قانون دقیق قابل بررسی‌اند با Script انجام شوند، نه با مصرف Token و قضاوت مدل.
+اسکریپت‌های داخل `scripts/` برای بررسی‌های deterministic، نرمال‌سازی Telemetry قابل مشاهده و ساخت/اعتبارسنجی Bundle هستند. هدف این است که چیزهایی که با قانون دقیق قابل بررسی‌اند با Script انجام شوند، نه با مصرف Token و قضاوت مدل.
 
 این اسکریپت‌ها به‌تنهایی ثابت نمی‌کنند که برنامه Secure، Production-ready، Recoverable یا درست Deploy شده است. برای چنین Claimهایی همچنان Receipt واقعی Runtime/Test/Security/Recovery لازم است.
 
@@ -175,24 +175,98 @@ python3 scripts/usage_ledger.py report --task-id TASK-123
 
 این Ledger نباید Prompt، Response، Chain-of-thought یا Transcript را ذخیره کند.
 
-## 5. بررسی پیشنهادی قبل از Release
+## 5. Snapshot سهمیه Session/Weekly در Claude Code
+
+Script:
+
+```text
+scripts/claude_usage_snapshot.py
+```
+
+هدف این Script این است که Usage واقعی Claude Code را به یک خروجی یکسان تبدیل کند تا در پایان Task یا Notification بتوانیم هم **used** و هم **remaining** را نشان دهیم.
+
+ترتیب ترجیح Source:
+
+```text
+Claude Code statusLine rate_limits.five_hour / seven_day
+→ ~/.claude.json cachedUsageUtilization
+→ UNAVAILABLE
+```
+
+مسیر `~/.claude.json` یک fallback عملی ولی implementation-dependent است و نباید API پایدار فرض شود. Script همیشه `source` و در صورت وجود `source_age_seconds` را گزارش می‌کند و عددی را جعل نمی‌کند.
+
+اجرای معمول:
+
+```bash
+python3 scripts/claude_usage_snapshot.py
+```
+
+نمونه خروجی:
+
+```json
+{
+  "source": "CLAUDE_JSON_CACHED_USAGE_UTILIZATION",
+  "source_age_seconds": 118,
+  "session": {
+    "used_percent": 15.0,
+    "remaining_percent": 85.0
+  },
+  "weekly": {
+    "used_percent": 23.0,
+    "remaining_percent": 77.0
+  }
+}
+```
+
+اگر JSON مربوط به `statusLine` را دارید:
+
+```bash
+python3 scripts/claude_usage_snapshot.py \
+  --statusline-json /path/to/statusline.json
+```
+
+تعیین Threshold برای Cache قدیمی:
+
+```bash
+python3 scripts/claude_usage_snapshot.py --max-cache-age 300
+```
+
+تست Script:
+
+```bash
+python3 scripts/test_claude_usage_snapshot.py
+```
+
+خروجی مورد انتظار:
+
+```text
+claude_usage_snapshot self-tests: 3 scenarios PASS
+```
+
+Contract خروجی در `schemas/USAGE_QUOTA_SNAPSHOT.md` است. نحوه‌ی اضافه‌شدن به گزارش Task در `docs/agent/USAGE_AWARE_TASK_REPORTING.md` و راهنمای Telegram/Notification در `docs/operator/CLAUDE_USAGE_NOTIFICATIONS.md` آمده است.
+
+این اعداد فقط Signal برای Operator/Model routing هستند؛ Evidence صحت Task نیستند. کمبود سهمیه مجوز حذف Test یا پایین آوردن Verification bar نیست.
+
+## 6. بررسی پیشنهادی قبل از Release
 
 ```bash
 python3 -m py_compile \
   scripts/verification_lint.py \
   scripts/production_readiness_lint.py \
   scripts/usage_ledger.py \
+  scripts/claude_usage_snapshot.py \
   scripts/build_agent_bundle.py
 
 python3 scripts/test_verification_lint.py
 python3 scripts/test_production_readiness_lint.py
+python3 scripts/test_claude_usage_snapshot.py
 python3 scripts/test_build_agent_bundle.py
 python3 scripts/build_agent_bundle.py
 ```
 
 بعد اجازه دهید GitHub Actions همان کار را روی Checkout تمیز تکرار کند و Artifact واقعی را بسازد.
 
-## 6. چه زمانی Script و چه زمانی Agent؟
+## 7. چه زمانی Script و چه زمانی Agent؟
 
 برای سؤال deterministic از Script/Tool استفاده کنید:
 
@@ -202,6 +276,7 @@ python3 scripts/build_agent_bundle.py
 آیا Version marker درست است؟
 آیا VERIFIED claim بدون Evidence داریم؟
 آیا Bundle فایل لازم را دارد؟
+Claude Code چه درصد Usage واقعی را expose کرده است؟
 ```
 
 برای سؤال judgment-heavy از Agent/Human استفاده کنید:
@@ -212,6 +287,7 @@ python3 scripts/build_agent_bundle.py
 Root cause محتمل چیست؟
 آیا Risk امنیتی قابل قبول است؟
 آیا Restore drill واقعاً RPO/RTO را ثابت می‌کند؟
+آیا سهمیه کم باید Scheduling یا Model routing Task بعدی را تغییر دهد؟
 ```
 
 قاعده‌ی عملی:

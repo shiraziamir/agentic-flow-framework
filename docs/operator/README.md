@@ -7,6 +7,7 @@
 - `OPERATOR_GUIDE.fa.md` — راهنمای عملی اپراتور به فارسی.
 - `USING_PYTHON_TOOLS.en.md` — command-by-command purpose and usage of the deterministic Python helpers.
 - `USING_PYTHON_TOOLS.fa.md` — راهنمای فارسی استفاده از اسکریپت‌های Python.
+- `CLAUDE_USAGE_NOTIFICATIONS.md` — Claude Code session/weekly quota snapshots and Telegram/notification integration.
 - `PROMPT_TASK_AGENT_SETUP.en.md` — prompting, task-writing and agent-setup best practices in English.
 - `PROMPT_TASK_AGENT_SETUP.fa.md` — بهترین روش‌های Prompt، Task و Agent Setup به فارسی.
 - `INSTALLATION_PROMPTS.en.md` / `INSTALLATION_PROMPTS.fa.md` — copy-ready installation/adoption prompts.
