@@ -2,6 +2,7 @@
 
 **Operator-only index; coding agents should not preload this directory.**
 
+- `CLONE_AND_ADOPT.md` — recommended clone-based installation/adoption flow and `STRICT_PREVIEW` approval pattern.
 - `OPERATOR_GUIDE.en.md` — practical adoption/operation guide in English.
 - `OPERATOR_GUIDE.fa.md` — راهنمای عملی اپراتور به فارسی.
 - `USING_PYTHON_TOOLS.en.md` — command-by-command purpose and usage of the deterministic Python helpers.
@@ -11,6 +12,8 @@
 - `INSTALLATION_PROMPTS.en.md` / `INSTALLATION_PROMPTS.fa.md` — copy-ready installation/adoption prompts.
 - `RELEASE_CHECKLIST.en.md` / `RELEASE_CHECKLIST.fa.md` — framework release checklist.
 - `SCOPE_BOUNDARY.md` — operator/agent documentation-boundary note.
+
+The Git repository itself is the recommended distribution source. GitHub Actions Artifacts are optional release/checking outputs rather than files expected in the repository tree.
 
 The portable distribution may contain this directory so it is usable offline, but the coding agent should enter through `START_HERE.md` and load operator files only when the current task needs them.
 
