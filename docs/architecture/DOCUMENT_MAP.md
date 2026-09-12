@@ -12,6 +12,12 @@ docs/agent/                     agent-facing adoption docs
 docs/operator/                  human/operator-only docs
 docs/architecture/              reader architecture explanations
 docs/references/                consolidated external source index
+docs/GETTING_STARTED.md         newcomer adoption path
+docs/WHY_AGENTIC_FLOW.md        problem statement + concise evidence map
+docs/COMPARISON.md              minimum comparison and trade-offs
+docs/VALIDATION_STATUS.md       verified, partial and unproven claims
+docs/GUIDE.fa.md                comprehensive standalone Persian guide
+docs/examples/                  worked end-to-end examples
 research/                       dated research notes
 scripts/                        deterministic helper/lint/bundle tools
 templates/                      project examples

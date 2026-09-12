@@ -133,6 +133,8 @@ LOCAL / HERMETIC
 
 A request for stronger access is not authorization. Production mutation follows the project's explicit authority path.
 
+For behavior-changing work, confirm execution readiness before APPLY: at least one authorized environment must exercise the real changed path at the receipt strength required by the claim. Use `LOCAL_REAL` or `EPHEMERAL_TEST` as the normal minimum for non-docs behavior when they include the affected runtime/dependencies. Mock-only evidence may close a unit/mock-boundary claim, but not integration, persistence, migration, user-flow, deployment or production claims. If no adequate environment exists, return an environment request and keep the claim `UNVERIFIED` or `BLOCKED`.
+
 ## 8. Token/context and quota efficiency
 
 For long, multi-agent, repository-wide or log-heavy work, read:

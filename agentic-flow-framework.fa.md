@@ -1,10 +1,12 @@
 # راهنمای فارسی Agentic Flow Framework
 
-**نسخه راهنمای خواندنی:** 1.7  
-**به‌روزرسانی:** `2026-09-09T11:30:00Z`  
+**نسخه راهنمای خواندنی:** 1.8
+**به‌روزرسانی:** `2026-09-13`
 **منبع قطعی:** `ARCHITECTURE.md`
 
 این فایل برای انسان است. اگر با `ARCHITECTURE.md` اختلاف داشت، معماری Canonical ملاک است.
+
+راهنمای فارسی جامع، مستقل و دارای چینش RTL/LTR خوانا در [`docs/GUIDE.fa.md`](docs/GUIDE.fa.md) قرار دارد.
 
 ## این Framework چه مسئله‌ای را حل می‌کند؟
 
@@ -150,8 +152,8 @@ Agent برنامه‌نویس نباید مستندات Operator و Research ر�
 
 ## مسیرهای شروع
 
-Agent: `docs/agent/START_HERE.md`  
-اپراتور: `docs/operator/OPERATOR_GUIDE.fa.md`  
-بهترین روش‌های Prompt/Task/Agent Setup: `docs/operator/PROMPT_TASK_AGENT_SETUP.fa.md`  
-چرایی و معماری: `docs/architecture/WHY_AND_HOW.md`  
+Agent: `docs/agent/START_HERE.md`
+اپراتور: `docs/operator/OPERATOR_GUIDE.fa.md`
+بهترین روش‌های Prompt/Task/Agent Setup: `docs/operator/PROMPT_TASK_AGENT_SETUP.fa.md`
+چرایی و معماری: `docs/architecture/WHY_AND_HOW.md`
 تمام منابع: `docs/references/PRIMARY_SOURCES.md`

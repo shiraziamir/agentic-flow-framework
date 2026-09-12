@@ -1,7 +1,7 @@
 # Engineering Advisory Schema
 
 **Schema version:** 1.0  
-**Updated:** 2026-09-12
+**Updated:** 2026-09-13
 
 Use for material tasks where the operator wants the executor to reason about implementation quality before coding without turning implementation suggestions into frozen requirements.
 
@@ -30,6 +30,13 @@ recommended_shape:
 
 avoid:
   - <likely failure mode, duplicated authority, unsafe handling, weak-test pattern, architecture drift>
+
+execution_readiness:
+  changed_behavior_to_exercise: <observable path or NOT_APPLICABLE>
+  minimum_environment: <LOCAL_REAL|EPHEMERAL_TEST|SHARED_TEST|STAGING|...>
+  real_boundaries_required: []
+  mock_only_limit: <which narrow claims mocks may establish>
+  unavailable_action: <environment request / UNVERIFIED / BLOCKED>
 
 preflight_receipt_required:
   observed_current_design: true
@@ -86,6 +93,8 @@ Use ThreadedConnectionPool.
 unless the exact technology is itself a frozen requirement.
 
 Every material recommendation should be tied to observed repository evidence. Unknown facts stay `UNKNOWN`.
+
+The advisory must also distinguish a test seam from a real-boundary receipt. It should identify what changed behavior must be exercised, the lowest adequate environment, and why a mock or substitute is adequate—or explicitly why it is not.
 
 ## Implementation-design preflight
 

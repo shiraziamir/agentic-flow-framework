@@ -1,8 +1,8 @@
 # Agentic Flow Architecture
 
-**Status:** CANONICAL SOURCE OF TRUTH  
-**Version:** 1.7  
-**Updated:** 2026-09-12
+**Status:** CANONICAL SOURCE OF TRUTH
+**Version:** 1.8
+**Updated:** 2026-09-13
 
 Agentic Flow is a repository-first, vendor-neutral operating architecture for coding agents. This file is intentionally a **canonical map + invariant set**, not a giant always-on manual. Detailed rules live in the lower canonical layers and are loaded lazily.
 
@@ -33,6 +33,8 @@ When sources disagree, use this order:
 > Stable project requirements live in a baseline; temporary exceptions are explicit, owned and expiring.
 
 > Operator education and agent runtime instructions are separate context surfaces.
+
+> An executor that can edit a behavior but cannot exercise the real changed path is not execution-ready for that claim.
 
 An agent session/model/provider is replaceable. Project state must survive reset or handoff without requiring full chat/history replay.
 
@@ -166,6 +168,25 @@ If execution reveals a materially new surface, consumer, environment, security/d
 STOP → durable evidence → amend/reclassify → decision → re-authorize when required
 ```
 
+## Designer → Manager → Executor separation
+
+For material work, keep proposal, authority, implementation and closure distinguishable:
+
+```text
+Operator intent
+→ Designer: evidence-bound contract proposal + advisory
+→ Manager: review, freeze and bounded authorization
+→ Executor: preflight, implementation and receipts on an isolated branch/PR
+→ Manager: review the exact commit/PR and evidence
+→ authorized merge decision
+```
+
+The Designer does not implement or approve. The Manager does not accept the Executor narrative in place of the actual diff, source context and raw receipts. The Executor owns the smallest conforming HOW, but cannot self-freeze, expand authority, or self-certify material closure.
+
+Where direct Git access is available, Designer and Manager bind their work to repository, branch and commit identity; the Executor works on a bounded branch and the Manager reviews the actual commit/PR head. Branch/PR isolation is the default for material code changes. A context packet is a degraded-access alternative, not an equivalent substitute for direct review of high-risk code.
+
+Engineering advice is evidence-constrained and tagged `MUST`, `SHOULD`, `INVESTIGATE`, or `AVOID`. Only frozen/owner constraints and observed invariants qualify as `MUST`; recommendations remain defeasible guidance.
+
 ## Verification and receipts
 
 Use `schemas/CHANGE_CLASSIFICATION.md`, `schemas/CLAIM_RECEIPT.md`, `schemas/STATUS_REPORT.md` and `verification/00_INDEX.md`.
@@ -233,6 +254,19 @@ LOCAL/HERMETIC
 ```
 
 Use the lowest environment that can establish the claim. An agent may request a stronger environment; the request is **not authority**. Production mutation follows the project's explicit authorization path. Prefer disposable/ephemeral environments for integration/E2E when practical.
+
+For behavior-changing work, execution readiness requires access to at least one authorized environment capable of exercising the changed behavior through the real affected boundary. Depending on the claim, that may require the real application runtime, database/container, migration path, network boundary or controlled provider sandbox. `LOCAL_REAL` or `EPHEMERAL_TEST` is the normal minimum for non-docs work; the exact requirement remains claim-dependent.
+
+A mock proves the modeled interaction, not the real integration boundary. Mock-only evidence may close a unit-level claim, but must not close an integration, persistence, migration, user-flow, deployment or other stronger claim. If no authorized environment can produce the minimum receipt, the agent reports the claim `UNVERIFIED` or `BLOCKED`, records an environment request, and does not weaken the claim to manufacture closure.
+
+Environment permission and execution readiness are separate from task and mutation authority:
+
+```text
+task authority        = what outcome/scope is authorized
+mutation authority    = what may be changed now
+environment authority = where actions may run
+execution readiness   = whether the authorized environment can prove the claim
+```
 
 ## Production engineering
 

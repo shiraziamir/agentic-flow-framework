@@ -3,6 +3,8 @@
 This directory is for human/operator guidance and should not be preloaded by coding agents.
 
 - `OPERATOR_GUIDE.en.md` — practical operation, task workflow, governance and script entrypoints.
+- `DESIGNER_MANAGER_SETUP.md` — separate roles, direct Git mode, isolated Executor branch/PR and Manager review of exact commits.
+- `CONTEXT_PACKET.md` — bounded alternative when a Designer or Manager lacks direct Git access.
 - `USING_PYTHON_TOOLS.en.md` — exact purpose, commands, limitations and self-tests for the deterministic Python helpers.
 - `PROMPT_TASK_AGENT_SETUP.en.md` — prompting, task-writing and agent-setup best practices.
 - `INSTALLATION_PROMPTS.en.md` — ready-to-use prompts for fresh, mature, production-bound and mid-task adoption.

@@ -53,6 +53,7 @@ jobs:
               'ARCHITECTURE.md': f'**Version:** {version}',
               'README.md': f'**Framework version:** {version}',
               'agentic-flow-framework.en.md': f'**Reader-guide version:** {version}',
+              'agentic-flow-framework.fa.md': f'**نسخه راهنمای خواندنی:** {version}',
               'agentic-flow-framework.en.html': f'Agentic Flow Framework v{version}',
               'agentic-flow-framework.fa.html': f'Agentic Flow Framework v{version}',
               'CHANGELOG.md': f'## {version} ',
@@ -77,7 +78,8 @@ jobs:
             scripts/test_verification_lint.py \
             scripts/test_production_readiness_lint.py \
             scripts/test_claude_usage_snapshot.py \
-            scripts/test_build_agent_bundle.py
+            scripts/test_build_agent_bundle.py \
+            scripts/test_docs_onboarding.py
 
       - name: Run verification-lint self-tests
         run: python3 scripts/test_verification_lint.py
@@ -90,6 +92,9 @@ jobs:
 
       - name: Run bundle-builder self-test
         run: python3 scripts/test_build_agent_bundle.py
+
+      - name: Run newcomer-documentation self-tests
+        run: python3 scripts/test_docs_onboarding.py
 
       - name: Build bundle from full checkout
         shell: bash
@@ -133,6 +138,13 @@ jobs:
               'agentic-flow/docs/architecture/WHY_AND_HOW.md',
               'agentic-flow/docs/references/PRIMARY_SOURCES.md',
               'agentic-flow/docs/references/CLAUDE_USAGE_TELEMETRY.md',
+              'agentic-flow/docs/GETTING_STARTED.md',
+              'agentic-flow/docs/WHY_AGENTIC_FLOW.md',
+              'agentic-flow/docs/COMPARISON.md',
+              'agentic-flow/docs/VALIDATION_STATUS.md',
+              'agentic-flow/docs/GUIDE.fa.md',
+              'agentic-flow/docs/examples/END_TO_END_TASK.md',
+              'agentic-flow/docs/operator/CONTEXT_PACKET.md',
               'agentic-flow/schemas/USAGE_QUOTA_SNAPSHOT.md',
               'agentic-flow/scripts/build_agent_bundle.py',
               'agentic-flow/scripts/test_build_agent_bundle.py',
@@ -143,6 +155,7 @@ jobs:
               'agentic-flow/scripts/usage_ledger.py',
               'agentic-flow/scripts/claude_usage_snapshot.py',
               'agentic-flow/scripts/test_claude_usage_snapshot.py',
+              'agentic-flow/scripts/test_docs_onboarding.py',
           }
           forbidden_fragments = (
               '/research/',
@@ -230,6 +243,7 @@ jobs:
             echo "- Production-readiness self-tests: PASS"
             echo "- Claude usage-snapshot self-tests: PASS"
             echo "- Bundle-builder self-test: PASS"
+            echo "- Newcomer-documentation self-tests: PASS"
             echo "- Full-checkout bundle manifest/hash/docs/boundary verification: PASS"
             echo
             echo '```text'

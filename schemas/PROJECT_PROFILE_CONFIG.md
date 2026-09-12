@@ -1,7 +1,7 @@
 # Project Profile Config Schema
 
-**Schema version:** 1.2  
-**Updated:** 2026-09-12
+**Schema version:** 1.3
+**Updated:** 2026-09-13
 
 A target project should keep one small, durable project-level profile, typically `.agentic/PROJECT_PROFILE.yaml`. It declares baseline operating intent and guardrails. It is not a proof that the project satisfies them.
 
@@ -27,6 +27,16 @@ quality:
   mutation_or_path_proof:
     required_for_load_bearing_tests: true|false
   minimum_layers: [UNIT, INTEGRATION, CONTRACT, E2E, LIVE]
+
+execution_readiness:
+  required_for_behavior_changes: true|false
+  minimum_capability: LOCAL_REAL|EPHEMERAL_INTEGRATION|PROJECT_DEFINED
+  real_application_runtime: REQUIRED_WHEN_AFFECTED|OPTIONAL
+  real_database: REQUIRED_WHEN_AFFECTED|OPTIONAL|NOT_APPLICABLE
+  real_migrations: REQUIRED_WHEN_AFFECTED|OPTIONAL|NOT_APPLICABLE
+  real_external_boundary: REQUIRED_WHEN_CLAIMED|CONTROLLED_SUBSTITUTE_ALLOWED|NOT_APPLICABLE
+  mock_only_closure: DENIED_FOR_INTEGRATION_OR_STRONGER|PROJECT_DEFINED
+  when_unavailable: BLOCK_AND_REQUEST_ENVIRONMENT|REPORT_UNVERIFIED
 
 operations:
   metrics: REQUIRED|OPTIONAL|NOT_APPLICABLE
@@ -112,3 +122,5 @@ Quota information is an operator/routing signal only. Low quota may justify chec
 5. Mutation approval and environment authorization are separate: approval to edit source does not authorize production mutation.
 6. Usage/quota values are telemetry, not task-completion evidence.
 7. Keep this profile concise. Detailed policy remains in canonical framework/project docs and production profiles.
+8. For behavior-changing work, an executor is not execution-ready unless an authorized environment can exercise the real changed path at the minimum receipt strength required by the planned claim.
+9. Mock-only evidence may close only claims explicitly scoped to the mock/unit boundary. It does not inherit integration, persistence, migration, user-visible, deployment or production semantics.

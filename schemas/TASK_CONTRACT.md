@@ -79,6 +79,11 @@ measurement_qualification:
   repository_ref_required: true|false
   runtime_artifact_identity_required: true|false
   environment_identity_required: true|false
+  changed_behavior_exercised: true|false|NOT_APPLICABLE
+  lowest_adequate_environment: LOCAL_REAL|EPHEMERAL_TEST|SHARED_TEST|STAGING|PRODUCTION_READ|PROJECT_DEFINED
+  real_boundaries_required: []
+  mock_only_closure_limit: <narrow claims mocks may establish; DENIED for integration-or-stronger by default>
+  environment_unavailable_action: BLOCK_AND_REQUEST_ENVIRONMENT|REPORT_UNVERIFIED
   writable_path_isolation_required: true|false
   baseline_ref: <ref|null>
   forbidden_preconditioning: []

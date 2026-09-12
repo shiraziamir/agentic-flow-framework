@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.8 — 2026-09-13
+
+Newcomer/onboarding release: makes README a WHY-first landing page; adds getting-started, comparison, validation-status and end-to-end example guides; adds a standalone comprehensive RTL Persian guide; formalizes Designer/Manager/Executor separation, direct-Git branch/PR review and bounded context packets; adds evidence-constrained advisory tags; and makes real changed-path execution readiness, environment ladders and mock-only claim limits explicit in canonical policy, profiles, prompts and deterministic documentation checks.
+
 ## Unreleased
 
 Evidence-recovery hardening: adds a canonical recovery/measurement-qualification schema; separates designed/implemented/tested/qualified/live/deployed/production-proven capability states; formalizes stale/wrong-runtime evidence as preservable but potentially `VOID_FOR_CLAIM`; records single-use authorization consumption and rerun re-authorization; adds pre-live runtime/environment/writable-path qualification and explicit side-effect accounting.

@@ -3,6 +3,8 @@
 **Operator-only index; coding agents should not preload this directory.**
 
 - `CLONE_AND_ADOPT.md` — recommended clone-based installation/adoption flow and `STRICT_PREVIEW` approval pattern.
+- `DESIGNER_MANAGER_SETUP.md` — separate Designer/Manager/Executor roles, direct Git access, isolated branch/PR review and execution readiness.
+- `CONTEXT_PACKET.md` — bounded degraded-access alternative when a role cannot inspect Git directly.
 - `OPERATOR_GUIDE.en.md` — practical adoption/operation guide in English.
 - `OPERATOR_GUIDE.fa.md` — راهنمای عملی اپراتور به فارسی.
 - `USING_PYTHON_TOOLS.en.md` — command-by-command purpose and usage of the deterministic Python helpers.

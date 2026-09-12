@@ -166,6 +166,8 @@ This reduces narrative anchoring and makes it harder for an Executor to overstat
 
 Use a bounded context packet for the role without repository access.
 
+Use the full packet contract in [CONTEXT_PACKET.md](CONTEXT_PACKET.md).
+
 The packet should contain only evidence needed to author/review the task:
 
 ```text
@@ -180,6 +182,14 @@ unknowns
 
 Do not substitute a context packet for direct code review when the Manager is expected to approve a high-risk implementation. For HIGH-risk code review, direct source/diff access is strongly preferred.
 
+## 5.1 Execution readiness is required
+
+Direct Git access is not enough. For behavior-changing work, the Executor also needs an authorized environment capable of exercising the real changed path at the receipt strength required by the frozen claim.
+
+The Designer names the lowest adequate environment and real boundaries. The Manager rejects a task or returns `BLOCKED / MORE EVIDENCE REQUIRED` when the planned environment cannot establish the claim. A mock-only pass may close a unit/mock-boundary claim, but not an integration, persistence, migration, user-flow, deployment or production claim.
+
+Environment access remains separate from task and mutation authority. Neither the Designer nor Manager prompt grants production access.
+
 ## 6. Initial prompt — Task Designer / Architect
 
 Copy and adapt:
@@ -191,6 +201,7 @@ You are NOT the implementation Executor and you are NOT the approving Manager.
 Framework source: <path-to-agentic-flow-framework>
 Target repository: <path-or-repository>
 Operator intent: <request>
+Access mode: DIRECT_GIT_READ|CONTEXT_PACKET
 
 Read the relevant Agentic Flow task/advisory rules first:
 - schemas/ENGINEERING_ADVISORY.md
@@ -215,6 +226,8 @@ A. FROZEN CONTRACT PROPOSAL
 - affected engineering/production surfaces
 - observable acceptance criteria
 - required verification and minimum receipts
+- changed behavior, lowest adequate environment, and real boundaries required
+- explicit mock-only claim limitations
 - security/data/operational constraints
 - STOP/amendment conditions
 
@@ -270,6 +283,7 @@ Your job is authority, task quality control, mutation review, code review, and e
 Framework source: <path-to-agentic-flow-framework>
 Target repository: <path-or-repository>
 Designer output: <task/advisory path or supplied content>
+Access mode: DIRECT_GIT|CONTEXT_PACKET
 
 Read the relevant Agentic Flow governance first:
 - ARCHITECTURE.md
@@ -290,6 +304,8 @@ Review the Designer proposal for:
 - missing consumers, failure modes, data/security/production effects;
 - STOP conditions that are too weak;
 - tests that prove proxies rather than required behavior.
+- planned claims that cannot be exercised in any authorized environment;
+- mock-only evidence proposed for real-boundary claims.
 
 Return one of:
 PASS TO FREEZE
@@ -307,6 +323,7 @@ When the Executor submits IMPLEMENTATION DESIGN PROPOSED / STRICT_PREVIEW:
 - verify departures from advisory are justified by source evidence;
 - reject scope/authority expansion without amendment;
 - approve only the specific mutation batch when authorized.
+- confirm task, mutation and environment authority independently.
 
 PHASE 3 — CODE REVIEW
 When the Executor provides a commit or PR, inspect the exact diff/commit and relevant surrounding source.

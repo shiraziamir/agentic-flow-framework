@@ -57,6 +57,12 @@ AFFECTED FILES / RESOURCES
 VERIFICATION / FAILURE-INJECTION STRATEGY
 - <tests/checks tied to behavior>
 
+EXECUTION READINESS
+- <changed behavior to exercise>
+- <lowest adequate authorized environment>
+- <real dependencies/boundaries required>
+- <what mock-only evidence can and cannot establish>
+
 ADVISORY DEPARTURES
 - <none or recommendation + evidence-backed reason>
 
@@ -67,6 +73,8 @@ NEW STOP CONDITIONS / UNKNOWNS
 Under `STRICT_PREVIEW`, append the normal mutation preview fields and wait for explicit `APPROVE` / `APPLY`.
 
 If a frozen STOP condition fires, do not solve around it. Request amendment/decision.
+
+If no authorized environment can exercise the changed path at the required claim strength, report `BLOCKED` or `UNVERIFIED` and issue an environment request. Do not preserve an integration-or-stronger claim while substituting a mock-only receipt.
 
 ## During implementation
 

@@ -1,10 +1,12 @@
 # Agentic Flow Framework — English Reader Guide
 
-**Reader-guide version:** 1.7  
-**Updated:** 2026-09-09T11:30:00Z  
+**Reader-guide version:** 1.8
+**Updated:** 2026-09-13
 **Canonical source of truth:** [`ARCHITECTURE.md`](ARCHITECTURE.md)
 
 This is a human-readable synchronized view. If it conflicts with `ARCHITECTURE.md`, the architecture file wins.
+
+Newcomers should begin with [README.md](README.md) and [docs/GETTING_STARTED.md](docs/GETTING_STARTED.md). The current limitations and unproven claims are explicit in [docs/VALIDATION_STATUS.md](docs/VALIDATION_STATUS.md).
 
 ## What the framework does
 
@@ -114,7 +116,7 @@ Operator/reference docs are not standing coding-agent instructions.
 
 ## Start points
 
-For coding agents: [`docs/agent/START_HERE.md`](docs/agent/START_HERE.md)  
-For operators: [`docs/operator/OPERATOR_GUIDE.en.md`](docs/operator/OPERATOR_GUIDE.en.md)  
-Why/how architecture: [`docs/architecture/WHY_AND_HOW.md`](docs/architecture/WHY_AND_HOW.md)  
+For coding agents: [`docs/agent/START_HERE.md`](docs/agent/START_HERE.md)
+For operators: [`docs/operator/OPERATOR_GUIDE.en.md`](docs/operator/OPERATOR_GUIDE.en.md)
+Why/how architecture: [`docs/architecture/WHY_AND_HOW.md`](docs/architecture/WHY_AND_HOW.md)
 Consolidated sources: [`docs/references/PRIMARY_SOURCES.md`](docs/references/PRIMARY_SOURCES.md)

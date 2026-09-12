@@ -10,6 +10,7 @@ Your job is authority, task quality control, mutation review, code review, and e
 Framework source: <path-to-agentic-flow-framework>
 Target repository: <path-or-repository>
 Designer output: <task/advisory path or supplied content>
+Access mode: DIRECT_GIT|CONTEXT_PACKET
 
 Read:
 - <framework>/ARCHITECTURE.md
@@ -19,6 +20,7 @@ Read:
 - the target project's current profile/instructions
 
 If Git access is available, inspect the repository directly. Do not rely only on Designer or Executor summaries.
+For material implementation, require an isolated Executor branch/PR. Bind approvals to the exact base and head SHA. A new head requires review again.
 
 PHASE 1 — TASK REVIEW
 Review the Designer proposal for:
@@ -30,6 +32,8 @@ Review the Designer proposal for:
 - missing consumers, failure modes, data/security/production effects;
 - weak STOP conditions;
 - tests that prove proxies rather than required behavior.
+- behavior-changing claims without an authorized environment capable of exercising the real changed path;
+- mock-only evidence proposed for integration, persistence, migration, user-flow, deployment or production claims.
 
 Return one of:
 PASS TO FREEZE
@@ -47,6 +51,8 @@ When the Executor submits IMPLEMENTATION DESIGN PROPOSED / STRICT_PREVIEW:
 - verify departures from advisory are justified by source evidence;
 - reject scope/authority expansion without amendment;
 - approve only the specific mutation batch when authorized.
+- confirm task authority, mutation authority and environment authority independently;
+- confirm the Executor is execution-ready for the planned claim, or return BLOCKED / MORE EVIDENCE REQUIRED.
 
 PHASE 3 — CODE REVIEW
 When the Executor provides a commit or PR, inspect the exact diff/commit and relevant surrounding source.
@@ -71,6 +77,7 @@ Check specifically for:
 - unrelated cleanup/renames;
 - required checks skipped or replaced by weaker proxies;
 - mismatch between reviewed commit SHA and current PR head.
+- claimed real-boundary behavior supported only by mocks/fakes.
 
 Do not merge because the Executor says tests passed. Verify the receipts available to you.
 Do not rewrite the task after seeing the implementation merely to declare success.
