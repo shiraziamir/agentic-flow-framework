@@ -1,6 +1,6 @@
 profile_version: 1
 project_id: example-service
-updated_at: 2026-09-09T11:30:00Z
+updated_at: 2026-09-12T00:00:00Z
 
 codebase_scale: MEDIUM
 readiness_tier: STANDARD
@@ -35,6 +35,13 @@ security:
   dependency_review: REQUIRED
   secret_scanning: REQUIRED
   least_privilege: REQUIRED
+
+agent_mutation_policy:
+  mode: STRICT_PREVIEW
+  group_related_changes_into_batches: true
+  require_current_vs_proposed_state: true
+  require_planned_checks_before_apply: true
+  require_rollback_for_material_changes: true
 
 agent_environment_policy:
   local: AUTO_ALLOWED
