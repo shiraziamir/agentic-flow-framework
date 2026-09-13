@@ -1,9 +1,9 @@
 # Project Profile Config Schema
 
-**Schema version:** 1.3
+**Schema version:** 1.4  
 **Updated:** 2026-09-13
 
-A target project should keep one small, durable project-level profile, typically `.agentic/PROJECT_PROFILE.yaml`. It declares baseline operating intent and guardrails. It is not a proof that the project satisfies them.
+A target project should keep one small durable profile, usually `.agentic/PROJECT_PROFILE.yaml`. It declares the intended operating bar; current receipts establish reality.
 
 Recommended shape:
 
@@ -15,18 +15,11 @@ updated_at: <RFC3339>
 codebase_scale: SMALL|MEDIUM|LARGE
 readiness_tier: BASIC|STANDARD|HIGH_ASSURANCE
 
-surfaces:
-  frontend: true|false
-  backend: true|false
-  shared: true|false
-  data: true|false
-  infra: true|false
-
 quality:
   test_strategy: RISK_BASED|TEST_FIRST_FOR_MATERIAL_CLAIMS|TDD_STRICT
+  minimum_layers: [UNIT, INTEGRATION, CONTRACT, E2E, LIVE]
   mutation_or_path_proof:
     required_for_load_bearing_tests: true|false
-  minimum_layers: [UNIT, INTEGRATION, CONTRACT, E2E, LIVE]
 
 execution_readiness:
   required_for_behavior_changes: true|false
@@ -37,6 +30,43 @@ execution_readiness:
   real_external_boundary: REQUIRED_WHEN_CLAIMED|CONTROLLED_SUBSTITUTE_ALLOWED|NOT_APPLICABLE
   mock_only_closure: DENIED_FOR_INTEGRATION_OR_STRONGER|PROJECT_DEFINED
   when_unavailable: BLOCK_AND_REQUEST_ENVIRONMENT|REPORT_UNVERIFIED
+
+agent_mutation_policy:
+  mode: STRICT_PREVIEW|MATERIAL_CHANGES_ONLY|BOUNDED_AUTONOMY
+  group_related_changes_into_batches: true|false
+  require_current_vs_proposed_state: true|false
+  require_planned_checks_before_apply: true|false
+  require_rollback_for_material_changes: true|false
+  remediation_windows:
+    enabled: true|false
+    default_max_iterations: <integer>
+    manager_review_required_before_closure: true|false
+
+workspace_safety:
+  preserve_unknown_dirty_work: true
+  destructive_git_requires_explicit_authority: true
+
+external_effects:
+  real_provider_calls: DENIED|EXPLICIT_AUTHORITY_REQUIRED|PROJECT_DEFINED
+  paid_api_calls: DENIED|EXPLICIT_AUTHORITY_REQUIRED|PROJECT_DEFINED
+  message_or_notification_sends: DENIED|EXPLICIT_AUTHORITY_REQUIRED|PROJECT_DEFINED
+
+review_policy:
+  pre_manager_adversarial_review: REQUIRED_FOR_MEDIUM_HIGH|OPTIONAL|DISABLED
+  consolidated_manager_findings: true|false
+  independent_closure: REQUIRED_FOR_HIGH|PROJECT_DEFINED|DISABLED
+
+flow_metrics:
+  enabled: true|false
+  collect_material_tasks_only: true|false
+
+agent_environment_policy:
+  local: AUTO_ALLOWED|OWNER_APPROVAL|DENIED
+  ephemeral_test: AUTO_ALLOWED|OWNER_APPROVAL|DENIED
+  shared_test: AUTO_ALLOWED|OWNER_APPROVAL|DENIED
+  staging: AUTO_ALLOWED|OWNER_APPROVAL|DENIED
+  production_read: AUTO_ALLOWED|OWNER_APPROVAL|DENIED
+  production_mutation: OWNER_APPROVAL|DENIED
 
 operations:
   metrics: REQUIRED|OPTIONAL|NOT_APPLICABLE
@@ -53,27 +83,12 @@ security:
   secret_scanning: REQUIRED|OPTIONAL|NOT_APPLICABLE
   least_privilege: REQUIRED|OPTIONAL|NOT_APPLICABLE
 
-agent_mutation_policy:
-  mode: STRICT_PREVIEW|MATERIAL_CHANGES_ONLY|BOUNDED_AUTONOMY
-  group_related_changes_into_batches: true|false
-  require_current_vs_proposed_state: true|false
-  require_planned_checks_before_apply: true|false
-  require_rollback_for_material_changes: true|false
-
 usage_reporting:
   quota_snapshot: ENABLED|OPTIONAL|DISABLED
   report_after_material_task: true|false
   notify_operator: true|false
   stale_after_seconds: <integer>
   never_reduce_acceptance_quality: true
-
-agent_environment_policy:
-  local: AUTO_ALLOWED|OWNER_APPROVAL|DENIED
-  ephemeral_test: AUTO_ALLOWED|OWNER_APPROVAL|DENIED
-  shared_test: AUTO_ALLOWED|OWNER_APPROVAL|DENIED
-  staging: AUTO_ALLOWED|OWNER_APPROVAL|DENIED
-  production_read: AUTO_ALLOWED|OWNER_APPROVAL|DENIED
-  production_mutation: OWNER_APPROVAL|DENIED
 
 architecture_policy:
   pattern_mode: AGENT_PROPOSES_OWNER_MAY_OVERRIDE|OWNER_SPECIFIES|AGENT_AUTONOMOUS_WITHIN_GUARDRAILS
@@ -88,11 +103,7 @@ temporary_overrides:
   require_compensating_control: true
 ```
 
-## Mutation approval policy
-
-Use `schemas/MUTATION_APPROVAL_POLICY.md`.
-
-Recommended default for first adoption or an operator who wants explicit control:
+## Recommended balanced default
 
 ```yaml
 agent_mutation_policy:
@@ -101,26 +112,42 @@ agent_mutation_policy:
   require_current_vs_proposed_state: true
   require_planned_checks_before_apply: true
   require_rollback_for_material_changes: true
+  remediation_windows:
+    enabled: true
+    default_max_iterations: 2
+    manager_review_required_before_closure: true
+
+workspace_safety:
+  preserve_unknown_dirty_work: true
+  destructive_git_requires_explicit_authority: true
+
+external_effects:
+  real_provider_calls: EXPLICIT_AUTHORITY_REQUIRED
+  paid_api_calls: EXPLICIT_AUTHORITY_REQUIRED
+  message_or_notification_sends: EXPLICIT_AUTHORITY_REQUIRED
+
+review_policy:
+  pre_manager_adversarial_review: REQUIRED_FOR_MEDIUM_HIGH
+  consolidated_manager_findings: true
+  independent_closure: REQUIRED_FOR_HIGH
+
+flow_metrics:
+  enabled: true
+  collect_material_tasks_only: true
 ```
 
-Under `STRICT_PREVIEW`, read-only discovery is allowed without a mutation approval. Before each bounded mutation batch, the agent reports current state, proposed state, affected files/resources, impacts, planned checks, rollback/recovery when relevant, and explicit out-of-scope boundaries; then waits for `APPROVE`/`APPLY`.
-
-## Usage/quota reporting
-
-Use `schemas/USAGE_QUOTA_SNAPSHOT.md` and `docs/agent/USAGE_AWARE_TASK_REPORTING.md`.
-
-When enabled and the harness exposes trustworthy quota telemetry, append one compact usage snapshot after each **material task/checkpoint**, not after every trivial tool call. Missing telemetry must be reported as unavailable rather than fabricated.
-
-Quota information is an operator/routing signal only. Low quota may justify checkpointing or proposing deferral, but never silently skips required tests, security checks, evidence, or review.
+This keeps first mutation approval explicit while allowing bounded same-task remediation after a consolidated review.
 
 ## Rules
 
-1. This file describes the baseline; current receipts determine reality.
-2. A baseline requirement must not be silently switched off during a task. Use `schemas/TEMPORARY_OVERRIDE.md`.
-3. `NOT_APPLICABLE` requires a durable rationale when the capability would normally be expected for the selected readiness tier.
-4. Agent permissions are an upper bound, not automatic authority. Task/governance/environment authorization can further restrict them.
-5. Mutation approval and environment authorization are separate: approval to edit source does not authorize production mutation.
-6. Usage/quota values are telemetry, not task-completion evidence.
-7. Keep this profile concise. Detailed policy remains in canonical framework/project docs and production profiles.
-8. For behavior-changing work, an executor is not execution-ready unless an authorized environment can exercise the real changed path at the minimum receipt strength required by the planned claim.
-9. Mock-only evidence may close only claims explicitly scoped to the mock/unit boundary. It does not inherit integration, persistence, migration, user-visible, deployment or production semantics.
+1. The profile is a baseline, not proof.
+2. Baseline requirements must not be silently disabled; use `schemas/TEMPORARY_OVERRIDE.md`.
+3. `NOT_APPLICABLE` needs a durable rationale where the capability would normally be expected.
+4. Agent permissions are an upper bound, not automatic task authority.
+5. Task, mutation, environment and external-side-effect authority are separate.
+6. Behavior-changing work is not execution-ready unless the Executor can exercise the real changed path at the required receipt strength.
+7. Mock-only evidence cannot inherit stronger integration/persistence/deployment semantics.
+8. Unknown/unowned dirty work is preserved by default.
+9. Remediation windows reduce round-trips; they never authorize material scope expansion.
+10. Flow metrics and usage/quota values are process telemetry, not completion evidence.
+11. Keep this profile concise; detailed policy belongs in canonical schemas/docs.
