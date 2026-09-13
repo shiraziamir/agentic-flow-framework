@@ -15,55 +15,49 @@ Do not confuse rigor with repeated permission prompts.
 
 ## 1. Classify the work
 
-Prefer two independent dimensions:
-
 ```yaml
 risk_level: LOW|MEDIUM|HIGH
 work_kind: IMPLEMENTATION|REMEDIATION|EVIDENCE_ONLY
 ```
 
-Typical workflow:
-
 | Risk | Default workflow |
 |---|---|
 | LOW | execute → focused test → compact self-review → commit/report |
-| MEDIUM | short preflight → execute → cold code review → one bounded remediation → Manager review |
-| HIGH | frozen contract → engineering/failure preflight → explicit initial authorization → execute → adversarial review → Manager consolidated review → one remediation round by default → read-only Independent Judge when required |
+| MEDIUM | short preflight → execute → cold review → one bounded remediation → Manager review |
+| HIGH | frozen contract → failure preflight → explicit authorization → execute → adversarial review → Manager consolidated review → one remediation round by default → read-only Independent Judge when required |
+
+If the task exposes that the project architecture baseline itself is missing/broken, do not keep treating it as a local task. Route to `docs/agent/PROJECT_INCEPTION_ARCHITECTURE.md`.
 
 ## 2. Draft the observable contract
 
-For material work, define before mutation:
+Define before material mutation:
 
-- goal and symptom;
+- goal/symptom;
 - in-scope / out-of-scope surfaces;
 - observable Definition of Done;
-- planned claims and minimum receipts;
-- required environment and real boundaries;
-- important checks intentionally omitted;
+- claims and minimum receipts;
+- required environment/real boundaries;
+- intentionally omitted checks;
 - STOP/escalation conditions.
 
 The contract defines **WHAT + SUCCESS**, not an implementation script.
 
 ## 3. Engineering preflight
 
-For MEDIUM/HIGH or advisory-required tasks, inspect the current system before editing.
-
-At minimum answer:
+For MEDIUM/HIGH, inspect the current system before editing:
 
 ```text
 What owns the affected state?
 What is the real call/data path?
-Where are exceptions/failures swallowed or propagated?
-What are the authoritative vs derived states?
+Where do failures propagate or disappear?
+What is authoritative vs derived?
 What is the smallest coherent change?
-What test seam and real boundary prove it?
+What real boundary proves it?
 ```
 
 ### Failure-surface matrix
 
-Use a triggered matrix instead of blindly applying every failure case to every task.
-
-Baseline questions for material behavioral work:
+Baseline for material behavior:
 
 ```text
 NORMAL PATH
@@ -74,7 +68,7 @@ OBSERVABILITY / HEALTH PROPAGATION
 TEST-ORACLE FALSIFICATION
 ```
 
-Add only when applicable:
+Add when applicable:
 
 ```text
 THREAD CONCURRENCY
@@ -87,49 +81,28 @@ MIGRATION / SCHEMA
 CACHE / CONSISTENCY
 ```
 
-For each applicable row, state the expected invariant, failure signal and planned evidence. This is intended to reduce serial remediation rounds by finding the failure surface before coding.
-
-Under `STRICT_PREVIEW`, include the implementation preflight in the first change preview and wait for `APPROVE` / `APPLY`.
+Under `STRICT_PREVIEW`, include the preflight in the first change preview and wait for `APPROVE/APPLY`.
 
 ## 4. Execute in an adequate environment
 
-Implement only inside the frozen/approved boundaries.
-
-Use the lowest authorized environment that can directly exercise the changed behavior. Mock-only evidence may close only unit/model claims; it cannot silently inherit persistence, migration, integration, user-flow, deployment or production semantics.
+Use the lowest authorized environment that can directly exercise the changed behavior. Mock-only evidence closes only unit/model claims; it cannot silently inherit persistence, migration, integration, user-flow, deployment or production semantics.
 
 During execution:
 
 - run focused checks early;
-- preserve existing project conventions unless explicitly changed;
+- preserve project conventions unless intentionally changed;
 - do not weaken tests to make output green;
 - do not silently broaden scope;
 - protect dirty/uncommitted work;
-- do not make real provider/external calls unless explicitly authorized.
+- do not make real provider/external calls without authority.
 
 ## 5. Pre-Manager adversarial review
 
-Before spending Manager attention on MEDIUM/HIGH work, use a cold/read-only reviewer or separate review context where practical.
-
-Review the actual diff and relevant surrounding source for:
-
-- incorrect assumptions and missing consumers;
-- duplicated state authorities;
-- swallowed truth / broad exception handling;
-- cleanup/rollback leaks;
-- concurrency or crash gaps;
-- false-positive tests or proxy assertions;
-- missing propagation to health/observability;
-- unsafe Git/workspace operations;
-- unauthorized provider/external effects;
-- scope drift.
-
-The Executor may fix obvious findings inside existing authority when the change remains within the frozen scope and mutation policy.
+For MEDIUM/HIGH, prefer a cold/read-only review before spending Manager attention. Inspect actual diff and surrounding source for false assumptions, duplicate state authorities, swallowed errors, cleanup leaks, concurrency/crash gaps, weak test oracles, missing health propagation, unsafe workspace actions, unauthorized external effects and scope drift.
 
 ## 6. Manager consolidated review
 
-The Manager reviews the exact commit/PR head, not only the Executor summary.
-
-Prefer returning one consolidated finding set:
+Manager reviews the exact commit/PR head, not only the Executor summary. Prefer one consolidated finding set:
 
 ```text
 R1 ...
@@ -137,55 +110,87 @@ R2 ...
 R3 ...
 ```
 
-rather than repeatedly opening a new authorization cycle for every local defect.
-
-If findings are bounded and same-task, the Manager can authorize a `remediation_window` per `schemas/MUTATION_APPROVAL_POLICY.md`.
+If findings are bounded/same-task, authorize a controlled remediation window per `schemas/MUTATION_APPROVAL_POLICY.md`.
 
 ## 7. Controlled remediation
 
-The normal target is **one** consolidated remediation round:
+Normal target:
 
 ```text
 implementation
-→ cold/adversarial review
+→ adversarial review
 → Manager consolidated findings
 → ONE bounded remediation
 → final review
 ```
 
-Inside a valid remediation window, the Executor may fix/test/self-review the listed findings and allowed files/resources without new human approval for each local edit.
-
-A second remediation iteration is exceptional. It requires a **new material finding**, must remain within the configured `maximum_without_escalation`, and must not be used merely because the first review was incomplete.
+A second iteration is exceptional: it requires a **new material finding**, stays within the configured maximum, and must not compensate for a shallow first review.
 
 ```text
 round 2 without new material finding
 → STOP / MANAGER REVIEW
 ```
 
-A materially new scope, provider, migration, public contract, security boundary, production action, dependency or architecture strategy invalidates the window and triggers STOP + amendment/re-authorization.
+Materially new scope/provider/migration/public contract/security boundary/production action/dependency/architecture strategy invalidates the window.
 
-## 8. Independent closure is not model voting
+## 8. Swamp Guard checkpoint
 
-For HIGH-risk work when project policy requires independent closure, use a separate read-only Judge after Manager review/remediation.
-
-The Judge should inspect:
+The Swamp Guard runs throughout normal work, not only at project inception. Evaluate it:
 
 ```text
-frozen task/profile
-→ exact source/diff/head
-→ raw tests/CI/receipts
-→ gaps and omitted checks
-→ authorized runtime/production-read evidence when relevant
-→ prior reviewer narratives last
+before a major dependency/provider/datastore/framework
+before changing an architecture boundary
+after material review/remediation
+after repeated rework in the same subsystem
+before broad feature expansion
+before staging/production promotion
+at durable project checkpoints
 ```
 
-Independent closure should separate four dimensions where risk justifies it:
+Classify:
 
 ```text
-IMPLEMENTATION — Judge did not materially implement the change
-CONTEXT        — Judge does not rely only on Executor/Manager summaries
-AUTHORITY      — Executor cannot self-approve/merge/close
-EVIDENCE       — Judge inspects raw receipts rather than repeating a conclusion
+CLEAR | WATCH | ALERT | STOP_REBASELINE
+```
+
+Raise at least `WATCH/ALERT` for repeated architecture churn, repeated remediation, abstraction/tooling proliferation without product need, competing mechanisms for one responsibility, AI/RAG tuning without evals, feature growth before a critical vertical slice, chat-only architecture decisions, source-of-truth ambiguity, permanent “temporary” workarounds, or complexity growing faster than demonstrated value.
+
+Use `STOP_REBASELINE` when local patching is compounding structural debt or safety risk. Then:
+
+```text
+STOP
+→ preserve evidence/current state
+→ Project Inception / Architecture Discovery
+→ simplify / measure / decide
+→ establish coherent baseline
+→ resume task flow
+```
+
+Required alert:
+
+```text
+SWAMP ALERT: <WATCH|ALERT|STOP_REBASELINE>
+Signal: ...
+Evidence: ...
+Why it matters: ...
+Recommended action: ...
+Continue allowed: YES|NO
+Authority needed: <none|Manager|Operator>
+```
+
+Do not hide a swamp signal merely to maintain velocity.
+
+## 9. Independent closure is not model voting
+
+For HIGH-risk work when required, use a separate read-only Judge after Manager review/remediation.
+
+Independent closure should separate:
+
+```text
+IMPLEMENTATION
+CONTEXT
+AUTHORITY
+EVIDENCE
 ```
 
 Model diversity can improve coverage, but:
@@ -194,13 +199,9 @@ Model diversity can improve coverage, but:
 MULTI-MODEL AGREEMENT != INDEPENDENT BEHAVIORAL EVIDENCE
 ```
 
-A second model does not upgrade a mock/unit receipt into integration, deployment or production proof.
+The Judge is read-only by default and does not mutate product code or production.
 
-The Independent Judge is read-only by default. It may recommend closure, request evidence or fail the review; it does not mutate product code or production.
-
-## 9. Verify claims, not activity
-
-Map each DoD/claim to current receipts.
+## 10. Verify claims, not activity
 
 ```text
 IDENTITY
@@ -218,19 +219,17 @@ IDENTITY
 Examples:
 
 ```text
-unit test PASS      != end-user flow proven
-HTTP 200            != persistence proven
-CI green            != deployed artifact proven
-backup configured   != restore proven
-reviewer PASS       != missing runtime evidence
-three model PASSes  != stronger receipt class
+unit PASS          != user flow proven
+HTTP 200           != persistence
+CI green           != deployed artifact
+backup configured  != restore proven
+reviewer PASS      != missing runtime evidence
+three model PASSes != stronger receipt class
 ```
 
-Report exact states: `PASS | FAIL | PARTIAL | SKIPPED | UNVERIFIED` and truth classes `OBSERVED | DERIVED | INFERRED | UNKNOWN | CONTRADICTED`.
+Report `PASS | FAIL | PARTIAL | SKIPPED | UNVERIFIED` and truth classes `OBSERVED | DERIVED | INFERRED | UNKNOWN | CONTRADICTED`.
 
-## 10. Compact receipts, raw evidence elsewhere
-
-Evidence richness must not require verbose task reports.
+## 11. Compact receipts, raw evidence elsewhere
 
 Preferred receipt:
 
@@ -244,71 +243,54 @@ proves: commit uncertainty classification
 does_not_prove: production provider behavior
 ```
 
-Store raw logs/artifacts separately when useful. The report should index evidence, not repeat hundreds of lines of it.
+Reports index evidence; they do not repeat huge logs.
 
-## 11. Artifact-driven handoff
-
-The human/operator should not be a permanent copy/paste message bus.
-
-Durable task state should make these recoverable from the repository:
-
-```text
-current task / frozen contract
-base + head identity
-current review decision/findings
-active remediation window
-receipts / gaps / omitted checks
-closure state
-next required authority decision
-```
-
-Use this principle:
+## 12. Artifact-driven handoff
 
 ```text
 Human transports authority.
 Repository transports engineering state.
 ```
 
-A new session should inspect current repository/task state before continuing. Do not require replay of the old chat when the durable checkpoint is sufficient.
+Durable state should recover current project mode/baseline, task, base/head, findings, remediation window, receipts/gaps, Swamp Guard state, closure state and next authority decision. A new session should re-read repository state rather than replay old chat.
 
-## 12. Model/cost routing
+## 13. Model/cost routing
 
-Vendor names are adapters, not framework policy. Projects may route roles by capability and cost:
+Vendor names are adapters, not policy:
 
 ```text
+Project Architect → stronger reasoning when architecture ambiguity justifies it
 Executor          → task-adequate / cost-efficient
-Manager           → higher reasoning when the task justifies it
-Independent Judge → high reasoning + separate context; diversity preferred when useful
+Manager           → higher reasoning when justified
+Independent Judge → high reasoning + separate context
 ```
 
-Cost optimization never permits weaker acceptance criteria or evidence.
+Cost optimization never permits weaker acceptance/evidence.
 
-## 13. Production authority
+## 14. Production authority
 
-Production remains a separate boundary. Before every production mutation, follow `production/DELIVERY.md` and project policy: exact target/change identity, health signals, abort condition, rollback or forward recovery, data constraints, recovery owner and post-change verification.
+Before every production mutation follow `production/DELIVERY.md`: exact target/change identity, health signals, abort condition, rollback or forward recovery, data constraints, recovery owner and post-change verification. Judge PASS is not production authority.
 
-The Independent Judge remains read-only by default. A Judge PASS is not production mutation authority.
+## 15. Closure and checkpoint
 
-## 14. Closure and checkpoint
-
-Preserve a compact durable checkpoint:
+Preserve:
 
 ```text
 repository/environment identity
+project mode + architecture baseline state
 current task + exact head
 verified claims
 open findings/gaps
 omitted checks
 remediation state
+Swamp Guard state
 independent review state when required
-next action / next authority decision
+next action / authority decision
 ```
 
-Once the checkpoint is durable, the working session may be replaced/reset. Session-reset commands themselves are vendor-specific.
+## 16. Measure Flow friction
 
-## 15. Measure Flow friction
-
-For material tasks, record cheap process counters when available:
+For material tasks record when available:
 
 ```yaml
 flow_metrics:
@@ -322,13 +304,4 @@ flow_metrics:
   task_cycle_time: <optional duration>
 ```
 
-These are process-improvement signals, not developer-performance scores. Use them to distinguish:
-
-```text
-quality cost
-vs agent defect cost
-vs governance friction
-vs environment friction
-```
-
-The objective is fewer unnecessary round-trips without weakening the acceptance bar.
+Use these to distinguish quality cost, agent defect cost, governance friction and environment friction. Repeated rework also feeds the Swamp Guard.
