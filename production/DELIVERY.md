@@ -1,7 +1,7 @@
 # Production Profile — Delivery
 
-**Version:** 1.1  
-**Updated:** 2026-09-09T10:40:00Z
+**Version:** 1.2  
+**Updated:** 2026-09-13
 
 Goal: make the path from source to production repeatable, inspectable, reversible, attributable and measurably improvable.
 
@@ -19,6 +19,40 @@ SOURCE REF
 
 A green source build is not a deployment receipt. A deployment command is not proof the intended artifact is serving traffic.
 
+## Production mutation readiness — mandatory per change
+
+When production mutation is enabled, **every production change** must have recovery defined before execution. This applies to application deploys, configuration, infrastructure, migrations, feature flags with material effect, external integrations and other production mutations.
+
+Required before execution:
+
+- named production target;
+- exact artifact/config/change identity;
+- expected success and health signals;
+- explicit abort condition;
+- executable rollback path **or** explicit forward-recovery path;
+- stateful/data compatibility and rollback constraints;
+- recovery owner/authority;
+- post-change verification;
+- blast-radius limit when the change can affect multiple users/services/regions.
+
+```text
+NO ROLLBACK / FORWARD-RECOVERY PLAN
+→ NOT EXECUTION-READY FOR PRODUCTION MUTATION
+```
+
+If rollback is technically possible, it must be documented and usable before execution. Do not defer rollback design until after failure.
+
+If rollback is unsafe or impossible, record why and require all applicable controls:
+
+- tested or otherwise qualified forward-recovery procedure;
+- backup/checkpoint/snapshot or equivalent recovery anchor;
+- compatibility ordering for schema/state changes;
+- reduced blast radius / progressive exposure where practical;
+- STOP/abort conditions;
+- explicit residual-risk acceptance when recovery remains incomplete.
+
+A production change may be correctly blocked even when the implementation itself is complete.
+
 ## BASIC
 
 - documented/repeatable build command;
@@ -27,7 +61,7 @@ A green source build is not a deployment receipt. A deployment command is not pr
 - named deployment target and operator/automation owner;
 - explicit secrets/config source; no credentials committed to source;
 - basic post-deploy health check;
-- documented rollback/redeploy path;
+- documented rollback/redeploy path for each production mutation;
 - stateful changes identify data migration/backup implications.
 
 ## STANDARD
@@ -114,7 +148,8 @@ Examples that must be explicit rather than implied away:
 - build is only reproducible on one engineer laptop;
 - production artifact digest cannot be identified;
 - deployment is manual/unreviewed;
-- rollback is undocumented or known unsafe;
+- rollback is undocumented, untested where required, or known unsafe;
+- irreversible production mutation lacks forward-recovery/checkpoint strategy;
 - staging differs materially from production;
 - CI job is skipped for relevant branch/path;
 - progressive rollout exists but has no health/abort gate;
