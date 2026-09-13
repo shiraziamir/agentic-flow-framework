@@ -2,29 +2,89 @@
 
 **Agent-facing entrypoint.**
 
-The framework may be available as a cloned repository, a sibling directory, or a portable `.agentic-flow/` distribution. Operator, architecture and source-reference documentation may be present, but **do not preload those files**. Read them only when the current task explicitly needs them.
+The framework may be available as a cloned repository, sibling directory, or portable `.agentic-flow/` distribution. Do **not** preload the whole framework. Read only the layers triggered by the current project/task.
 
-## 1. Find the framework and project state
+## 1. Find framework and project state
 
 1. Confirm the framework root containing `ARCHITECTURE.md` and `VERSION`.
 2. Read `ARCHITECTURE.md` first.
-3. Inspect the target repository read-only before mutation: branch/HEAD, dirty paths, current task/issue, existing agent instructions, build/test commands and any active environment changes.
-4. Locate or propose the target project's `.agentic/PROJECT_PROFILE.yaml` using `schemas/PROJECT_PROFILE_CONFIG.md`.
-5. Determine the project's `agent_mutation_policy`. If none is defined during first adoption, use `STRICT_PREVIEW` as the safe default and ask the operator to persist/override it.
-6. Check `usage_reporting`. If quota snapshots are enabled/optional and the current harness exposes trustworthy telemetry, route to `docs/agent/USAGE_AWARE_TASK_REPORTING.md`.
-7. Use `verification/00_INDEX.md`, `production/00_INDEX.md`, and `skills/00_INDEX.md` as routers. Load detailed profiles/skills lazily.
+3. Inspect the target repository read-only: branch/HEAD, dirty paths, current project/task, existing agent instructions, build/test commands and active environment changes.
+4. Locate or propose `.agentic/PROJECT_PROFILE.yaml` using `schemas/PROJECT_PROFILE_CONFIG.md`.
+5. Determine `project_mode.mode`: `VIBE_PROTOTYPE | PRODUCT_BUILD | MAINTENANCE`.
+6. Determine `agent_mutation_policy`; if absent during first adoption, use `STRICT_PREVIEW` as the safe default.
+7. Use verification/production/skills indexes as routers and load details lazily.
 
-If the framework is a sibling clone such as `../agentic-flow-framework`, framework paths are resolved from that root; project-owned `.agentic/` state stays in the target project.
+## 2. New / greenfield / unclear architecture
 
-## 2. Mutation approval
-
-Read:
+If the repository is new, the architecture baseline is missing/untrusted, or the operator mostly knows the desired product outcome rather than the technical shape, read:
 
 ```text
-schemas/MUTATION_APPROVAL_POLICY.md
+docs/agent/PROJECT_INCEPTION_ARCHITECTURE.md
 ```
 
-Under `STRICT_PREVIEW`, read-only discovery does not need separate approval. Before every bounded mutation batch, report:
+Do **not** start serious product coding directly from the idea.
+
+Normal inception:
+
+```text
+PRODUCT INTENT
+→ PRODUCT BRIEF
+→ QUALITY / EVAL CONTRACT
+→ ARCHITECTURE DISCOVERY
+→ MINIMAL OPTIONS
+→ WALKING SKELETON
+→ ARCHITECTURE CHECKPOINT
+→ PROJECT BASELINE
+→ NORMAL TASK FLOW
+```
+
+If `project_mode.mode: VIBE_PROTOTYPE`, optimize for learning speed but preserve this invariant:
+
+```text
+VIBE_PROTOTYPE != PRODUCTION BASELINE
+```
+
+Prototype code is provisional/sacrificial by default and may not silently inherit production readiness. Promotion to `PRODUCT_BUILD` requires re-baselining and explicit reuse/rewrite/discard decisions.
+
+## 3. Swamp Guard
+
+At every material checkpoint, before major architecture/tooling expansion, after repeated remediation, and before Vibe→Product or staging/production promotion, evaluate:
+
+```text
+CLEAR | WATCH | ALERT | STOP_REBASELINE
+```
+
+Watch for:
+
+- repeated architecture churn/rework in the same subsystem;
+- frameworks/datastores/abstractions added without product justification;
+- multiple mechanisms competing for one responsibility;
+- AI/RAG tuning before a representative eval baseline;
+- broad feature growth before the critical vertical slice works;
+- architecture decisions existing only in chat;
+- duplicate/ambiguous state ownership or source of truth;
+- prototype code accumulating production expectations;
+- operational complexity growing faster than demonstrated value.
+
+For severe cases return:
+
+```text
+SWAMP ALERT: STOP_REBASELINE
+Signal: ...
+Evidence: ...
+Why it matters: ...
+Recommended action: ...
+Continue allowed: NO
+Authority needed: Manager|Operator
+```
+
+Do not hide a swamp signal to preserve momentum. The purpose is to stop compounding structural debt early.
+
+## 4. Mutation approval
+
+Read `schemas/MUTATION_APPROVAL_POLICY.md`.
+
+Under `STRICT_PREVIEW`, read-only discovery needs no separate approval. Before a bounded mutation batch report:
 
 ```text
 CURRENT STATE
@@ -37,27 +97,19 @@ ROLLBACK / RECOVERY when material
 OUT OF SCOPE
 ```
 
-Then **STOP and wait for explicit `APPROVE` / `APPLY`** before mutating files, configuration, infrastructure, data, external systems or runtime state.
+Then wait for explicit `APPROVE` / `APPLY`.
 
-Group tightly related edits into one bounded batch. Do not ask permission line-by-line unless the operator explicitly requests per-file approval.
+Group tightly related edits. Approval is limited to the previewed boundary. Materially new files/resources, behavior, risk, environment, architecture strategy, dependency, public contract, security/data boundary or scope trigger STOP + revised preview.
 
-Approval is limited to the previewed batch. If implementation discovers a materially different file/resource, behavior, risk, environment, architecture strategy, dependency, public contract, security/data boundary or scope, STOP and present a revised preview before continuing.
+Mutation approval does not replace task/environment/external-effect/production authority.
 
-Mutation approval does not replace task authorization or environment authority. An approved source edit is not permission to mutate production.
+## 5. If coding is already in progress
 
-## 3. If coding is already in progress
+Read `docs/agent/MIDSTREAM_ADOPTION.md` before changing product code. Preserve current valid work and do not fabricate prior framework review or authorization. Existing dirty edits are observed current state, not newly approved work.
 
-Read:
+## 6. Normal material-task workflow
 
-```text
-docs/agent/MIDSTREAM_ADOPTION.md
-```
-
-before changing product code. Preserve current valid work and do not fabricate prior framework review or authorization. Treat existing dirty edits as observed current state, not as newly approved framework work.
-
-## 4. Practical task workflow
-
-For a material task, read:
+Once a coherent project baseline exists, read:
 
 ```text
 docs/agent/TASK_WORKFLOW_DRAFT_REVIEW_APPLY_VERIFY.md
@@ -70,21 +122,23 @@ REQUEST
 → DRAFT
 → REVIEW
 → FREEZE / APPLY AUTHORIZATION when required
-→ CHANGE PREVIEW / MUTATION APPROVAL when policy requires
+→ CHANGE PREVIEW / MUTATION APPROVAL when required
 → APPLY
 → VERIFY + REPORT
 → independent closure when required
 ```
 
-Before material APPLY, define observable DoD, planned closure claims, minimum receipt per claim, affected engineering/production surfaces, required test/environment, intentionally omitted checks and STOP conditions.
+Before material APPLY, define observable DoD, planned closure claims, minimum receipts, affected surfaces, required environment, intentionally omitted checks and STOP conditions.
 
-If APPLY discovers a materially new provider, database, public contract, security/data/recovery boundary, production environment or architecture strategy:
+If implementation reveals a materially new provider, database, public contract, security/data/recovery boundary, production environment or architecture strategy:
 
 ```text
-STOP → evidence → amend/reclassify → revised change preview → review/authorize as required → continue
+STOP → evidence → amend/reclassify → revised preview → authorize → continue
 ```
 
-## 5. Verification discipline
+If the discovery indicates architecture failure rather than local task scope, use the Swamp Guard and return to Project Inception/Architecture Discovery instead of stacking local patches.
+
+## 7. Verification discipline
 
 A claim may not be stronger than its current receipt.
 
@@ -93,19 +147,35 @@ unit green           != user flow proven
 HTTP 200             != persistence proven
 CI green             != deployed artifact proven
 backup configured    != restore proven
-scanner green        != secure
 reviewer PASS        != missing runtime evidence
+multi-model PASS     != independent behavioral evidence
 ```
 
 Report exact `PASS / FAIL / PARTIAL / SKIPPED / UNVERIFIED` states and preserve `OBSERVED / DERIVED / INFERRED / UNKNOWN / CONTRADICTED` truth boundaries.
 
-When live/integration evidence depends on a runtime/environment, use `schemas/EVIDENCE_RECOVERY.md` to qualify the measuring environment and preserve stale/wrong-runtime evidence honestly.
+For AI/RAG/search systems, do not treat demo quality as evaluation. A representative eval/quality contract is required before serious tuning or claims of improvement.
 
-## 6. Production-bound work
+## 8. Environment policy
 
-A task may close while the project still has operational gaps. Consult only the current project/production profile and triggered production profiles.
+Use the lowest environment that directly establishes the required claim:
 
-Missing requirements remain explicit:
+```text
+LOCAL / HERMETIC
+→ LOCAL_REAL
+→ EPHEMERAL TEST
+→ SHARED TEST
+→ STAGING / PRODUCTION-LIKE
+→ CONTROLLED PRODUCTION READ / CANARY
+→ PRODUCTION MUTATION
+```
+
+Mock-only evidence may close unit/model claims, not integration, persistence, migration, user-flow, deployment or production claims. If no adequate environment exists, return an environment request and keep the stronger claim `UNVERIFIED` or `BLOCKED`.
+
+## 9. Production-bound work
+
+Production mutation is separate authority. Every production mutation requires rollback or explicit forward-recovery readiness before execution. A Judge/Reviewer PASS does not grant production authority.
+
+Missing operational requirements remain explicit:
 
 ```text
 NOT_IMPLEMENTED
@@ -116,49 +186,22 @@ ACCEPTED_RISK
 CLOSED
 ```
 
-Do not infer production readiness from configuration presence alone.
+## 10. Context / quota efficiency
 
-## 7. Environment policy
-
-Use the lowest environment that can directly establish the required claim:
-
-```text
-LOCAL / HERMETIC
-→ EPHEMERAL TEST
-→ SHARED TEST
-→ STAGING / PRODUCTION-LIKE
-→ CONTROLLED PRODUCTION READ / CANARY
-→ PRODUCTION MUTATION
-```
-
-A request for stronger access is not authorization. Production mutation follows the project's explicit authority path.
-
-For behavior-changing work, confirm execution readiness before APPLY: at least one authorized environment must exercise the real changed path at the receipt strength required by the claim. Use `LOCAL_REAL` or `EPHEMERAL_TEST` as the normal minimum for non-docs behavior when they include the affected runtime/dependencies. Mock-only evidence may close a unit/mock-boundary claim, but not integration, persistence, migration, user-flow, deployment or production claims. If no adequate environment exists, return an environment request and keep the claim `UNVERIFIED` or `BLOCKED`.
-
-## 8. Token/context and quota efficiency
-
-For long, multi-agent, repository-wide or log-heavy work, read:
-
-```text
-docs/agent/TOKEN_EFFICIENT_WORKFLOW.md
-```
+For long or log-heavy work, read `docs/agent/TOKEN_EFFICIENT_WORKFLOW.md`.
 
 Default behavior:
 
-- deterministic checks before model rediscovery;
+- deterministic checks before rediscovery;
 - small affected working set;
-- bounded log packets instead of raw dumps;
-- cheap/read-only workers for mechanically checkable discovery when useful;
+- bounded logs instead of raw dumps;
 - compact evidence handoffs instead of transcripts;
-- stronger model judgment only for ambiguity, architecture, security, diagnosis or closure risk.
+- stronger model reasoning for ambiguity, architecture, security, diagnosis or closure risk;
+- checkpoint durable state before session reset.
 
-`STRICT_PREVIEW` should batch related mutations so approval discipline does not become token/interaction spam.
+Acceptance quality must not be lowered to save tokens/quota.
 
-If quota reporting is enabled, append one compact snapshot after each material task/checkpoint. For Claude Code use `scripts/claude_usage_snapshot.py` and `schemas/USAGE_QUOTA_SNAPSHOT.md`. Report both **used** and **remaining**, plus source/freshness. Missing telemetry stays unavailable.
-
-Acceptance quality must not be lowered merely to save tokens or quota.
-
-## 9. Agent vs operator/reference files
+## 11. Agent vs cold documentation
 
 Normal coding-agent context may use:
 
@@ -172,39 +215,22 @@ selected skills/
 current project/task/evidence files
 ```
 
-These are cold by default:
+Operator/reference/research/history files are cold by default. Load only when required.
 
-```text
-docs/operator/
-docs/architecture/
-docs/references/
-PRIMARY_SOURCES.md
-BEST_PRACTICES_USED.en.txt
-```
+## 12. Adoption completion
 
-Do not read all of them simply because they exist.
+Before product work begins/resumes, return a concise adoption receipt containing:
 
-## 10. Vendor adapter
-
-Inspect existing `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, OpenCode configuration or equivalent before generating anything. Use the matching `prompts/bootstrap/*` file and create/update only the minimum adapter required by the current harness.
-
-Preserve valid project-specific rules. Report conflicts instead of silently overwriting them.
-
-## 11. Adoption completion
-
-Before product work begins/resumes, return a concise read-only adoption receipt containing:
-
-- framework version/ref and location;
-- source of truth;
-- target project branch/HEAD/dirty paths;
-- current task/project profile/open gaps/overrides;
-- mutation approval mode;
-- usage-reporting policy and whether current harness telemetry is available;
-- build/test/deploy/rollback entrypoints or explicit gaps;
-- verification and production routers;
-- relevant environment authority;
+- framework version/ref;
+- target repository branch/HEAD/dirty paths;
+- `project_mode` and whether architecture baseline is trusted;
+- Swamp Guard state;
+- current task/profile/open gaps/overrides;
+- mutation policy;
+- build/test/deploy/rollback entrypoints or gaps;
+- environment authority;
 - unresolved conflicts.
 
-Do not perform the first product mutation merely because adoption succeeded. Under `STRICT_PREVIEW`, present the first change preview and wait for explicit approval.
+For greenfield/unclear projects, successful adoption does **not** mean start coding; route through Project Inception first. Under `STRICT_PREVIEW`, do not perform the first product mutation until the required preview/approval exists.
 
 Do not store chain-of-thought or raw transcripts as project state.
