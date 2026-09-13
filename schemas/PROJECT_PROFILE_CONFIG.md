@@ -1,6 +1,6 @@
 # Project Profile Config Schema
 
-**Schema version:** 1.4  
+**Schema version:** 1.5  
 **Updated:** 2026-09-13
 
 A target project should keep one small durable profile, usually `.agentic/PROJECT_PROFILE.yaml`. It declares the intended operating bar; current receipts establish reality.
@@ -68,6 +68,16 @@ agent_environment_policy:
   production_read: AUTO_ALLOWED|OWNER_APPROVAL|DENIED
   production_mutation: OWNER_APPROVAL|DENIED
 
+production_mode:
+  enabled: true|false
+  rollback_or_forward_recovery_required_for_every_mutation: true
+  require_abort_condition: true
+  require_post_change_verification: true
+  irreversible_change:
+    require_forward_recovery_plan: true
+    require_backup_or_checkpoint: true
+    require_blast_radius_control: true
+
 operations:
   metrics: REQUIRED|OPTIONAL|NOT_APPLICABLE
   logs: REQUIRED|OPTIONAL|NOT_APPLICABLE
@@ -134,20 +144,24 @@ review_policy:
 flow_metrics:
   enabled: true
   collect_material_tasks_only: true
+
+production_mode:
+  enabled: false
+  rollback_or_forward_recovery_required_for_every_mutation: true
+  require_abort_condition: true
+  require_post_change_verification: true
+  irreversible_change:
+    require_forward_recovery_plan: true
+    require_backup_or_checkpoint: true
+    require_blast_radius_control: true
 ```
 
 This keeps first mutation approval explicit while allowing bounded same-task remediation after a consolidated review.
 
-## Rules
+## Production-mode rule
 
-1. The profile is a baseline, not proof.
-2. Baseline requirements must not be silently disabled; use `schemas/TEMPORARY_OVERRIDE.md`.
-3. `NOT_APPLICABLE` needs a durable rationale where the capability would normally be expected.
-4. Agent permissions are an upper bound, not automatic task authority.
-5. Task, mutation, environment and external-side-effect authority are separate.
-6. Behavior-changing work is not execution-ready unless the Executor can exercise the real changed path at the required receipt strength.
-7. Mock-only evidence cannot inherit stronger integration/persistence/deployment semantics.
-8. Unknown/unowned dirty work is preserved by default.
-9. Remediation windows reduce round-trips; they never authorize material scope expansion.
-10. Flow metrics and usage/quota values are process telemetry, not completion evidence.
-11. Keep this profile concise; detailed policy belongs in canonical schemas/docs.
+When `production_mode.enabled: true`, a production mutation is not execution-ready until the specific change has an executable rollback path or an explicit forward-recovery plan. The change must also define the target, success/health signals, abort condition, stateful/data constraints, recovery authority and post-change verification.
+
+For irreversible changes, `rollback: impossible` is not enough. Record why rollback is unsafe/impossible and require forward recovery, backup/checkpoint evidence when applicable, controlled blast radius and STOP conditions.
+
+Production mode never converts `production_mutation: OWNER_APPROVAL` into automatic authority.
