@@ -1,9 +1,18 @@
 # Mutation Approval Policy
 
-**Schema version:** 1.0  
-**Updated:** 2026-09-12
+**Schema version:** 1.1  
+**Updated:** 2026-09-13
 
-This policy controls whether a coding agent may mutate files, configuration, infrastructure, data, external systems, or runtime state after read-only discovery.
+This policy controls mutation authority without turning every correction into a new human round-trip.
+
+## Principle
+
+```text
+Quality requirements stay fixed.
+Process ceremony adapts to risk.
+```
+
+Approval is for boundaries, not for every keystroke. High-risk work should have stronger scope, evidence and review boundaries, but can still use bounded remediation autonomy inside an approved task.
 
 ## Modes
 
@@ -15,106 +24,151 @@ BOUNDED_AUTONOMY
 
 ### STRICT_PREVIEW
 
-Default recommended mode for first adoption, unfamiliar repositories, sensitive projects, or operators who want explicit control.
-
-Every mutation batch requires an explicit operator approval before execution. Read-only discovery does not require approval.
-
-Before requesting approval, the agent must present a compact change preview:
+Recommended for first adoption, unfamiliar repositories and sensitive work. Before the first mutation batch, present:
 
 ```yaml
 change_preview:
-  current_state:
-    - <what is true now, with file/ref/evidence where useful>
-  proposed_state:
-    - <what will be true after the change>
-  reason:
-    - <why this change is needed>
-  files_or_resources:
-    - <paths/resources expected to change>
-  behavior_or_contract_impact:
-    - <none or concise impact>
-  operational_security_data_impact:
-    - <none or concise impact>
-  planned_checks:
-    - <tests/lints/build/live checks>
-  rollback_or_recovery:
-    - <how to revert/recover if material>
-  scope_boundary:
-    - <what will NOT be changed>
+  current_state: []
+  proposed_state: []
+  reason: []
+  files_or_resources: []
+  behavior_or_contract_impact: []
+  operational_security_data_impact: []
+  planned_checks: []
+  rollback_or_recovery: []
+  scope_boundary: []
 ```
 
-The agent then waits for a durable or conversational authorization such as:
+Then wait for `APPROVE` / `APPLY`.
 
-```text
-APPROVE
-APPLY
-APPROVE THIS BATCH
-```
-
-Approval is bounded to the previewed mutation batch. A materially different change requires a new preview and approval.
+Do **not** interpret STRICT_PREVIEW as permission spam. Related edits that share one purpose, verification plan and rollback boundary should be one batch.
 
 ### MATERIAL_CHANGES_ONLY
 
-The agent may perform trivial/local/reversible edits within the frozen task without a separate approval round. Material changes still require the same preview + explicit approval.
+Trivial/local/reversible edits inside the frozen task may proceed without a separate approval. Material changes still need a preview.
 
-Material normally includes public contracts, architecture boundaries, dependencies, persistence/data, security, CI/CD, infrastructure, production behavior, external providers, secrets/identity, destructive actions, or meaningful scope expansion.
+Material normally includes public contracts, architecture boundaries, persistence/data, dependencies, security/identity, CI/CD, infrastructure, external providers, destructive operations or meaningful scope expansion.
 
 ### BOUNDED_AUTONOMY
 
-The agent may mutate only inside a previously approved frozen task and explicit path/resource boundary. It must still STOP and request approval before scope, strategy, risk, environment, authority, or public-contract expansion.
+The agent may mutate inside the frozen task and explicit path/resource boundary. It still stops before material scope, architecture, risk, environment, authority or public-contract expansion.
 
-## Read-only discovery
+## Controlled remediation window
 
-The following normally do not require mutation approval:
+A Manager may authorize a **controlled remediation window** after reviewing an implementation or PR. This prevents a high-risk task from requiring a fresh authorization for every finding while preserving boundaries.
 
-- reading repository files and current project state;
-- `git status`, diff/log/branch inspection;
-- dependency/graph/search queries;
-- reading CI/test configuration;
-- non-mutating cloud/runtime queries;
-- planning, drafting and review.
+Recommended shape:
 
-If a supposedly read-only tool can produce side effects, treat it as mutation-capable.
-
-## Approval is not a substitute for task governance
-
-This policy controls mutation authority. It does not replace:
-
-- DRAFT/REVIEW/FREEZE requirements;
-- environment permissions;
-- production/destructive authorization;
-- security/data controls;
-- verification/closure evidence.
-
-A task can therefore require both an approved task contract and a separate mutation approval.
-
-## Batch changes to avoid approval spam
-
-Under `STRICT_PREVIEW`, group tightly related edits into one bounded batch when they share one purpose, one verification plan, and one rollback boundary. Do not ask separately for every line or file unless the operator explicitly requests per-file authorization.
-
-Recommended sequence:
-
-```text
-READ / DISCOVER
-→ CURRENT STATE
-→ PROPOSED STATE
-→ CHANGE PREVIEW
-→ OPERATOR APPROVAL
-→ MUTATE ONLY APPROVED BOUNDARY
-→ VERIFY
-→ REPORT ACTUAL RESULT / DELTA
+```yaml
+remediation_window:
+  review_ref: <review-id/ref>
+  finding_ids: [R1, R2]
+  max_iterations: 2
+  allowed_files_or_resources: []
+  allowed_change_classes:
+    - CORRECTNESS_FIX
+    - TEST_HARDENING
+    - CLEANUP_FAILURE_HANDLING
+    - OBSERVABILITY_FIX
+  owner_review_required_before_closure: true
 ```
 
-## Mid-task discovery
+The window is limited to the listed findings and scope. The iteration count is configurable; `2` is a practical default, not a correctness rule.
 
-If implementation reveals a material difference from the approved preview:
+A remediation iteration may include implementation, focused tests, self-review and related corrections without a new approval for each small edit.
+
+The window ends immediately if work requires any unapproved material expansion, including:
+
+- new database/schema/migration scope;
+- new public API/contract behavior;
+- new external provider call or external side effect;
+- new dependency or architecture boundary;
+- new security/identity/secret scope;
+- production access or destructive action;
+- files/resources outside the approved boundary;
+- a materially different implementation strategy or risk class.
+
+Then:
 
 ```text
 STOP
 → report discovered state
-→ explain why the old preview is no longer sufficient
-→ present a revised preview
-→ obtain new approval
+→ revise task/change preview
+→ obtain new authority
 ```
 
-Never use an earlier broad approval as unlimited authority for newly discovered work.
+**Remediation autonomy is not scope autonomy.**
+
+## Consolidated review
+
+Prefer one broad review that returns a set of findings over a sequence of narrow reviews that reveal one layer at a time.
+
+Recommended loop:
+
+```text
+IMPLEMENT
+→ focused tests
+→ cold/adversarial agent review
+→ executor fixes obvious findings
+→ Manager consolidated review
+→ bounded remediation window
+→ Manager final review
+→ independent closure when required
+```
+
+The Manager should spend human/reviewer attention on scope, architecture, risk, product semantics, evidence and unresolved ambiguity—not on repeatedly rediscovering simple local defects that an adversarial pre-review can catch.
+
+## Read-only discovery
+
+Normally no mutation approval is required for reading files/state, `git status`, diff/log/branch inspection, dependency/search queries, CI/test configuration, planning and non-mutating runtime queries. If a supposedly read-only tool can cause side effects, treat it as mutation-capable.
+
+## Workspace safety
+
+Uncommitted work is protected state unless ownership is proven otherwise.
+
+The following are destructive or potentially destructive and require explicit care/authority when dirty work may exist:
+
+```text
+git checkout -- <path>
+git restore <path>
+git reset --hard
+git clean -fd
+force checkout
+force push
+```
+
+Before destructive Git/file operations:
+
+```text
+git status / dirty-state inspection
+→ identify ownership of changed paths
+→ preserve/checkpoint unknown or user-owned work
+→ obtain destructive approval when loss is possible
+```
+
+Unknown ownership means **preserve**, not discard.
+
+## External side effects
+
+Authorization to run tests does not automatically authorize real provider calls, paid APIs, messages, deployments or other external side effects.
+
+```text
+unit/integration test authority
+!=
+real external-provider-call authority
+```
+
+Projects should default real external calls to denied unless a task/environment policy explicitly authorizes them.
+
+## Separation of authority
+
+Mutation approval does not replace:
+
+- task DRAFT/REVIEW/FREEZE;
+- environment permissions;
+- external-side-effect permission;
+- production/destructive authorization;
+- security/data controls;
+- verification/closure evidence.
+
+A task can therefore be conceptually authorized while a specific mutation, environment action or provider call is still denied.
