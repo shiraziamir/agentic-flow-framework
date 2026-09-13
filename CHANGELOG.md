@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.10 — 2026-09-13
+
+Project-inception and architecture-safety release: adds explicit `VIBE_PROTOTYPE | PRODUCT_BUILD | MAINTENANCE` project modes; a canonical Product Inception / Architecture Discovery lifecycle; a copy-ready Project Architect prompt; quality/eval-contract-first guidance for AI/RAG systems; minimal architecture option comparison; walking-skeleton and architecture-checkpoint gates; hard-to-change-invariant vs easy-experiment-variable separation; and a continuous Swamp Guard with `CLEAR | WATCH | ALERT | STOP_REBASELINE` states. Vibe prototypes are explicitly sacrificial/non-production by default and require re-baselining before product promotion.
+
 ## 1.9 — 2026-09-13
 
 Risk-adaptive execution and coherence release: adds controlled remediation windows, consolidated review, triggered failure-surface preflight, pre-Manager adversarial review, compact receipt/raw-evidence separation, workspace dirty-state protection, explicit external-provider-call authority, flow-friction metrics and a clean separation between risk level and work kind. Simplifies the newcomer route to four human-facing files and two agent entrypoints, and refreshes the standalone Persian guide around the same workflow.
