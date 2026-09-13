@@ -28,6 +28,7 @@ INCLUDE_PREFIXES = (
     "prompts/bootstrap/",
     "prompts/workflow/",
     "prompts/supervisor/",
+    "prompts/operator/",
     "templates/",
 )
 INCLUDE_SCRIPTS = {

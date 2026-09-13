@@ -39,27 +39,59 @@ class OnboardingDocsTest(unittest.TestCase):
                 clean = target.split("#", 1)[0]
                 if not clean:
                     continue
-                resolved = (source.parent / clean).resolve()
-                self.assertTrue(resolved.exists(), f"{rel}: missing link target {target}")
+                self.assertTrue((source.parent / clean).resolve().exists(), f"{rel}: {target}")
 
-    def test_landing_page_contains_newcomer_route(self) -> None:
+    def test_landing_page_has_small_newcomer_route(self) -> None:
         text = read("README.md")
         for phrase in (
             "Why this repository exists",
-            "What changes compared",
-            "What is evidence-based",
-            "Five-minute workflow",
+            "Start here — do not read the whole repository",
+            "Quality requirements stay fixed",
+            "Controlled remediation",
             "Required execution environment",
-            "Designer",
-            "Manager",
-            "Executor",
-            "STRICT_PREVIEW",
-            "mock-only",
-            "Validation Status",
+            "Workspace and external-effect safety",
+            "Compact evidence",
         ):
             self.assertIn(phrase, text)
+        self.assertIn("four human-facing files", text)
 
-    def test_execution_readiness_is_canonical_and_profiled(self) -> None:
+    def test_risk_adaptive_policy_is_canonical(self) -> None:
+        architecture = read("ARCHITECTURE.md")
+        workflow = read("docs/agent/TASK_WORKFLOW_DRAFT_REVIEW_APPLY_VERIFY.md")
+        approval = read("schemas/MUTATION_APPROVAL_POLICY.md")
+        task = read("schemas/TASK_CONTRACT.md")
+        profile = read("schemas/PROJECT_PROFILE_CONFIG.md")
+        for text in (architecture, workflow, approval):
+            self.assertIn("Remediation autonomy", text)
+            self.assertIn("remediation", text.lower())
+        for text in (architecture, workflow, task):
+            self.assertIn("work_kind", text)
+            self.assertIn("LOW", text)
+            self.assertIn("MEDIUM", text)
+            self.assertIn("HIGH", text)
+        self.assertIn("remediation_windows:", profile)
+        self.assertIn("external_effects:", profile)
+        self.assertIn("workspace_safety:", profile)
+        self.assertIn("flow_metrics:", profile)
+
+    def test_failure_surface_and_adversarial_review_are_wired(self) -> None:
+        workflow = read("docs/agent/TASK_WORKFLOW_DRAFT_REVIEW_APPLY_VERIFY.md")
+        designer = read("prompts/operator/TASK_DESIGNER.md")
+        manager = read("prompts/operator/MANAGER_REVIEWER.md")
+        for phrase in (
+            "TEST-ORACLE FALSIFICATION",
+            "CLEANUP / ROLLBACK FAILURE",
+            "PROCESS CONCURRENCY",
+            "EXTERNAL PROVIDER",
+        ):
+            self.assertIn(phrase, workflow)
+            self.assertIn(phrase, designer)
+        self.assertIn("CONSOLIDATED FINDING SET", manager)
+        self.assertIn("CONTROLLED REMEDIATION WINDOW", manager)
+        self.assertIn("adversarial", manager.lower())
+        self.assertIn("exact diff/commit", manager)
+
+    def test_execution_readiness_and_mock_limits_remain_canonical(self) -> None:
         architecture = read("ARCHITECTURE.md")
         environments = read("production/AGENT_ENVIRONMENTS.md")
         schema = read("schemas/PROJECT_PROFILE_CONFIG.md")
@@ -72,20 +104,11 @@ class OnboardingDocsTest(unittest.TestCase):
             self.assertIn("mock_only_closure:", text)
             self.assertIn("real_application_runtime:", text)
 
-    def test_role_prompts_preserve_separation_and_real_review(self) -> None:
-        designer = read("prompts/operator/TASK_DESIGNER.md")
-        manager = read("prompts/operator/MANAGER_REVIEWER.md")
-        self.assertIn("MUST", designer)
-        self.assertIn("SHOULD", designer)
-        self.assertIn("INVESTIGATE", designer)
-        self.assertIn("AVOID", designer)
-        self.assertIn("environment", designer.lower())
-        self.assertIn("exact diff/commit", manager)
-        self.assertIn("isolated Executor branch/PR", manager)
-        self.assertIn("environment authority", manager)
-        self.assertIn("mock-only", manager)
+    def test_bundle_builder_includes_operator_role_prompts(self) -> None:
+        builder = read("scripts/build_agent_bundle.py")
+        self.assertIn('"prompts/operator/"', builder)
 
-    def test_persian_guide_has_balanced_rtl_and_ltr_code_blocks(self) -> None:
+    def test_persian_guide_has_rtl_ltr_and_new_flow(self) -> None:
         text = read("docs/GUIDE.fa.md")
         self.assertGreater(len(re.findall(r"[\u0600-\u06ff]", text)), 1000)
         self.assertTrue(text.startswith('<div dir="rtl" align="right">'))
@@ -93,6 +116,7 @@ class OnboardingDocsTest(unittest.TestCase):
         self.assertNotIn("```", text)
         self.assertGreaterEqual(text.count('<pre dir="ltr" style="text-align:left"'), 10)
         self.assertIn('class="sourceCode bash"', text)
+        self.assertIn("Controlled Remediation Window", text)
         self.assertIn("mock-only closure", text)
 
     def test_validation_status_does_not_overclaim(self) -> None:
