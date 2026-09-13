@@ -40,6 +40,8 @@ Reader docs, research, historical reports and generated exports are explanatory/
 
 > Production readiness is evidenced capability plus explicit gaps—not a badge.
 
+> Every production mutation requires rollback or explicit forward-recovery readiness before execution.
+
 Agent/model/provider sessions are replaceable. Project state must survive reset or handoff without replaying full chat history.
 
 ## 3. Progressive disclosure
@@ -118,230 +120,41 @@ frozen contract
 
 HIGH risk means stronger boundaries/evidence, not human approval for every tiny correction.
 
-## 7. Task design before mutation
+## 7. Production mutation invariant
 
-Material tasks define:
+Production mutation is a separate authority boundary. Enabling production mode does not mean the Executor may improvise recovery after something goes wrong.
 
-- observable goal and Definition of Done;
-- in-scope/out-of-scope surfaces;
-- planned closure claims;
-- minimum receipt for each claim;
-- required environment and real boundaries;
-- intentionally omitted checks;
-- STOP/escalation conditions.
-
-The frozen contract owns **WHAT + SUCCESS**. The Executor owns the smallest conforming **HOW**.
-
-Engineering guidance may use:
+Before **every production change**, the active task/change record must identify:
 
 ```text
-MUST         frozen/owner invariant
-SHOULD       evidence-backed recommendation
-INVESTIGATE  fact to establish before mutation
-AVOID        likely failure/design/test trap
+target environment
+exact artifact/config/change identity
+expected success + health signals
+abort condition
+rollback OR explicit forward-recovery path
+stateful/data rollback constraints
+recovery authority/owner
+post-change verification
 ```
 
-Model recommendations do not become `MUST` merely because they are confidently written.
-
-## 8. Failure-surface preflight
-
-For material behavior changes, inspect before coding:
+If rollback is technically possible, it must be documented and executable before mutation. If rollback is unsafe or impossible (for example an irreversible data transformation), the change must instead define an explicit forward-recovery path, backup/checkpoint strategy, blast-radius controls and STOP conditions.
 
 ```text
-NORMAL PATH
-BOUNDARY / INVALID INPUT
-DEPENDENCY OR I/O FAILURE
-CLEANUP / ROLLBACK FAILURE
-OBSERVABILITY / HEALTH PROPAGATION
-TEST-ORACLE FALSIFICATION
+missing rollback/recovery readiness
+→ NOT EXECUTION_READY_FOR_PRODUCTION_MUTATION
 ```
 
-Add only when triggered:
+A successful deployment command does not erase the recovery requirement. See `production/DELIVERY.md`.
 
-```text
-THREAD / PROCESS CONCURRENCY
-CRASH / RESTART
-DURABILITY / PARTIAL WRITE
-PERMISSION / IDENTITY
-EXTERNAL PROVIDER
-MIGRATION / SCHEMA
-CACHE / CONSISTENCY
-```
+## 8. Canonical practical routes
 
-The goal is broader first-pass reasoning, not universal exhaustive testing.
+- Task lifecycle: `docs/agent/TASK_WORKFLOW_DRAFT_REVIEW_APPLY_VERIFY.md`
+- Mutation/remediation authority: `schemas/MUTATION_APPROVAL_POLICY.md`
+- Project operating baseline: `schemas/PROJECT_PROFILE_CONFIG.md`
+- Test environments: `production/AGENT_ENVIRONMENTS.md`
+- Delivery/rollback: `production/DELIVERY.md`
+- Verification semantics: `verification/00_INDEX.md`
+- Production profiles: `production/00_INDEX.md`
+- Operator role prompts: `prompts/operator/`
 
-## 9. Designer → Manager → Executor
-
-For material work:
-
-```text
-Operator intent
-→ Designer: evidence-bound contract + advisory proposal
-→ Manager: review/freeze + bounded authority
-→ Executor: preflight + implementation + receipts on isolated branch/PR
-→ cold/adversarial review
-→ Manager: exact diff/commit + evidence review
-→ authorized merge/closure
-```
-
-The Designer does not self-authorize. The Manager does not accept narrative instead of real diff/source/receipts. The Executor cannot expand scope or self-certify material closure.
-
-Direct Git access with branch/PR isolation is preferred for material code. Context packets are degraded-access alternatives, not equal substitutes for high-risk direct review.
-
-## 10. Mutation authority and controlled remediation
-
-Use `schemas/MUTATION_APPROVAL_POLICY.md`.
-
-Supported modes:
-
-```text
-STRICT_PREVIEW
-MATERIAL_CHANGES_ONLY
-BOUNDED_AUTONOMY
-```
-
-`STRICT_PREVIEW` means one bounded preview/approval per coherent mutation batch—not line-by-line permission spam.
-
-After a consolidated Manager review, same-task findings may enter a controlled remediation window with explicit findings, allowed paths/change classes and a configurable iteration limit. A new provider, migration, public contract, security boundary, production action, dependency, architecture strategy or out-of-scope resource invalidates the window and requires STOP + revised authority.
-
-## 11. Workspace and external-effect safety
-
-Uncommitted work is protected unless ownership is known. Potentially destructive operations such as hard reset, clean, force checkout/push or blind restore require dirty-state inspection and appropriate authority when loss is possible.
-
-Unknown ownership means preserve.
-
-Test authority does not imply permission for real provider calls, paid API usage, sending messages/notifications, deployments, destructive data operations or production mutation. External side effects need explicit authority according to project policy.
-
-## 12. Verification and receipts
-
-Use `schemas/CLAIM_RECEIPT.md`, `schemas/STATUS_REPORT.md` and `verification/00_INDEX.md`.
-
-Truth classes:
-
-```text
-OBSERVED | DERIVED | INFERRED | UNKNOWN | CONTRADICTED
-```
-
-Verification ladder:
-
-```text
-IDENTITY
-→ STATIC
-→ BUILD
-→ FOCUSED_TEST
-→ PATH_PROOF
-→ INTEGRATION_CONTRACT
-→ LIVE_BEHAVIOR
-→ DEPLOYED_ARTIFACT
-→ EXHAUSTIVE_BOUNDED_NEGATIVE
-→ JUDGMENT
-```
-
-Do not equate source presence with runtime, unit green with user flow, HTTP 200 with persistence, CI green with deployment, backup configuration with restore proof, or reviewer confidence with behavioral evidence.
-
-Capability wording remains separate:
-
-```text
-DESIGNED
-IMPLEMENTED_IN_SOURCE
-MECHANICALLY_TESTED
-QUALIFIED_IN_NAMED_ENVIRONMENT
-LIVE_BEHAVIOR_PROVEN
-DEPLOYED_ARTIFACT_PROVEN
-PRODUCTION_BEHAVIOR_PROVEN
-```
-
-## 13. Evidence environment
-
-Use `production/AGENT_ENVIRONMENTS.md` and `schemas/EVIDENCE_RECOVERY.md`.
-
-Environment ladder:
-
-```text
-LOCAL / HERMETIC
-→ LOCAL_REAL / EPHEMERAL TEST
-→ SHARED TEST
-→ STAGING / PRODUCTION-LIKE
-→ CONTROLLED PRODUCTION READ
-→ PRODUCTION MUTATION
-```
-
-Use the lowest authorized environment that proves the planned claim. Mocks prove the modeled interaction only. Mock-only evidence cannot silently close persistence, migration, integration, user-flow, deployment or production claims.
-
-If the required environment is unavailable, report `UNVERIFIED` or `BLOCKED`; do not weaken the receipt while retaining the stronger claim.
-
-Wrong/stale-runtime evidence is preserved and classified, including `VOID_FOR_CLAIM` where appropriate. Evidence recovery does not silently authorize new product scope.
-
-## 14. Tests and adversarial review
-
-Define test/receipt strategy before APPLY for material claims. Prefer the smallest test layer that directly proves the claim. For load-bearing safety/regression tests, use mutation/path/falsification proof when risk warrants it.
-
-Before Manager attention on MEDIUM/HIGH work, prefer a cold/read-only adversarial review of the actual diff and nearby source to catch obvious local defects, weak test oracles, cleanup leaks, concurrency gaps, missing observability propagation and scope drift.
-
-Manager review should return consolidated findings where practical.
-
-## 15. Compact reports, rich evidence
-
-Evidence richness does not require verbose status reports. Keep raw logs/artifacts separately and use compact claim-index receipts.
-
-Reports state actual `PASS | FAIL | PARTIAL | SKIPPED | UNVERIFIED` outcomes and explicit gaps.
-
-## 16. Production engineering
-
-Use `schemas/PRODUCTION_PROFILE.md`, `schemas/OPERATIONAL_GAP.md` and `production/00_INDEX.md`.
-
-Production readiness covers delivery, security, observability, data durability, troubleshooting, resilience, architecture and test/environment strategy. Missing capabilities remain explicit:
-
-```text
-NOT_IMPLEMENTED | PARTIAL | UNVERIFIED | BLOCKED | ACCEPTED_RISK | CLOSED
-```
-
-> Backup success is not recoverability proof. Restore is the receipt.
-
-Patterns are selected for real volatility/failure/security/testability boundaries, not to satisfy a pattern checklist.
-
-## 17. Model/context/cost efficiency
-
-Semantic model tiers:
-
-```text
-T0 DETERMINISTIC       graph/query/lint/schema/test selection
-T1 CHEAP_READONLY      discovery/inventory/log reduction
-T2 STANDARD_EXECUTION  bounded implementation/tests
-T3 JUDGMENT            architecture/security/ambiguity/high-risk closure
-```
-
-Use the cheapest reliable tier without weakening acceptance quality. Escalation sends compact evidence, not transcript.
-
-Quota/usage telemetry is an operator/routing signal, never engineering evidence and never permission to skip required verification.
-
-## 18. Measure Flow friction
-
-For material tasks, cheap counters may track:
-
-```text
-first_pass_review_passed
-remediation_iterations
-manager_review_rounds
-authorization_round_trips
-unplanned_scope_escalations
-environment_blocked
-agent_safety_incidents
-task_cycle_time (optional)
-```
-
-These are process-improvement telemetry, not developer-performance scores. Use them to distinguish genuine quality cost from agent defects, governance friction and environment friction.
-
-## 19. Hot state vs cold history
-
-Hot state: current task/amendment/profile pointers, relevant source, selected verification/production profiles, triggered skills and unresolved decisions.
-
-Cold state: completed tasks/evidence, incidents, closed gaps, historical judgments, research, retrospectives, stories and large logs.
-
-Do not store chain-of-thought or full transcripts as project state.
-
-## 20. Validation principle
-
-Prefer deterministic enforcement for deterministic facts: schemas, graph checks, linters, tests, artifact hashes, permissions and CI. Spend model judgment where ambiguity exists.
-
-A method/model/skill/pattern/control becomes default because risk and evidence justify it—not because it sounds sophisticated.
+Detailed rules belong in those triggered layers rather than being duplicated here.
