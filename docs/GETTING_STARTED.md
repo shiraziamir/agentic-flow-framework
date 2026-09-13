@@ -1,13 +1,13 @@
 # Getting Started
 
-This guide takes a new operator from “what is this?” to one bounded, reviewable task. Read [Why Agentic Flow](WHY_AGENTIC_FLOW.md) first if the problem is not yet clear.
+This guide takes a new operator from “what is this?” to a coherent project baseline and one bounded, reviewable task.
 
 ## Prerequisites
 
 - a target Git repository;
-- a coding agent that can read repository files and run the project’s normal tools;
-- at least one safe environment capable of exercising the behavior you intend to change;
-- an operator who can decide task, mutation, environment and production authority.
+- a coding agent that can read repository files and run normal project tools;
+- an operator who can decide product, task, mutation, environment and production authority;
+- for behavior work, at least one safe environment capable of exercising the changed path.
 
 Agentic Flow is documentation, schemas, prompts and deterministic helpers. It is not an orchestration service and does not create production credentials or environments.
 
@@ -23,11 +23,52 @@ workspace/
 
 ## 2. Start read-only
 
-Ask the target project’s coding agent to read `docs/agent/START_HERE.md` and inspect the project without mutation. If work is already underway, follow `docs/agent/MIDSTREAM_ADOPTION.md` and preserve branch, HEAD, dirty paths, current task, tests already run and environment mutations.
+Ask the agent to read `docs/agent/START_HERE.md` and inspect the project without mutation. If work is already underway, follow `docs/agent/MIDSTREAM_ADOPTION.md` and preserve branch, HEAD, dirty paths, current task, tests and environment mutations.
 
-## 3. Establish the project profile
+## 3. Choose the project mode
 
-Copy the shape from `templates/PROJECT_PROFILE.example.yaml` into:
+Do this before serious coding:
+
+```text
+VIBE_PROTOTYPE  → learn fast; provisional/sacrificial code; not production baseline
+PRODUCT_BUILD   → establish product/eval/architecture baseline before broad feature work
+MAINTENANCE     → existing trustworthy baseline; normal task flow
+```
+
+If the project is greenfield, early-stage, architecture is untrusted, or the operator mainly knows the product outcome, read [Project Inception & Architecture Discovery](agent/PROJECT_INCEPTION_ARCHITECTURE.md) and use the [Project Architect prompt](../prompts/operator/PROJECT_ARCHITECT.md).
+
+Do not jump directly from a product idea to a technology stack.
+
+## 4. If using Vibe mode
+
+Vibe mode is explicitly supported:
+
+```yaml
+project_mode:
+  mode: VIBE_PROTOTYPE
+```
+
+Use it for fast questions like “can this interaction work?” or “is this provider useful?”. It is allowed to be provisional and even disposable.
+
+But:
+
+```text
+VIBE_PROTOTYPE != PRODUCTION BASELINE
+```
+
+Before moving to `PRODUCT_BUILD`:
+
+1. preserve useful learnings/evals;
+2. establish product constraints and quality/eval contract;
+3. run architecture discovery;
+4. define security/data boundaries;
+5. classify prototype code as `REUSE_AS_IS | REUSE_AFTER_REVIEW | REWRITE | DISCARD`;
+6. build the intended product walking skeleton;
+7. pass an architecture checkpoint.
+
+## 5. Establish the project profile
+
+Copy `templates/PROJECT_PROFILE.example.yaml` into:
 
 ```text
 target-project/.agentic/PROJECT_PROFILE.yaml
@@ -35,85 +76,103 @@ target-project/.agentic/PROJECT_PROFILE.yaml
 
 Confirm:
 
-- project surfaces and readiness tier;
-- mutation policy and bounded remediation settings;
-- required test layers and execution-readiness requirements;
-- permissions for local, ephemeral, shared, staging and production environments;
-- role-specific access for Designer, Executor, Manager and Independent Judge;
-- review independence requirements;
-- model/cost routing preferences;
+- `project_mode` and promotion rules;
+- `swamp_guard` behavior;
+- project surfaces/readiness tier;
+- mutation/remediation policy;
+- test and execution-readiness requirements;
+- local/test/staging/production permissions;
+- role-specific access;
+- review independence;
+- model/cost routing;
 - production rollback/forward-recovery requirements;
-- operational/security expectations and temporary-override rules.
+- operational/security expectations.
 
-The profile says what should be true. It is not proof that those capabilities exist.
+The profile says what should be true. It is not proof those capabilities exist.
 
-## 4. Confirm execution readiness
+## 6. Run Product Inception before broad feature work
 
-Before authorizing behavior-changing work, name the planned closure claims and ask what environment can directly prove each one.
+For new/unclear projects, the normal sequence is:
+
+```text
+PRODUCT INTENT
+→ PRODUCT BRIEF
+→ QUALITY / EVAL CONTRACT
+→ ARCHITECTURE DISCOVERY
+→ 2–3 MINIMAL OPTIONS when useful
+→ LOAD-BEARING DECISIONS
+→ WALKING SKELETON
+→ ARCHITECTURE CHECKPOINT
+→ PROJECT BASELINE
+```
+
+The Product Owner should decide business trade-offs—not low-level technologies they do not need to own.
+
+Freeze hard-to-change invariants such as data/security boundaries, provenance/version/delete semantics, public contracts and recovery expectations. Keep easy experiment variables open until evidence supports them.
+
+For AI/RAG/search systems, create a representative eval set before serious tuning. Do not choose/tune chunking, vector vendor, embedding model, top-k, reranker or prompts only from demo impressions.
+
+## 7. Keep the Swamp Guard active
+
+At material checkpoints classify:
+
+```text
+CLEAR | WATCH | ALERT | STOP_REBASELINE
+```
+
+Typical alerts:
+
+- repeated redesign/rework in the same subsystem;
+- tooling/framework/datastore proliferation without product need;
+- multiple mechanisms competing for one responsibility;
+- tuning without evals;
+- features growing before the critical end-to-end path works;
+- architecture decisions trapped in chat;
+- source-of-truth/state ownership ambiguity;
+- prototype code quietly acquiring production expectations.
+
+`STOP_REBASELINE` means local patches are no longer the right fix. Stop, restore a coherent architecture baseline, then continue.
+
+## 8. Confirm execution readiness
+
+Before behavior-changing work, name the planned closure claims and ask what environment can directly prove each one.
 
 ```text
 Claim: transaction rollback works against PostgreSQL
-Adequate: real application + disposable PostgreSQL + actual transaction path
+Adequate: real app + disposable PostgreSQL + actual transaction path
 Inadequate alone: mocked connection returning expected calls
 ```
 
-Use the lowest adequate authorized environment. If none exists, resolve or approve an environment request, narrow the task/claim honestly, or leave it `UNVERIFIED/BLOCKED`. Never let a mock-only pass inherit integration semantics.
+Use the lowest adequate authorized environment. If none exists, request it, narrow the claim honestly, or leave it `UNVERIFIED/BLOCKED`.
 
-## 5. Separate roles for material work
+## 9. Separate roles for material work
 
 Use separate sessions/identities where practical:
 
-1. **Designer** — read-only task contract + engineering advisory.
-2. **Manager** — reviews/freezes the task and controls bounded authority.
-3. **Executor** — implements on an isolated branch/PR and produces receipts.
-4. **Cold reviewer** — read-only quality filter for MEDIUM/HIGH when useful.
-5. **Independent Judge** — read-only closure for HIGH-risk work when required.
-6. **Operator** — retains business, risk and production authority.
+1. **Project Architect** — greenfield/product architecture discovery, no product mutation.
+2. **Designer** — task contract + engineering advisory.
+3. **Manager** — reviews/freezes tasks and controls bounded authority.
+4. **Executor** — implements on an isolated branch/PR and produces receipts.
+5. **Cold reviewer** — read-only quality filter for MEDIUM/HIGH when useful.
+6. **Independent Judge** — read-only closure for HIGH when required.
+7. **Operator** — product, business, risk and production authority.
 
 Copy-ready prompts:
 
+- [Project Architect](../prompts/operator/PROJECT_ARCHITECT.md)
 - [Task Designer](../prompts/operator/TASK_DESIGNER.md)
 - [Manager / Reviewer](../prompts/operator/MANAGER_REVIEWER.md)
 - [Independent Judge](../prompts/operator/INDEPENDENT_JUDGE.md)
 
-Use [Role Setup](operator/DESIGNER_MANAGER_SETUP.md) for Git/permission details. If a role lacks Git access, use a [bounded context packet](operator/CONTEXT_PACKET.md).
+## 10. Preserve authority and evidence boundaries
 
-## 6. Do not confuse multiple models with independent evidence
+Keep task, mutation, environment, external-effect, production and closure-evidence authority separate.
 
-Different models or vendors can improve review coverage, but they may share assumptions or accept the same weak test oracle.
+Under `STRICT_PREVIEW`, the Executor reports current state, proposed state, affected resources, impact, checks, recovery and out-of-scope items, then waits for `APPROVE/APPLY`.
 
-```text
-model A says PASS
-+ model B says PASS
-+ model C says PASS
-!= stronger behavioral receipt
-```
+Different models agreeing does not upgrade the evidence class. Independent closure separates implementation, context, authority and evidence.
 
-For independent closure, separate four things where risk justifies it:
-
-- **implementation** — Judge did not materially implement the change;
-- **context** — Judge inspects task/source/diff/receipts, not only summaries;
-- **authority** — Executor cannot self-approve or self-merge material work;
-- **evidence** — Judge sees the raw receipt/runtime evidence needed for the claim.
-
-Model diversity is useful defense-in-depth, not an evidence-class upgrade.
-
-## 7. Preserve authority boundaries
-
-Keep these questions separate:
-
-| Boundary | Question |
-|---|---|
-| task authority | What outcome and scope are approved? |
-| mutation authority | What files/resources may change in this batch? |
-| environment authority | Where may the agent run/read/deploy/mutate? |
-| external-effect authority | May it call real providers/send/deploy? |
-| closure evidence | What current receipt establishes each claim? |
-| production authority | Who may approve the live change? |
-
-Under `STRICT_PREVIEW`, the Executor reports current state, proposed state, affected resources, impact, checks, recovery and out-of-scope items, then waits for `APPROVE/APPLY`. A frozen task is not blanket mutation or production authority.
-
-## 8. Prefer one consolidated remediation round
+## 11. Prefer one consolidated remediation round
 
 For MEDIUM/HIGH work, aim for:
 
@@ -125,68 +184,22 @@ implementation
 → final review
 ```
 
-A second iteration is exceptional: require a new material finding, remain inside the configured maximum and do not use it as a substitute for a comprehensive first review.
+A second iteration is exceptional and requires a new material finding within the configured maximum. Repeated remediation is also a Swamp Guard signal.
 
-## 9. Make the repository the handoff bus
-
-The operator should not permanently copy/paste engineering reports between agents.
-
-Use this principle:
+## 12. Make the repository the handoff bus
 
 ```text
 Human transports authority.
 Repository transports engineering state.
 ```
 
-A durable checkpoint should make these recoverable:
+A durable checkpoint should make project mode/baseline, current task, base/head identity, findings, remediation state, receipts/gaps and next authority decision recoverable. A fresh session should continue from repository state instead of replaying old chat.
 
-```text
-current task / frozen contract
-base + head identity
-review findings
-active remediation window
-receipts / gaps / omitted checks
-closure state
-next required authority decision
-```
+## 13. Production remains separate
 
-Once that checkpoint is durable, a session can be cleared/replaced and the next session can re-read current state. Vendor-specific reset commands are optional adapters, not framework policy.
+Production mutation is not implied by source approval, prototype success or Judge PASS. Before every production change require exact target/change identity, health/success signals, abort condition, rollback or forward-recovery path, state/data constraints, recovery authority and post-change verification.
 
-## 10. Route models by capability and cost, not brand
-
-A project may use a cheaper capable model for execution and stronger reasoning for review/judgment:
-
-```text
-Executor          → task-adequate / cost-efficient
-Manager           → stronger reasoning when justified
-Independent Judge → high reasoning + separate context
-```
-
-This is optional and vendor-neutral. Cost optimization never lowers acceptance or evidence requirements.
-
-## 11. Production remains separate
-
-Production mutation is not implied by source approval or Judge PASS.
-
-Before every production change, require:
-
-```text
-exact target/change identity
-success + health signals
-abort condition
-rollback OR explicit forward-recovery path
-stateful/data constraints
-recovery owner/authority
-post-change verification
-```
-
-The Independent Judge is read-only by default. Production mutation requires separate Operator/project authority.
-
-## 12. Run one task
-
-Follow [the worked example](examples/END_TO_END_TASK.md). Keep the first adoption small but real: choose a bounded change with an observable path and a disposable integration environment.
-
-## 13. Validate the framework checkout
+## 14. Validate the framework checkout
 
 ```bash
 python3 -m unittest discover -s scripts -p 'test_*.py'
@@ -194,10 +207,12 @@ python3 scripts/test_docs_onboarding.py
 python3 scripts/build_agent_bundle.py
 ```
 
-These checks validate repository tooling and packaging, not the effectiveness of the framework in your organization. Record project-specific outcomes separately.
+These checks validate repository mechanics, not the effectiveness of the framework in your organization.
 
 ## What to read next
 
+- [Project Inception](agent/PROJECT_INCEPTION_ARCHITECTURE.md)
+- [Task Workflow](agent/TASK_WORKFLOW_DRAFT_REVIEW_APPLY_VERIFY.md)
 - [Comparison](COMPARISON.md)
 - [Validation Status](VALIDATION_STATUS.md)
 - [Comprehensive Persian Guide](GUIDE.fa.md)
