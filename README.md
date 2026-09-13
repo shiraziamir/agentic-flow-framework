@@ -1,6 +1,6 @@
 # Agentic Flow Framework
 
-**Framework version:** 1.8  
+**Framework version:** 1.9  
 **Status:** evidence-oriented operating framework; see [Validation Status](docs/VALIDATION_STATUS.md)  
 **Persian:** [راهنمای جامع فارسی](docs/GUIDE.fa.md)
 
