@@ -1,17 +1,17 @@
 # Agentic Flow Architecture
 
 **Status:** CANONICAL SOURCE OF TRUTH  
-**Version:** 1.9  
+**Version:** 1.10  
 **Updated:** 2026-09-13
 
-Agentic Flow is a repository-first, vendor-neutral operating architecture for coding agents. This file is intentionally a **small canonical map + invariant set**. Detailed contracts live in lower layers and are loaded only when the active task triggers them.
+Agentic Flow is a repository-first, vendor-neutral operating architecture for coding agents. This file is intentionally a **small canonical map + invariant set**. Detailed contracts live in lower layers and are loaded only when the active project/task triggers them.
 
 ## 1. Source-of-truth hierarchy
 
 When sources disagree, use this order:
 
 1. `ARCHITECTURE.md` — authority, lifecycle and invariants.
-2. `schemas/` — durable task/evidence/project/approval contracts.
+2. `schemas/` — durable project/task/evidence/approval contracts.
 3. `verification/` — claim-aware verification profiles.
 4. `production/` — environment/production-readiness profiles.
 5. `skills/` — triggered reusable procedures.
@@ -27,6 +27,14 @@ Reader docs, research, historical reports and generated exports are explanatory/
 > Durable project memory; disposable working context.
 
 > Human transports authority; repository transports engineering state.
+
+> Product intent must become constraints before it becomes architecture.
+
+> VIBE_PROTOTYPE is a learning mode, not a production baseline.
+
+> Freeze hard-to-change invariants; keep easy-to-change implementation choices open until evidence justifies them.
+
+> Unmeasured complexity must not become architecture by accident.
 
 > A claim may be no broader than the current receipt that directly establishes it.
 
@@ -50,13 +58,101 @@ Reader docs, research, historical reports and generated exports are explanatory/
 
 Agent/model/provider sessions are replaceable. Project state must survive reset or handoff without replaying full chat history.
 
-## 3. Progressive disclosure
+## 3. Project lifecycle before task lifecycle
+
+A new/early-stage project does not begin with the normal coding task loop.
+
+```text
+PRODUCT INTENT
+→ PRODUCT BRIEF
+→ QUALITY / EVAL CONTRACT
+→ ARCHITECTURE DISCOVERY
+→ 2–3 MINIMAL OPTIONS when meaningful
+→ LOAD-BEARING DECISIONS
+→ WALKING SKELETON
+→ ARCHITECTURE CHECKPOINT
+→ PROJECT BASELINE
+→ NORMAL TASK FLOW
+```
+
+The Product Owner owns WHY / WHAT / business trade-offs. The Project Architect owns system-shape discovery. The Executor owns implementation after the baseline is sufficiently coherent.
+
+Canonical guide: `docs/agent/PROJECT_INCEPTION_ARCHITECTURE.md`.
+
+## 4. Project development modes
+
+Projects declare one mode:
+
+```text
+VIBE_PROTOTYPE
+PRODUCT_BUILD
+MAINTENANCE
+```
+
+### VIBE_PROTOTYPE
+
+Optimizes for learning speed. Architecture may be provisional and code may be sacrificial. It does not grant production-readiness claims, sensitive-data authority, or production mutation.
+
+```text
+VIBE_PROTOTYPE != PRODUCTION BASELINE
+```
+
+Promotion to PRODUCT_BUILD requires explicit re-baselining and classification of prototype code as `REUSE_AS_IS | REUSE_AFTER_REVIEW | REWRITE | DISCARD`.
+
+### PRODUCT_BUILD
+
+Requires the product/quality constraints and load-bearing architecture to be explicit enough to guide implementation. Broad feature expansion should not outrun the walking skeleton and architecture checkpoint.
+
+### MAINTENANCE
+
+Uses the established baseline and normal task lifecycle. Return to architecture discovery when a material boundary changes or the Swamp Guard indicates local patches are compounding structural debt.
+
+## 5. Swamp Guard
+
+The Swamp Guard is evaluated at material checkpoints and before architecture/tooling expansion.
+
+```text
+CLEAR
+WATCH
+ALERT
+STOP_REBASELINE
+```
+
+Typical signals include:
+
+- repeated architecture churn or rewrites in the same subsystem;
+- repeated remediation beyond the normal bounded loop;
+- new abstractions/frameworks/datastores without a product constraint or failure boundary;
+- multiple mechanisms competing for one responsibility;
+- AI/RAG tuning without a representative eval baseline;
+- feature growth before a real end-to-end vertical slice works;
+- architecture decisions existing only in chat;
+- duplicate/ambiguous sources of truth or state ownership;
+- operational complexity growing faster than demonstrated product value;
+- prototype code silently acquiring production expectations.
+
+Use `STOP_REBASELINE` when continuing would compound structural debt or safety risk—for example unresolved sensitive-data boundaries, prototype-to-production drift, major architecture change without decision/evidence, source-of-truth ambiguity causing repeated defects, or RAG optimization with no measurable eval contract.
+
+The required alert is compact:
+
+```text
+SWAMP ALERT: <WATCH|ALERT|STOP_REBASELINE>
+Signal: ...
+Evidence: ...
+Why it matters: ...
+Recommended action: ...
+Continue allowed: YES|NO
+Authority needed: ...
+```
+
+## 6. Progressive disclosure
 
 Humans should not read the whole repository to begin. The normal human route is:
 
 ```text
 README.md
 → docs/GETTING_STARTED.md
+→ docs/agent/PROJECT_INCEPTION_ARCHITECTURE.md when baseline is missing/new
 → docs/agent/TASK_WORKFLOW_DRAFT_REVIEW_APPLY_VERIFY.md
 → docs/GUIDE.fa.md when Persian guidance is preferred
 ```
@@ -65,21 +161,21 @@ The normal Executor route is:
 
 ```text
 docs/agent/START_HERE.md
-→ current project profile + current task
+→ current project mode/profile
+→ project inception when baseline is missing
+→ current task
 → only triggered schemas/profiles/skills
 ```
 
 Do not preload research, operator manuals, historical tasks, all production profiles or the full schema shelf.
 
-## 4. Adoption modes
+## 7. Adoption modes
 
-- **NEW / IDLE:** discover project reality, establish/map the project profile, validate build/test/environment entrypoints, then stop before product mutation unless authorized.
-- **EXISTING MATURE:** reuse valid CI/CD, observability, security and architecture; do not create shadow systems.
+- **NEW / IDLE:** determine project mode. If greenfield or architecture is untrusted, run Project Inception before serious product mutation.
+- **EXISTING MATURE:** reuse valid architecture/CI/CD/observability/security; do not create shadow systems.
 - **MIDSTREAM:** snapshot branch/HEAD/dirty state/current task/tests/environment first; preserve existing work; never fabricate retroactive approval.
 
-The framework can be cloned directly or distributed as a generated portable bundle. Distribution does not change authority semantics.
-
-## 5. Project baseline
+## 8. Project baseline
 
 A target project should normally maintain:
 
@@ -89,11 +185,28 @@ A target project should normally maintain:
 
 Use `schemas/PROJECT_PROFILE_CONFIG.md` and `templates/PROJECT_PROFILE.example.yaml`.
 
-The profile defines intended testing, execution readiness, mutation modes, environment permissions, review policy, role access, model routing, workspace safety, external effects and production expectations. It is not proof that those expectations are satisfied.
+The profile defines project mode, Swamp Guard, intended testing, execution readiness, mutation modes, environment permissions, review policy, role access, model routing, workspace safety, external effects and production expectations. It is not proof those expectations are satisfied.
 
 Temporary exceptions use `schemas/TEMPORARY_OVERRIDE.md`; they are explicit, owned, expiring and do not silently rewrite the baseline.
 
-## 6. Risk and work kind are separate
+## 9. Architecture decision discipline
+
+Architecture is not a library list. Freeze decisions that are load-bearing and expensive to change, such as data ownership, tenant/security boundaries, provenance/version/delete semantics, public contracts, recovery expectations, online/offline boundaries and evaluation contracts.
+
+Keep cheap experiment variables open until evidence supports them.
+
+For material hard-to-reverse choices, prefer a short architecture decision record:
+
+```text
+CONTEXT
+DECISION
+CONSEQUENCES
+REVISIT TRIGGER
+```
+
+For AI/RAG systems, do not freeze vector vendor, chunk size, embedding model, top-k, reranker, prompt wording or agent framework merely from convention. Establish product/eval constraints first.
+
+## 10. Risk and work kind are separate
 
 New task contracts should represent two dimensions:
 
@@ -102,9 +215,7 @@ risk.level = LOW | MEDIUM | HIGH
 work_kind  = IMPLEMENTATION | REMEDIATION | EVIDENCE_ONLY
 ```
 
-Legacy `governance: HIGH|MEDIUM|EVIDENCE_ONLY` remains readable during migration, but `EVIDENCE_ONLY` is a work kind, not a risk level.
-
-Default workflow:
+Default task workflow:
 
 ```text
 LOW
@@ -125,81 +236,49 @@ frozen contract
 → Operator production/business decision
 ```
 
-HIGH risk means stronger boundaries/evidence, not human approval for every tiny correction.
+A second remediation iteration is exceptional: it requires a new material finding, remains inside the configured maximum and cannot silently expand scope. Exceeding the bounded loop is itself a Swamp Guard signal.
 
-A second remediation iteration is exceptional rather than routine: it requires a new material finding, must remain inside the configured maximum and cannot silently expand scope.
+## 11. Independent closure
 
-## 7. Independent closure
-
-A different model name is not enough to establish independence. Independent review should separate as many of these dimensions as the risk requires:
+A different model name is not enough to establish independence. Independent review should separate as many of these dimensions as risk requires:
 
 ```text
 IMPLEMENTATION INDEPENDENCE
-reviewer/judge did not materially implement the change
-
 CONTEXT INDEPENDENCE
-review starts from task + source/diff + receipts, not only the Executor narrative
-
 AUTHORITY INDEPENDENCE
-Executor cannot approve/merge/close its own material work
-
 EVIDENCE INDEPENDENCE
-reviewer/judge inspects raw receipts/runtime evidence rather than repeating another model's conclusion
 ```
 
-Model/provider diversity is useful defense-in-depth, especially for HIGH-risk judgment, but it is **not** an evidence-class upgrade by itself.
+Model/provider diversity is useful defense-in-depth, but it is not an evidence-class upgrade by itself.
 
 ```text
-Sonnet PASS + Opus PASS + another model PASS
-!=
-real integration / deployment / production proof
+MULTI-MODEL AGREEMENT != INDEPENDENT BEHAVIORAL EVIDENCE
 ```
 
-The Independent Judge is read-only by default. It may inspect source, exact diff, CI/receipts and authorized production telemetry, but it must not mutate product code, rewrite the task to manufacture a pass, or mutate production. Production mutation remains separately authorized by the Operator/project policy.
+The Independent Judge is read-only by default. It may inspect source, exact diff, CI/receipts and authorized production telemetry, but it must not mutate product code, rewrite the task to manufacture a pass, or mutate production.
 
-## 8. Artifact-driven handoff and session reset
+## 12. Artifact-driven handoff and session reset
 
-Humans should not act as permanent message buses between agents.
+Humans should not act as permanent message buses between agents. Durable handoff state should include current project mode/baseline, task/contract, repository/base/head identity, review findings, remediation state, receipts/gaps, closure state and next authority decision.
 
-Durable handoff state should be recoverable from repository artifacts such as:
+A fresh session should be able to continue without replaying the previous conversation.
 
-```text
-current task / contract
-repository + base/head identity
-review findings
-active remediation window
-receipts / gaps
-closure state
-next required authority decision
-```
+## 13. Capability/cost routing
 
-A fresh agent session should be able to inspect those artifacts and continue without replaying the previous conversation.
+The framework does not prescribe model brands. Projects may route roles by capability and cost:
 
 ```text
-checkpoint durable state
-→ session may be cleared/replaced
-→ new session re-reads current repo/task state
-```
-
-Session-reset commands are vendor-specific and belong in adapters/guides, not in canonical policy.
-
-## 9. Capability/cost routing
-
-The framework does not prescribe model brands. Projects may route roles by capability and cost, for example:
-
-```text
+Project Architect → stronger reasoning when architecture ambiguity justifies it
 Executor          → task-adequate, cost-efficient model/harness
 Manager           → stronger reasoning/review capability when justified
-Independent Judge → high-reasoning, separate context; model diversity preferred where useful
+Independent Judge → high-reasoning, separate context
 ```
 
-Cost routing must never lower the evidence or acceptance bar. If the cheaper role cannot establish the required claim, escalate capability or leave the claim unverified.
+Cost routing must never lower the evidence or acceptance bar.
 
-## 10. Production mutation invariant
+## 14. Production mutation invariant
 
-Production mutation is a separate authority boundary. Enabling production mode does not mean the Executor may improvise recovery after something goes wrong.
-
-Before **every production change**, the active task/change record must identify:
+Production mutation is a separate authority boundary. Before **every production change**, the active change record must identify:
 
 ```text
 target environment
@@ -212,17 +291,17 @@ recovery authority/owner
 post-change verification
 ```
 
-If rollback is technically possible, it must be documented and executable before mutation. If rollback is unsafe or impossible, the change must instead define an explicit forward-recovery path, backup/checkpoint strategy, blast-radius controls and STOP conditions.
+If rollback is unsafe or impossible, require forward recovery, backup/checkpoint strategy, blast-radius controls and STOP conditions.
 
 ```text
 missing rollback/recovery readiness
 → NOT EXECUTION_READY_FOR_PRODUCTION_MUTATION
 ```
 
-A successful deployment command does not erase the recovery requirement. See `production/DELIVERY.md`.
+## 15. Canonical practical routes
 
-## 11. Canonical practical routes
-
+- Greenfield/vibe/product inception: `docs/agent/PROJECT_INCEPTION_ARCHITECTURE.md`
+- Project Architect prompt: `prompts/operator/PROJECT_ARCHITECT.md`
 - Task lifecycle: `docs/agent/TASK_WORKFLOW_DRAFT_REVIEW_APPLY_VERIFY.md`
 - Mutation/remediation authority: `schemas/MUTATION_APPROVAL_POLICY.md`
 - Project operating baseline: `schemas/PROJECT_PROFILE_CONFIG.md`
@@ -231,6 +310,5 @@ A successful deployment command does not erase the recovery requirement. See `pr
 - Test environments: `production/AGENT_ENVIRONMENTS.md`
 - Delivery/rollback: `production/DELIVERY.md`
 - Verification semantics: `verification/00_INDEX.md`
-- Production profiles: `production/00_INDEX.md`
 
 Detailed rules belong in those triggered layers rather than being duplicated here.
