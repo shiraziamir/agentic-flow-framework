@@ -1,6 +1,6 @@
 # Mutation Approval Policy
 
-**Schema version:** 1.1  
+**Schema version:** 1.2  
 **Updated:** 2026-09-13
 
 This policy controls mutation authority without turning every correction into a new human round-trip.
@@ -63,7 +63,9 @@ Recommended shape:
 remediation_window:
   review_ref: <review-id/ref>
   finding_ids: [R1, R2]
-  max_iterations: 2
+  max_iterations: 1
+  maximum_without_escalation: 2
+  extra_iteration_requires_new_material_finding: true
   allowed_files_or_resources: []
   allowed_change_classes:
     - CORRECTNESS_FIX
@@ -73,9 +75,14 @@ remediation_window:
   owner_review_required_before_closure: true
 ```
 
-The window is limited to the listed findings and scope. The iteration count is configurable; `2` is a practical default, not a correctness rule.
+The normal target is **one** remediation iteration after one consolidated review. That iteration may include implementation, focused tests, self/cold review and corrections for the listed findings without a fresh approval for each local edit.
 
-A remediation iteration may include implementation, focused tests, self-review and related corrections without a new approval for each small edit.
+A second iteration is exceptional. It requires a **new material finding**, must remain inside `maximum_without_escalation`, and must not silently expand the task. If no new material finding exists, a second round indicates the Manager should re-review the state rather than automatically extending the loop.
+
+```text
+round 2 without NEW MATERIAL FINDING
+→ STOP / MANAGER REVIEW
+```
 
 The window ends immediately if work requires any unapproved material expansion, including:
 
@@ -111,12 +118,24 @@ IMPLEMENT
 → cold/adversarial agent review
 → executor fixes obvious findings
 → Manager consolidated review
-→ bounded remediation window
+→ ONE bounded remediation by default
 → Manager final review
-→ independent closure when required
+→ read-only Independent Judge when required
 ```
 
-The Manager should spend human/reviewer attention on scope, architecture, risk, product semantics, evidence and unresolved ambiguity—not on repeatedly rediscovering simple local defects that an adversarial pre-review can catch.
+The Manager should spend reviewer attention on scope, architecture, risk, product semantics, evidence and unresolved ambiguity—not on repeatedly rediscovering simple local defects that an adversarial pre-review can catch.
+
+## Independent closure does not authorize mutation
+
+When project policy requires an Independent Judge, the Judge is read-only by default. Judge findings return to the Manager/Operator. A Judge does not extend a remediation window, edit code or mutate production by itself.
+
+```text
+Judge PASS
+!= mutation authority
+!= production authority
+```
+
+Multiple model/reviewer PASSes also do not upgrade the evidence class of the underlying receipts.
 
 ## Read-only discovery
 

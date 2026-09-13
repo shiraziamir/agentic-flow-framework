@@ -7,7 +7,7 @@ This guide takes a new operator from “what is this?” to one bounded, reviewa
 - a target Git repository;
 - a coding agent that can read repository files and run the project’s normal tools;
 - at least one safe environment capable of exercising the behavior you intend to change;
-- an operator who can decide task, mutation and environment authority.
+- an operator who can decide task, mutation, environment and production authority.
 
 Agentic Flow is documentation, schemas, prompts and deterministic helpers. It is not an orchestration service and does not create production credentials or environments.
 
@@ -23,7 +23,7 @@ workspace/
 
 ## 2. Start read-only
 
-Ask the target project’s coding agent to read `docs/agent/START_HERE.md` and `ARCHITECTURE.md`, then inspect the project without mutation. If work is already underway, it must follow `docs/agent/MIDSTREAM_ADOPTION.md` and preserve the branch, HEAD, dirty paths, current task, tests already run and environment mutations.
+Ask the target project’s coding agent to read `docs/agent/START_HERE.md` and inspect the project without mutation. If work is already underway, follow `docs/agent/MIDSTREAM_ADOPTION.md` and preserve branch, HEAD, dirty paths, current task, tests already run and environment mutations.
 
 ## 3. Establish the project profile
 
@@ -36,10 +36,13 @@ target-project/.agentic/PROJECT_PROFILE.yaml
 Confirm:
 
 - project surfaces and readiness tier;
-- `STRICT_PREVIEW` or another explicit mutation policy;
-- required test layers;
-- execution-readiness requirements;
+- mutation policy and bounded remediation settings;
+- required test layers and execution-readiness requirements;
 - permissions for local, ephemeral, shared, staging and production environments;
+- role-specific access for Designer, Executor, Manager and Independent Judge;
+- review independence requirements;
+- model/cost routing preferences;
+- production rollback/forward-recovery requirements;
 - operational/security expectations and temporary-override rules.
 
 The profile says what should be true. It is not proof that those capabilities exist.
@@ -58,34 +61,132 @@ Use the lowest adequate authorized environment. If none exists, resolve or appro
 
 ## 5. Separate roles for material work
 
-Start separate sessions/identities where practical:
+Use separate sessions/identities where practical:
 
-1. Designer uses [the initial prompt](../prompts/operator/TASK_DESIGNER.md) and reads an identified repository ref.
-2. Manager uses [the review prompt](../prompts/operator/MANAGER_REVIEWER.md), checks repository reality and freezes only an adequate task.
-3. Executor works from the frozen task, performs the implementation-design preflight, and waits for the required mutation approval.
-4. Executor implements and verifies on an isolated branch/PR.
-5. Manager reviews the exact base/head diff, surrounding source and raw receipts before approving closure/merge.
+1. **Designer** — read-only task contract + engineering advisory.
+2. **Manager** — reviews/freezes the task and controls bounded authority.
+3. **Executor** — implements on an isolated branch/PR and produces receipts.
+4. **Cold reviewer** — read-only quality filter for MEDIUM/HIGH when useful.
+5. **Independent Judge** — read-only closure for HIGH-risk work when required.
+6. **Operator** — retains business, risk and production authority.
 
-Use [Designer/Manager Setup](operator/DESIGNER_MANAGER_SETUP.md) for permission details. If one role lacks Git access, use a [bounded context packet](operator/CONTEXT_PACKET.md).
+Copy-ready prompts:
 
-## 6. Preserve authority boundaries
+- [Task Designer](../prompts/operator/TASK_DESIGNER.md)
+- [Manager / Reviewer](../prompts/operator/MANAGER_REVIEWER.md)
+- [Independent Judge](../prompts/operator/INDEPENDENT_JUDGE.md)
 
-Keep four questions separate:
+Use [Role Setup](operator/DESIGNER_MANAGER_SETUP.md) for Git/permission details. If a role lacks Git access, use a [bounded context packet](operator/CONTEXT_PACKET.md).
+
+## 6. Do not confuse multiple models with independent evidence
+
+Different models or vendors can improve review coverage, but they may share assumptions or accept the same weak test oracle.
+
+```text
+model A says PASS
++ model B says PASS
++ model C says PASS
+!= stronger behavioral receipt
+```
+
+For independent closure, separate four things where risk justifies it:
+
+- **implementation** — Judge did not materially implement the change;
+- **context** — Judge inspects task/source/diff/receipts, not only summaries;
+- **authority** — Executor cannot self-approve or self-merge material work;
+- **evidence** — Judge sees the raw receipt/runtime evidence needed for the claim.
+
+Model diversity is useful defense-in-depth, not an evidence-class upgrade.
+
+## 7. Preserve authority boundaries
+
+Keep these questions separate:
 
 | Boundary | Question |
 |---|---|
 | task authority | What outcome and scope are approved? |
 | mutation authority | What files/resources may change in this batch? |
 | environment authority | Where may the agent run/read/deploy/mutate? |
+| external-effect authority | May it call real providers/send/deploy? |
 | closure evidence | What current receipt establishes each claim? |
+| production authority | Who may approve the live change? |
 
 Under `STRICT_PREVIEW`, the Executor reports current state, proposed state, affected resources, impact, checks, recovery and out-of-scope items, then waits for `APPROVE/APPLY`. A frozen task is not blanket mutation or production authority.
 
-## 7. Run one task
+## 8. Prefer one consolidated remediation round
+
+For MEDIUM/HIGH work, aim for:
+
+```text
+implementation
+→ cold/adversarial review
+→ Manager consolidated findings
+→ one bounded remediation round
+→ final review
+```
+
+A second iteration is exceptional: require a new material finding, remain inside the configured maximum and do not use it as a substitute for a comprehensive first review.
+
+## 9. Make the repository the handoff bus
+
+The operator should not permanently copy/paste engineering reports between agents.
+
+Use this principle:
+
+```text
+Human transports authority.
+Repository transports engineering state.
+```
+
+A durable checkpoint should make these recoverable:
+
+```text
+current task / frozen contract
+base + head identity
+review findings
+active remediation window
+receipts / gaps / omitted checks
+closure state
+next required authority decision
+```
+
+Once that checkpoint is durable, a session can be cleared/replaced and the next session can re-read current state. Vendor-specific reset commands are optional adapters, not framework policy.
+
+## 10. Route models by capability and cost, not brand
+
+A project may use a cheaper capable model for execution and stronger reasoning for review/judgment:
+
+```text
+Executor          → task-adequate / cost-efficient
+Manager           → stronger reasoning when justified
+Independent Judge → high reasoning + separate context
+```
+
+This is optional and vendor-neutral. Cost optimization never lowers acceptance or evidence requirements.
+
+## 11. Production remains separate
+
+Production mutation is not implied by source approval or Judge PASS.
+
+Before every production change, require:
+
+```text
+exact target/change identity
+success + health signals
+abort condition
+rollback OR explicit forward-recovery path
+stateful/data constraints
+recovery owner/authority
+post-change verification
+```
+
+The Independent Judge is read-only by default. Production mutation requires separate Operator/project authority.
+
+## 12. Run one task
 
 Follow [the worked example](examples/END_TO_END_TASK.md). Keep the first adoption small but real: choose a bounded change with an observable path and a disposable integration environment.
 
-## 8. Validate the framework checkout
+## 13. Validate the framework checkout
 
 ```bash
 python3 -m unittest discover -s scripts -p 'test_*.py'

@@ -1,6 +1,6 @@
 # Project Profile Config Schema
 
-**Schema version:** 1.5  
+**Schema version:** 1.6  
 **Updated:** 2026-09-13
 
 A target project should keep one small durable profile, usually `.agentic/PROJECT_PROFILE.yaml`. It declares the intended operating bar; current receipts establish reality.
@@ -40,6 +40,8 @@ agent_mutation_policy:
   remediation_windows:
     enabled: true|false
     default_max_iterations: <integer>
+    maximum_without_escalation: <integer>
+    extra_iteration_requires_new_material_finding: true|false
     manager_review_required_before_closure: true|false
 
 workspace_safety:
@@ -55,6 +57,45 @@ review_policy:
   pre_manager_adversarial_review: REQUIRED_FOR_MEDIUM_HIGH|OPTIONAL|DISABLED
   consolidated_manager_findings: true|false
   independent_closure: REQUIRED_FOR_HIGH|PROJECT_DEFINED|DISABLED
+  independence:
+    implementation: REQUIRED_FOR_INDEPENDENT_CLOSURE|PROJECT_DEFINED
+    context: REQUIRED_FOR_INDEPENDENT_CLOSURE|PROJECT_DEFINED
+    authority: REQUIRED_FOR_MATERIAL_WORK|PROJECT_DEFINED
+    evidence: REQUIRED_FOR_INDEPENDENT_CLOSURE|PROJECT_DEFINED
+    model_diversity: PREFERRED|OPTIONAL|DISABLED
+  multi_model_agreement_upgrades_evidence: false
+
+role_access:
+  designer:
+    source: READ_ONLY|PROJECT_DEFINED
+    production_read: OWNER_APPROVAL|DENIED
+    production_mutation: DENIED
+  executor:
+    source: BOUNDED_WRITE|PROJECT_DEFINED
+    production_read: OWNER_APPROVAL|DENIED
+    production_mutation: OWNER_APPROVAL|DENIED
+  manager:
+    source: READ_REVIEW|PROJECT_DEFINED
+    production_read: OWNER_APPROVAL|DENIED
+    production_mutation: DENIED|OWNER_APPROVAL
+  independent_judge:
+    source: READ_ONLY|READ_REVIEW
+    production_read: OWNER_APPROVAL|DENIED
+    production_mutation: DENIED
+
+model_routing:
+  vendor_neutral: true
+  executor: TASK_ADEQUATE_COST_EFFICIENT|PROJECT_DEFINED
+  manager: HIGH_REASONING_WHEN_JUSTIFIED|PROJECT_DEFINED
+  independent_judge: HIGH_REASONING_SEPARATE_CONTEXT|PROJECT_DEFINED
+  never_reduce_acceptance_or_evidence_for_cost: true
+
+state_handoff:
+  repository_transports_engineering_state: true
+  human_transports_authority: true
+  require_current_task_ref: true
+  require_current_repository_ref: true
+  session_reset_after_durable_checkpoint: ALLOWED|PROJECT_DEFINED
 
 flow_metrics:
   enabled: true|false
@@ -124,7 +165,9 @@ agent_mutation_policy:
   require_rollback_for_material_changes: true
   remediation_windows:
     enabled: true
-    default_max_iterations: 2
+    default_max_iterations: 1
+    maximum_without_escalation: 2
+    extra_iteration_requires_new_material_finding: true
     manager_review_required_before_closure: true
 
 workspace_safety:
@@ -140,6 +183,45 @@ review_policy:
   pre_manager_adversarial_review: REQUIRED_FOR_MEDIUM_HIGH
   consolidated_manager_findings: true
   independent_closure: REQUIRED_FOR_HIGH
+  independence:
+    implementation: REQUIRED_FOR_INDEPENDENT_CLOSURE
+    context: REQUIRED_FOR_INDEPENDENT_CLOSURE
+    authority: REQUIRED_FOR_MATERIAL_WORK
+    evidence: REQUIRED_FOR_INDEPENDENT_CLOSURE
+    model_diversity: PREFERRED
+  multi_model_agreement_upgrades_evidence: false
+
+role_access:
+  designer:
+    source: READ_ONLY
+    production_read: DENIED
+    production_mutation: DENIED
+  executor:
+    source: BOUNDED_WRITE
+    production_read: OWNER_APPROVAL
+    production_mutation: OWNER_APPROVAL
+  manager:
+    source: READ_REVIEW
+    production_read: OWNER_APPROVAL
+    production_mutation: DENIED
+  independent_judge:
+    source: READ_ONLY
+    production_read: OWNER_APPROVAL
+    production_mutation: DENIED
+
+model_routing:
+  vendor_neutral: true
+  executor: TASK_ADEQUATE_COST_EFFICIENT
+  manager: HIGH_REASONING_WHEN_JUSTIFIED
+  independent_judge: HIGH_REASONING_SEPARATE_CONTEXT
+  never_reduce_acceptance_or_evidence_for_cost: true
+
+state_handoff:
+  repository_transports_engineering_state: true
+  human_transports_authority: true
+  require_current_task_ref: true
+  require_current_repository_ref: true
+  session_reset_after_durable_checkpoint: ALLOWED
 
 flow_metrics:
   enabled: true
@@ -156,12 +238,16 @@ production_mode:
     require_blast_radius_control: true
 ```
 
-This keeps first mutation approval explicit while allowing bounded same-task remediation after a consolidated review.
+This keeps first mutation approval explicit, makes one consolidated remediation round the normal case, and keeps independent closure read-only by default.
+
+## Independent-review rule
+
+A second model is not automatically an independent reviewer. For independent closure, prefer separation of implementation, context, authority and evidence. Model diversity is useful defense-in-depth but does not upgrade the evidence class of the underlying receipts.
+
+## Handoff rule
+
+The human/operator should carry authority decisions, not routine engineering messages. Task state, reviewed refs, findings, receipts, gaps and next actions should be recoverable from durable repository artifacts so a fresh session can continue safely.
 
 ## Production-mode rule
 
-When `production_mode.enabled: true`, a production mutation is not execution-ready until the specific change has an executable rollback path or an explicit forward-recovery plan. The change must also define the target, success/health signals, abort condition, stateful/data constraints, recovery authority and post-change verification.
-
-For irreversible changes, `rollback: impossible` is not enough. Record why rollback is unsafe/impossible and require forward recovery, backup/checkpoint evidence when applicable, controlled blast radius and STOP conditions.
-
-Production mode never converts `production_mutation: OWNER_APPROVAL` into automatic authority.
+When `production_mode.enabled: true`, a production mutation is not execution-ready until the specific change has an executable rollback path or an explicit forward-recovery plan. Production mutation remains separately owner-authorized, and the Independent Judge remains read-only by default.

@@ -31,6 +31,7 @@ def main() -> None:
             "schemas/PROJECT_PROFILE_CONFIG.md": "# profile\n",
             "prompts/operator/TASK_DESIGNER.md": "# designer\n",
             "prompts/operator/MANAGER_REVIEWER.md": "# manager\n",
+            "prompts/operator/INDEPENDENT_JUDGE.md": "# judge\n",
             "prompts/bootstrap/CLONE_AND_ADOPT.md": "# clone\n",
             "prompts/workflow/APPLY_TASK.md": "# apply\n",
             "prompts/supervisor/REVIEW.md": "# review\n",
@@ -71,6 +72,7 @@ def main() -> None:
             "schemas/PROJECT_PROFILE_CONFIG.md",
             "prompts/operator/TASK_DESIGNER.md",
             "prompts/operator/MANAGER_REVIEWER.md",
+            "prompts/operator/INDEPENDENT_JUDGE.md",
             "prompts/bootstrap/CLONE_AND_ADOPT.md",
             "scripts/build_agent_bundle.py",
         }
@@ -92,6 +94,7 @@ def main() -> None:
                 "agentic-flow/ARCHITECTURE.md",
                 "agentic-flow/prompts/operator/TASK_DESIGNER.md",
                 "agentic-flow/prompts/operator/MANAGER_REVIEWER.md",
+                "agentic-flow/prompts/operator/INDEPENDENT_JUDGE.md",
                 "agentic-flow/schemas/MUTATION_APPROVAL_POLICY.md",
                 "agentic-flow/schemas/TASK_CONTRACT.md",
                 "agentic-flow/docs/GUIDE.fa.md",
@@ -107,6 +110,7 @@ def main() -> None:
             assert zf.read("agentic-flow/START_HERE.md") == b"# start\n"
             assert zf.read("agentic-flow/README.md") == b"# bundle readme\n"
             assert zf.read("agentic-flow/PRIMARY_SOURCES.md") == b"# sources\n"
+            assert zf.read("agentic-flow/prompts/operator/INDEPENDENT_JUDGE.md") == b"# judge\n"
             install_prompt = zf.read("agentic-flow/INSTALL_PROMPT.txt")
             assert b"MIDSTREAM_ADOPTION" in install_prompt
             assert b"STRICT_PREVIEW" in install_prompt

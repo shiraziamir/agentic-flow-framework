@@ -1,412 +1,272 @@
-# Setting Up the Task Designer and Manager/Reviewer
+# Setting Up Designer, Manager, Executor and Independent Judge
 
-**Operator guide.** This document explains how to run two separate AI-assisted roles around an Executor without allowing the Executor to define, approve, and close its own work.
+**Operator guide.** This document explains how to separate planning, execution, authority and independent closure without turning the human into a permanent message bus.
 
 ## 1. Roles
 
-### Task Designer / Task Architect
+### Designer / Task Architect
 
-Purpose: turn operator intent + repository evidence into a high-quality task contract and an evidence-constrained engineering advisory.
+Purpose: turn operator intent + repository evidence into a bounded task contract and evidence-constrained engineering advisory.
 
-The Designer:
+Default posture:
 
-- works read-only against the project whenever possible;
-- discovers current architecture, call paths, state ownership, failure modes and test seams;
-- drafts the frozen behavioral contract;
-- separates authoritative requirements from implementation recommendations;
-- produces `[MUST]`, `[SHOULD]`, `[INVESTIGATE]`, and `[AVOID]` guidance;
+- product/source access: read-only;
+- production mutation: denied;
+- may draft task/advisory artifacts;
 - must not implement product changes;
-- must not approve its own task;
-- must not merge Executor code.
+- must not approve/freeze its own task.
 
 ### Manager / Reviewer
 
-Purpose: own authority and independent review.
+Purpose: own task quality control, bounded authority and consolidated code review.
 
-The Manager:
+Default posture:
 
-- reviews Designer output against operator intent and repository reality;
-- rejects ambiguity, over-prescription, hidden scope or unverifiable acceptance criteria;
-- freezes/approves the task on behalf of the operator when authorized;
-- reviews Executor change previews under the project mutation policy;
-- reviews the actual Executor commit/diff/PR, not only the Executor's narrative;
-- checks CI/evidence and requests changes when receipts are insufficient;
-- controls or recommends merge according to repository permissions;
-- must not silently redefine the frozen contract after implementation merely to make the result pass.
+- reads exact repository/diff/receipts;
+- may freeze/approve task or mutation only when operator/project policy delegates that authority;
+- normally does not implement product code;
+- production mutation denied by default;
+- produces one consolidated finding set where possible;
+- may issue a bounded remediation window;
+- does not replace an Independent Judge when separate closure is required.
 
 ### Executor
 
 Purpose: implement the frozen task.
 
-The Executor:
+Default posture:
 
-- owns HOW inside the frozen boundaries;
-- performs implementation-design preflight when required;
-- may choose a smaller conforming alternative to advisory guidance when evidence justifies it;
-- requests amendments when the frozen boundary is insufficient;
-- may create commits/PRs if authorized;
-- may not self-freeze the task, self-approve material changes, or self-merge when independent review is required.
+- bounded source write access;
+- owns HOW inside frozen boundaries;
+- runs the real-enough changed path and produces receipts;
+- cannot self-freeze, self-approve, self-merge or self-close material work;
+- production mutation requires separate owner authority.
 
-## 2. Core separation
+### Independent Judge
+
+Purpose: perform read-only closure for HIGH-risk or policy-required work.
+
+Default posture:
+
+- source/diff: read-only;
+- CI/receipts: read-only;
+- production telemetry: read-only only when separately authorized;
+- product/source mutation: denied;
+- production mutation: denied;
+- provider/external side effects: denied.
+
+The Judge does not fix defects. It returns findings/closure status to the Manager/Operator.
+
+## 2. Core flow
 
 ```text
 Operator intent
     ↓
-Task Designer
+Designer — contract + advisory
     ↓
-DRAFT CONTRACT + ENGINEERING ADVISORY
+Manager — review / freeze / bounded authority
     ↓
-Manager / Reviewer
+Executor — implement / test / commit / PR
     ↓
-REVIEW / REVISE / FREEZE
+Cold/adversarial review when appropriate
     ↓
-Executor
+Manager — consolidated findings
     ↓
-IMPLEMENTATION DESIGN PREFLIGHT
+One bounded remediation round by default
     ↓
-APPROVAL when required
+Independent Judge — read-only closure when required
     ↓
-IMPLEMENT / TEST / COMMIT / PR
-    ↓
-Manager / Reviewer
-    ↓
-DIFF + COMMIT + CI + RECEIPT REVIEW
-    ↓
-MERGE DECISION
+Operator — business / production authority
 ```
 
 Remember:
 
 ```text
 Designer proposes.
-Manager freezes and reviews.
+Manager governs and reviews.
 Executor executes.
-Evidence decides closure.
+Judge independently assesses closure.
+Evidence limits the claim.
+Operator retains real authority.
 ```
 
-## 3. Recommended Git permissions when all roles have direct repository access
+## 3. Independence is more than a different model name
 
-Direct Git access is the strongest setup because both Designer and Manager can inspect exact source identity instead of relying on copied context.
+For HIGH-risk closure, assess four dimensions:
 
-Recommended authority:
+| Dimension | Meaning |
+|---|---|
+| implementation independence | Judge did not materially implement the candidate change |
+| context independence | Judge starts from task/source/diff/receipts, not only prior summaries |
+| authority independence | Executor cannot approve/merge/close itself |
+| evidence independence | Judge inspects underlying receipts/runtime evidence rather than repeating another conclusion |
 
-| Role | Read repository | Create task docs | Push implementation branch | Review PR/diff | Approve/merge |
+Model/vendor diversity is useful defense-in-depth, but:
+
+```text
+MULTI-MODEL AGREEMENT != INDEPENDENT BEHAVIORAL EVIDENCE
+```
+
+Three models can share the same wrong assumption or weak test oracle. Real-path tests, falsifying checks, runtime observations and recovery controls remain the primary defense.
+
+## 4. Recommended Git and runtime permissions
+
+| Role | Read source | Write source | Review PR/diff | Prod read | Prod mutation |
 |---|---:|---:|---:|---:|---:|
-| Designer | yes | proposal only if desired | no | read-only | no |
-| Executor | yes | current task receipts only | yes, bounded branch | yes, own diff for self-check | no self-merge |
-| Manager | yes | yes | normally no product implementation | yes | yes when operator-authorized |
+| Designer | yes | no | read-only if useful | normally no | no |
+| Executor | yes | bounded task branch | self-check only | owner approval | owner approval |
+| Manager | yes | normally no | yes | owner approval | normally no |
+| Independent Judge | yes | no | yes, read-only | owner approval | no |
 
-For real enforcement, use separate identities/tokens/apps/permission scopes where practical. Merely telling three sessions to act as different roles does not create a security boundary if all of them share one unrestricted credential.
+For real enforcement, use separate identities/tokens/apps/permission scopes where practical. Merely telling multiple sessions to behave differently does not create a security boundary if all of them share one unrestricted credential.
 
 ### Recommended repository controls
 
-For material work:
-
 ```text
 protected main/default branch
-→ Executor works on task branch
+→ isolated Executor branch
 → PR required
 → required CI/checks
-→ Manager reviews exact PR/commit
-→ merge only after required approval/evidence
+→ Manager reviews exact base/head
+→ bounded remediation if needed
+→ Independent Judge for HIGH when required
+→ authorized merge
 ```
 
-Avoid giving an autonomous Executor a credential that can bypass branch protection or force-push the protected branch.
+Avoid giving an autonomous Executor or Judge a credential that can bypass branch protection or mutate production.
 
-The Manager should compare the reviewed commit SHA with the final merge candidate. New commits after approval require another review according to project policy.
+## 5. Direct Git access is preferred
 
-## 4. If Designer and Manager both have direct Git access
+Direct Git access lets Designer/Manager/Judge independently inspect repository identity instead of relying on copied summaries.
 
-This is the preferred setup for medium/high-risk work.
-
-### Designer session
-
-Open the target repository in a separate session/model with read-only mutation policy. It may run non-mutating Git commands and repository searches.
-
-The Designer should record:
+Each review artifact should record:
 
 ```text
 repository
 branch
-HEAD
+base/head SHA
 relevant dirty-state caveat
 files/symbols inspected
+receipts inspected
 known unknowns
 ```
 
-Its task/advisory must be tied to that observed ref. If the repository moves materially before execution, the Manager or Executor revalidates affected assumptions.
+A new head after approval/review makes the old review stale for the new delta unless policy explicitly says otherwise.
 
-### Manager session
+## 6. If a role lacks Git access
 
-The Manager should independently read:
-
-```text
-frozen task
-engineering advisory
-actual source/diff
-Executor commit/PR
-raw test/CI receipts
-open gaps/amendments
-```
-
-For code review, prefer:
-
-```text
-frozen contract first
-→ advisory second
-→ actual diff/commit
-→ relevant surrounding source
-→ test/evidence outputs
-→ Executor summary last
-```
-
-This reduces narrative anchoring and makes it harder for an Executor to overstate completion.
-
-## 5. If only one role has direct Git access
-
-Use a bounded context packet for the role without repository access.
-
-Use the full packet contract in [CONTEXT_PACKET.md](CONTEXT_PACKET.md).
-
-The packet should contain only evidence needed to author/review the task:
+Use a bounded [Context Packet](CONTEXT_PACKET.md) containing only what the role needs:
 
 ```text
 repository identity / branch / HEAD
-relevant source excerpts or file list
-existing architecture/profile pointers
-current test/build entrypoints
-relevant diff if reviewing
+relevant source excerpts or diff
+current task/profile refs
+build/test entrypoints
+raw receipt/artifact refs
 known operational/security constraints
 unknowns
 ```
 
-Do not substitute a context packet for direct code review when the Manager is expected to approve a high-risk implementation. For HIGH-risk code review, direct source/diff access is strongly preferred.
+Do not substitute a copied narrative for direct code review when HIGH-risk closure is expected.
 
-## 5.1 Execution readiness is required
+## 7. Human should not be the message bus
 
-Direct Git access is not enough. For behavior-changing work, the Executor also needs an authorized environment capable of exercising the real changed path at the receipt strength required by the frozen claim.
-
-The Designer names the lowest adequate environment and real boundaries. The Manager rejects a task or returns `BLOCKED / MORE EVIDENCE REQUIRED` when the planned environment cannot establish the claim. A mock-only pass may close a unit/mock-boundary claim, but not an integration, persistence, migration, user-flow, deployment or production claim.
-
-Environment access remains separate from task and mutation authority. Neither the Designer nor Manager prompt grants production access.
-
-## 6. Initial prompt — Task Designer / Architect
-
-Copy and adapt:
+Use this operating rule:
 
 ```text
-You are the TASK DESIGNER / TASK ARCHITECT for this project.
-You are NOT the implementation Executor and you are NOT the approving Manager.
-
-Framework source: <path-to-agentic-flow-framework>
-Target repository: <path-or-repository>
-Operator intent: <request>
-Access mode: DIRECT_GIT_READ|CONTEXT_PACKET
-
-Read the relevant Agentic Flow task/advisory rules first:
-- schemas/ENGINEERING_ADVISORY.md
-- docs/agent/TASK_WORKFLOW_DRAFT_REVIEW_APPLY_VERIFY.md
-- relevant project profile / current architecture pointers
-
-Work read-only against product code and runtime state.
-Do not implement the task.
-Do not create product commits.
-Do not approve or freeze your own task.
-
-First inspect repository evidence. Do not invent facts. Mark unresolved facts UNKNOWN.
-
-Produce two clearly separated artifacts:
-
-A. FROZEN CONTRACT PROPOSAL
-- problem
-- objective
-- in scope
-- out of scope
-- behavioral invariants
-- affected engineering/production surfaces
-- observable acceptance criteria
-- required verification and minimum receipts
-- changed behavior, lowest adequate environment, and real boundaries required
-- explicit mock-only claim limitations
-- security/data/operational constraints
-- STOP/amendment conditions
-
-Do not prescribe implementation details unless they are genuine owner/frozen constraints.
-
-B. ENGINEERING APPROACH — ADVISORY, EVIDENCE-CONSTRAINED
-
-Use these categories:
-
-[INVESTIGATE]
-Questions/call graphs/state owners/failure paths/concurrency boundaries/test seams the Executor must understand before editing.
-
-[MUST]
-Only invariants already grounded in the frozen contract, owner constraints, or observed repository reality.
-
-[SHOULD]
-Small coherent implementation recommendations supported by repository evidence. Preserve Executor freedom to choose a smaller conforming alternative and require it to explain departures.
-
-[AVOID]
-Likely failure modes: duplicate state authorities, swallowed truth, unsafe concurrency, weak timing tests, test-only production branches, unrelated refactors, security/data leakage, or architecture drift.
-
-For each material [SHOULD], explain the repository evidence that supports it.
-Prefer established project patterns over introducing new abstractions.
-Do not confuse a technology suggestion with an invariant.
-
-Require the Executor, before first mutation, to produce an IMPLEMENTATION DESIGN PROPOSED receipt containing:
-- observed current design
-- chosen implementation shape
-- affected files/resources
-- why it is the smallest coherent solution
-- verification/failure-injection strategy
-- deviations from advisory with evidence
-- newly discovered STOP conditions
-
-End with:
-- repository ref used for design
-- assumptions
-- UNKNOWN facts
-- questions requiring Manager/Operator decision
-
-Return a proposal only. Authority remains with the Manager/Operator.
+Human transports authority.
+Repository transports engineering state.
 ```
 
-## 7. Initial prompt — Manager / Reviewer
+The operator should make real decisions:
 
-Copy and adapt:
+- approve/reject scope;
+- accept residual risk;
+- authorize external effects or production;
+- choose business priority;
+- override architecture/product constraints when appropriate.
+
+The operator should not have to permanently copy/paste:
 
 ```text
-You are the MANAGER / REVIEWER for this project.
-You are not the implementation Executor.
-Your job is authority, task quality control, mutation review, code review, and evidence-based closure.
-
-Framework source: <path-to-agentic-flow-framework>
-Target repository: <path-or-repository>
-Designer output: <task/advisory path or supplied content>
-Access mode: DIRECT_GIT|CONTEXT_PACKET
-
-Read the relevant Agentic Flow governance first:
-- ARCHITECTURE.md
-- schemas/ENGINEERING_ADVISORY.md
-- schemas/MUTATION_APPROVAL_POLICY.md
-- docs/agent/TASK_WORKFLOW_DRAFT_REVIEW_APPLY_VERIFY.md
-- current project profile
-
-If Git access is available, inspect the repository directly. Do not rely only on Designer or Executor summaries.
-
-PHASE 1 — TASK REVIEW
-Review the Designer proposal for:
-- ambiguous WHAT or success criteria;
-- hidden scope;
-- claims without adequate receipts;
-- implementation details incorrectly promoted to frozen requirements;
-- recommendations not grounded in repository evidence;
-- missing consumers, failure modes, data/security/production effects;
-- STOP conditions that are too weak;
-- tests that prove proxies rather than required behavior.
-- planned claims that cannot be exercised in any authorized environment;
-- mock-only evidence proposed for real-boundary claims.
-
-Return one of:
-PASS TO FREEZE
-PASS WITH REQUIRED CHANGES
-REVISE
-STOP / OWNER DECISION REQUIRED
-
-Only freeze/approve when authorized by the operator/project policy.
-Record the repository ref against which the task was reviewed.
-
-PHASE 2 — EXECUTION PREVIEW REVIEW
-When the Executor submits IMPLEMENTATION DESIGN PROPOSED / STRICT_PREVIEW:
-- compare it with the frozen contract and advisory;
-- verify affected files/resources remain bounded;
-- verify departures from advisory are justified by source evidence;
-- reject scope/authority expansion without amendment;
-- approve only the specific mutation batch when authorized.
-- confirm task, mutation and environment authority independently.
-
-PHASE 3 — CODE REVIEW
-When the Executor provides a commit or PR, inspect the exact diff/commit and relevant surrounding source.
-Review in this order:
-1. frozen task contract;
-2. engineering advisory;
-3. exact commit/PR diff;
-4. relevant source context;
-5. raw tests/CI/evidence;
-6. Executor narrative last.
-
-Check specifically for:
-- unmet acceptance criteria;
-- behavioral or public-contract drift;
-- duplicated state authorities;
-- unsafe exception/failure semantics;
-- connection/resource/lock leaks;
-- concurrency races;
-- security/data leakage;
-- weak or timing-dependent tests where deterministic seams are possible;
-- test gaming or test-only branches in production code;
-- unrelated cleanup/renames;
-- required checks skipped or replaced by weaker proxies;
-- mismatch between reviewed commit SHA and current PR head.
-
-Do not merge because the Executor says tests passed. Verify the receipts available to you.
-Do not rewrite the task after seeing the implementation merely to declare success.
-
-Return:
-APPROVE
-REQUEST CHANGES
-BLOCKED / MORE EVIDENCE REQUIRED
-AMENDMENT REQUIRED
-
-If approved, state the exact commit/PR ref reviewed and any residual risk/checks not executed.
-Do not self-approve code that you materially implemented yourself when independent review is required.
+Executor report
+→ Manager findings
+→ Executor fix report
+→ Judge packet
 ```
 
-## 8. Executor prompt addition
+Instead, persist compact task/review/receipt artifacts that each role can read directly.
 
-The Executor does not need the full operator guide. Its task should point to `schemas/ENGINEERING_ADVISORY.md` and, when required, `docs/agent/IMPLEMENTATION_DESIGN_PREFLIGHT.md`.
+A durable checkpoint should include current task, exact head, findings, remediation status, receipts/gaps and next required authority decision. Once durable, a fresh session can continue without replaying old conversation history.
 
-The Executor should understand:
+## 8. Model/cost routing
+
+Agentic Flow is vendor-neutral. A practical project may route by capability and cost:
 
 ```text
-Frozen Contract = authority
-Engineering Advisory = guidance
-Repository Evidence = reality
-Manager/Operator = approval authority
+Executor          → task-adequate / cost-efficient
+Manager           → higher reasoning when justified
+Independent Judge → high reasoning + separate context
 ```
 
-## 9. Manager code review of Executor commits
+Model diversity for the Judge is preferred when it adds useful defense-in-depth, but it is not proof by itself and should never replace real evidence.
 
-Yes: when both roles can access Git, Manager review of the Executor's real commit/PR is strongly recommended.
+Cost pressure must not weaken the acceptance/evidence bar.
 
-A good review receipt is bounded:
+## 9. Remediation target
 
-```yaml
-reviewed_repository_ref: <repo>
-reviewed_base: <base SHA>
-reviewed_head: <Executor commit SHA / PR head SHA>
-decision: APPROVE|REQUEST_CHANGES|BLOCKED|AMENDMENT_REQUIRED
-contract_findings: []
-advisory_departures_reviewed: []
-checks_observed: []
-checks_not_observed: []
-residual_risk: []
+For MEDIUM/HIGH work, prefer:
+
+```text
+implementation
+→ cold/adversarial review
+→ Manager consolidated findings
+→ ONE bounded remediation
+→ re-review
+→ Judge if required
 ```
 
-If the Executor pushes additional commits after approval, the old review is stale for the new head unless the repository platform/policy explicitly preserves a valid review under that change.
+Default `max_iterations` should normally be `1`. A second iteration requires a **new material finding**, remains inside the configured maximum and cannot silently expand scope.
 
-## 10. Anti-patterns
+A new provider, migration, public contract, security boundary, production action, dependency, architecture strategy or out-of-boundary file invalidates the remediation window.
+
+## 10. Production separation
+
+Production mutation is its own boundary.
+
+- Designer: no production mutation.
+- Manager: normally review/authorize only within delegated policy, not apply.
+- Independent Judge: read-only, no production mutation.
+- Executor: may mutate production only with explicit owner/project authority.
+
+Before every production mutation require exact target/change identity, health/success signals, abort condition, rollback or forward recovery, data constraints, recovery owner and post-change verification.
+
+Judge PASS is not production authority.
+
+## 11. Copy-ready prompts
+
+Use:
+
+- `prompts/operator/TASK_DESIGNER.md`
+- `prompts/operator/MANAGER_REVIEWER.md`
+- `prompts/operator/INDEPENDENT_JUDGE.md`
+
+The Executor should normally start at `docs/agent/START_HERE.md` and the current frozen task/profile rather than loading this whole operator guide.
+
+## 12. Anti-patterns
 
 Avoid:
 
 ```text
-same Executor writes the task, implements it, approves it, and declares closure
-Designer writes hundreds of lines of implementation pseudocode before inspecting source
-Manager reviews only the Executor summary and never opens the diff
-all roles share unrestricted production credentials
-Manager silently changes acceptance criteria after implementation
-Designer recommendation is treated as a frozen MUST without owner authority
-Executor is blocked from choosing a simpler conforming design
+same Executor writes task, implements, approves and closes
+three models say PASS, therefore integration is assumed proven
+Judge reads only Manager summary and never inspects raw receipts/diff
+Judge has unrestricted production mutation credentials
+Manager fixes code and then claims independent closure
+human permanently copy/pastes engineering state between agents
+second remediation round happens only because first review was shallow
+model cost optimization lowers evidence requirements
+all roles share one unrestricted production credential
 ```
 
-Separation is useful only when authority and evidence remain genuinely separated.
+Separation is useful only when authority, context and evidence remain genuinely separated.

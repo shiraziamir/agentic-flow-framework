@@ -32,7 +32,9 @@ agent_mutation_policy:
   require_rollback_for_material_changes: true
   remediation_windows:
     enabled: true
-    default_max_iterations: 2
+    default_max_iterations: 1
+    maximum_without_escalation: 2
+    extra_iteration_requires_new_material_finding: true
     manager_review_required_before_closure: true
 
 workspace_safety:
@@ -48,6 +50,45 @@ review_policy:
   pre_manager_adversarial_review: REQUIRED_FOR_MEDIUM_HIGH
   consolidated_manager_findings: true
   independent_closure: REQUIRED_FOR_HIGH
+  independence:
+    implementation: REQUIRED_FOR_INDEPENDENT_CLOSURE
+    context: REQUIRED_FOR_INDEPENDENT_CLOSURE
+    authority: REQUIRED_FOR_MATERIAL_WORK
+    evidence: REQUIRED_FOR_INDEPENDENT_CLOSURE
+    model_diversity: PREFERRED
+  multi_model_agreement_upgrades_evidence: false
+
+role_access:
+  designer:
+    source: READ_ONLY
+    production_read: DENIED
+    production_mutation: DENIED
+  executor:
+    source: BOUNDED_WRITE
+    production_read: OWNER_APPROVAL
+    production_mutation: OWNER_APPROVAL
+  manager:
+    source: READ_REVIEW
+    production_read: OWNER_APPROVAL
+    production_mutation: DENIED
+  independent_judge:
+    source: READ_ONLY
+    production_read: OWNER_APPROVAL
+    production_mutation: DENIED
+
+model_routing:
+  vendor_neutral: true
+  executor: TASK_ADEQUATE_COST_EFFICIENT
+  manager: HIGH_REASONING_WHEN_JUSTIFIED
+  independent_judge: HIGH_REASONING_SEPARATE_CONTEXT
+  never_reduce_acceptance_or_evidence_for_cost: true
+
+state_handoff:
+  repository_transports_engineering_state: true
+  human_transports_authority: true
+  require_current_task_ref: true
+  require_current_repository_ref: true
+  session_reset_after_durable_checkpoint: ALLOWED
 
 flow_metrics:
   enabled: true

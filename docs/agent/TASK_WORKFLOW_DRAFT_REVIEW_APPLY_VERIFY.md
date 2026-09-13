@@ -22,15 +22,13 @@ risk_level: LOW|MEDIUM|HIGH
 work_kind: IMPLEMENTATION|REMEDIATION|EVIDENCE_ONLY
 ```
 
-Legacy task contracts may still use `governance: HIGH|MEDIUM|EVIDENCE_ONLY`; interpret `EVIDENCE_ONLY` as work kind rather than as a risk level when migrating.
-
 Typical workflow:
 
 | Risk | Default workflow |
 |---|---|
 | LOW | execute → focused test → compact self-review → commit/report |
-| MEDIUM | short preflight → execute → cold code review → bounded remediation → Manager review |
-| HIGH | frozen contract → engineering/failure preflight → explicit initial authorization → execute → adversarial review → Manager consolidated review → remediation window → final/independent closure when required |
+| MEDIUM | short preflight → execute → cold code review → one bounded remediation → Manager review |
+| HIGH | frozen contract → engineering/failure preflight → explicit initial authorization → execute → adversarial review → Manager consolidated review → one remediation round by default → read-only Independent Judge when required |
 
 ## 2. Draft the observable contract
 
@@ -145,11 +143,62 @@ If findings are bounded and same-task, the Manager can authorize a `remediation_
 
 ## 7. Controlled remediation
 
-Inside a valid remediation window, the Executor may perform up to the authorized number of fix/test/self-review iterations for the listed findings and allowed files/resources.
+The normal target is **one** consolidated remediation round:
+
+```text
+implementation
+→ cold/adversarial review
+→ Manager consolidated findings
+→ ONE bounded remediation
+→ final review
+```
+
+Inside a valid remediation window, the Executor may fix/test/self-review the listed findings and allowed files/resources without new human approval for each local edit.
+
+A second remediation iteration is exceptional. It requires a **new material finding**, must remain within the configured `maximum_without_escalation`, and must not be used merely because the first review was incomplete.
+
+```text
+round 2 without new material finding
+→ STOP / MANAGER REVIEW
+```
 
 A materially new scope, provider, migration, public contract, security boundary, production action, dependency or architecture strategy invalidates the window and triggers STOP + amendment/re-authorization.
 
-## 8. Verify claims, not activity
+## 8. Independent closure is not model voting
+
+For HIGH-risk work when project policy requires independent closure, use a separate read-only Judge after Manager review/remediation.
+
+The Judge should inspect:
+
+```text
+frozen task/profile
+→ exact source/diff/head
+→ raw tests/CI/receipts
+→ gaps and omitted checks
+→ authorized runtime/production-read evidence when relevant
+→ prior reviewer narratives last
+```
+
+Independent closure should separate four dimensions where risk justifies it:
+
+```text
+IMPLEMENTATION — Judge did not materially implement the change
+CONTEXT        — Judge does not rely only on Executor/Manager summaries
+AUTHORITY      — Executor cannot self-approve/merge/close
+EVIDENCE       — Judge inspects raw receipts rather than repeating a conclusion
+```
+
+Model diversity can improve coverage, but:
+
+```text
+MULTI-MODEL AGREEMENT != INDEPENDENT BEHAVIORAL EVIDENCE
+```
+
+A second model does not upgrade a mock/unit receipt into integration, deployment or production proof.
+
+The Independent Judge is read-only by default. It may recommend closure, request evidence or fail the review; it does not mutate product code or production.
+
+## 9. Verify claims, not activity
 
 Map each DoD/claim to current receipts.
 
@@ -174,11 +223,12 @@ HTTP 200            != persistence proven
 CI green            != deployed artifact proven
 backup configured   != restore proven
 reviewer PASS       != missing runtime evidence
+three model PASSes  != stronger receipt class
 ```
 
 Report exact states: `PASS | FAIL | PARTIAL | SKIPPED | UNVERIFIED` and truth classes `OBSERVED | DERIVED | INFERRED | UNKNOWN | CONTRADICTED`.
 
-## 9. Compact receipts, raw evidence elsewhere
+## 10. Compact receipts, raw evidence elsewhere
 
 Evidence richness must not require verbose task reports.
 
@@ -196,22 +246,67 @@ does_not_prove: production provider behavior
 
 Store raw logs/artifacts separately when useful. The report should index evidence, not repeat hundreds of lines of it.
 
-## 10. Closure and checkpoint
+## 11. Artifact-driven handoff
 
-For HIGH risk, independent/cold closure remains recommended when required by project policy. Review in this order:
+The human/operator should not be a permanent copy/paste message bus.
+
+Durable task state should make these recoverable from the repository:
 
 ```text
-frozen task/profile
-→ approved boundaries/remediation window
-→ exact diff/source
-→ raw receipts/gaps
-→ falsifying checks
-→ executor narrative last
+current task / frozen contract
+base + head identity
+current review decision/findings
+active remediation window
+receipts / gaps / omitted checks
+closure state
+next required authority decision
 ```
 
-Preserve a compact checkpoint: repository/environment identity, task state, verified claims, omitted checks, open gaps/risks and next action.
+Use this principle:
 
-## 11. Measure Flow friction
+```text
+Human transports authority.
+Repository transports engineering state.
+```
+
+A new session should inspect current repository/task state before continuing. Do not require replay of the old chat when the durable checkpoint is sufficient.
+
+## 12. Model/cost routing
+
+Vendor names are adapters, not framework policy. Projects may route roles by capability and cost:
+
+```text
+Executor          → task-adequate / cost-efficient
+Manager           → higher reasoning when the task justifies it
+Independent Judge → high reasoning + separate context; diversity preferred when useful
+```
+
+Cost optimization never permits weaker acceptance criteria or evidence.
+
+## 13. Production authority
+
+Production remains a separate boundary. Before every production mutation, follow `production/DELIVERY.md` and project policy: exact target/change identity, health signals, abort condition, rollback or forward recovery, data constraints, recovery owner and post-change verification.
+
+The Independent Judge remains read-only by default. A Judge PASS is not production mutation authority.
+
+## 14. Closure and checkpoint
+
+Preserve a compact durable checkpoint:
+
+```text
+repository/environment identity
+current task + exact head
+verified claims
+open findings/gaps
+omitted checks
+remediation state
+independent review state when required
+next action / next authority decision
+```
+
+Once the checkpoint is durable, the working session may be replaced/reset. Session-reset commands themselves are vendor-specific.
+
+## 15. Measure Flow friction
 
 For material tasks, record cheap process counters when available:
 

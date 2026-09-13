@@ -26,9 +26,13 @@ Reader docs, research, historical reports and generated exports are explanatory/
 
 > Durable project memory; disposable working context.
 
+> Human transports authority; repository transports engineering state.
+
 > A claim may be no broader than the current receipt that directly establishes it.
 
-> Mock evidence proves only the modeled boundary; it does not inherit real integration, persistence, migration, deployment or production semantics.
+> Mock-only evidence cannot silently inherit integration, deployment or production semantics.
+
+> Multi-model agreement is review coverage, not independent behavioral evidence.
 
 > Quality requirements stay fixed; process ceremony adapts to risk.
 
@@ -85,7 +89,7 @@ A target project should normally maintain:
 
 Use `schemas/PROJECT_PROFILE_CONFIG.md` and `templates/PROJECT_PROFILE.example.yaml`.
 
-The profile defines intended testing, execution readiness, mutation modes, environment permissions, review policy, workspace safety, external effects and production expectations. It is not proof that those expectations are satisfied.
+The profile defines intended testing, execution readiness, mutation modes, environment permissions, review policy, role access, model routing, workspace safety, external effects and production expectations. It is not proof that those expectations are satisfied.
 
 Temporary exceptions use `schemas/TEMPORARY_OVERRIDE.md`; they are explicit, owned, expiring and do not silently rewrite the baseline.
 
@@ -107,7 +111,7 @@ LOW
 execute → focused test → compact self-review → report
 
 MEDIUM
-short preflight → execute → cold review → bounded remediation → Manager review
+short preflight → execute → cold review → one bounded remediation → Manager review
 
 HIGH
 frozen contract
@@ -116,13 +120,82 @@ frozen contract
 → bounded execution
 → adversarial review
 → Manager consolidated review
-→ controlled remediation window when safe
-→ final / independent closure when required
+→ one controlled remediation round by default
+→ read-only Independent Judge when required
+→ Operator production/business decision
 ```
 
 HIGH risk means stronger boundaries/evidence, not human approval for every tiny correction.
 
-## 7. Production mutation invariant
+A second remediation iteration is exceptional rather than routine: it requires a new material finding, must remain inside the configured maximum and cannot silently expand scope.
+
+## 7. Independent closure
+
+A different model name is not enough to establish independence. Independent review should separate as many of these dimensions as the risk requires:
+
+```text
+IMPLEMENTATION INDEPENDENCE
+reviewer/judge did not materially implement the change
+
+CONTEXT INDEPENDENCE
+review starts from task + source/diff + receipts, not only the Executor narrative
+
+AUTHORITY INDEPENDENCE
+Executor cannot approve/merge/close its own material work
+
+EVIDENCE INDEPENDENCE
+reviewer/judge inspects raw receipts/runtime evidence rather than repeating another model's conclusion
+```
+
+Model/provider diversity is useful defense-in-depth, especially for HIGH-risk judgment, but it is **not** an evidence-class upgrade by itself.
+
+```text
+Sonnet PASS + Opus PASS + another model PASS
+!=
+real integration / deployment / production proof
+```
+
+The Independent Judge is read-only by default. It may inspect source, exact diff, CI/receipts and authorized production telemetry, but it must not mutate product code, rewrite the task to manufacture a pass, or mutate production. Production mutation remains separately authorized by the Operator/project policy.
+
+## 8. Artifact-driven handoff and session reset
+
+Humans should not act as permanent message buses between agents.
+
+Durable handoff state should be recoverable from repository artifacts such as:
+
+```text
+current task / contract
+repository + base/head identity
+review findings
+active remediation window
+receipts / gaps
+closure state
+next required authority decision
+```
+
+A fresh agent session should be able to inspect those artifacts and continue without replaying the previous conversation.
+
+```text
+checkpoint durable state
+→ session may be cleared/replaced
+→ new session re-reads current repo/task state
+```
+
+Session-reset commands are vendor-specific and belong in adapters/guides, not in canonical policy.
+
+## 9. Capability/cost routing
+
+The framework does not prescribe model brands. Projects may route roles by capability and cost, for example:
+
+```text
+Executor          → task-adequate, cost-efficient model/harness
+Manager           → stronger reasoning/review capability when justified
+Independent Judge → high-reasoning, separate context; model diversity preferred where useful
+```
+
+Cost routing must never lower the evidence or acceptance bar. If the cheaper role cannot establish the required claim, escalate capability or leave the claim unverified.
+
+## 10. Production mutation invariant
 
 Production mutation is a separate authority boundary. Enabling production mode does not mean the Executor may improvise recovery after something goes wrong.
 
@@ -139,7 +212,7 @@ recovery authority/owner
 post-change verification
 ```
 
-If rollback is technically possible, it must be documented and executable before mutation. If rollback is unsafe or impossible (for example an irreversible data transformation), the change must instead define an explicit forward-recovery path, backup/checkpoint strategy, blast-radius controls and STOP conditions.
+If rollback is technically possible, it must be documented and executable before mutation. If rollback is unsafe or impossible, the change must instead define an explicit forward-recovery path, backup/checkpoint strategy, blast-radius controls and STOP conditions.
 
 ```text
 missing rollback/recovery readiness
@@ -148,15 +221,16 @@ missing rollback/recovery readiness
 
 A successful deployment command does not erase the recovery requirement. See `production/DELIVERY.md`.
 
-## 8. Canonical practical routes
+## 11. Canonical practical routes
 
 - Task lifecycle: `docs/agent/TASK_WORKFLOW_DRAFT_REVIEW_APPLY_VERIFY.md`
 - Mutation/remediation authority: `schemas/MUTATION_APPROVAL_POLICY.md`
 - Project operating baseline: `schemas/PROJECT_PROFILE_CONFIG.md`
+- Role setup and permissions: `docs/operator/DESIGNER_MANAGER_SETUP.md`
+- Independent Judge prompt: `prompts/operator/INDEPENDENT_JUDGE.md`
 - Test environments: `production/AGENT_ENVIRONMENTS.md`
 - Delivery/rollback: `production/DELIVERY.md`
 - Verification semantics: `verification/00_INDEX.md`
 - Production profiles: `production/00_INDEX.md`
-- Operator role prompts: `prompts/operator/`
 
 Detailed rules belong in those triggered layers rather than being duplicated here.

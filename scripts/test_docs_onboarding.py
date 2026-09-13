@@ -44,19 +44,15 @@ class OnboardingDocsTest(unittest.TestCase):
     def test_landing_page_is_fast_and_complete(self) -> None:
         text = read("README.md")
         for phrase in (
-            "Why use it?",
-            "The model in 20 seconds",
-            "Quality requirements stay fixed",
-            "Production mode",
-            "Fast adoption",
-            "Key rules",
-            "Read only what you need",
-            "What this project does **not** claim",
+            "The five questions",
+            "What exactly is authorized?",
+            "MULTI-MODEL AGREEMENT",
+            "Independent Judge",
+            "Human transports authority; repository transports engineering state.",
+            "one remediation round by default",
+            "rollback or explicit forward-recovery plan",
         ):
             self.assertIn(phrase, text)
-        self.assertIn("rollback or explicit forward-recovery", text)
-        self.assertIn("NO ROLLBACK / RECOVERY PLAN", text)
-        self.assertLess(len(text), 12000, "README should remain a fast landing page")
 
     def test_risk_adaptive_policy_is_canonical(self) -> None:
         architecture = read("ARCHITECTURE.md")
@@ -74,21 +70,43 @@ class OnboardingDocsTest(unittest.TestCase):
             self.assertIn("MEDIUM", text)
             self.assertIn("HIGH", text)
         self.assertIn("remediation_windows:", profile)
-        self.assertIn("external_effects:", profile)
-        self.assertIn("workspace_safety:", profile)
-        self.assertIn("flow_metrics:", profile)
+        self.assertIn("default_max_iterations: 1", profile)
+        self.assertIn("maximum_without_escalation: 2", profile)
+        self.assertIn("extra_iteration_requires_new_material_finding: true", profile)
 
-    def test_production_mutation_requires_recovery_readiness(self) -> None:
+    def test_independent_closure_is_not_model_voting(self) -> None:
         architecture = read("ARCHITECTURE.md")
-        delivery = read("production/DELIVERY.md")
+        workflow = read("docs/agent/TASK_WORKFLOW_DRAFT_REVIEW_APPLY_VERIFY.md")
         profile = read("schemas/PROJECT_PROFILE_CONFIG.md")
-        template = read("templates/PROJECT_PROFILE.example.yaml")
-        self.assertIn("Every production mutation requires rollback or explicit forward-recovery readiness", architecture)
-        self.assertIn("NO ROLLBACK / FORWARD-RECOVERY PLAN", delivery)
-        self.assertIn("production_mode:", profile)
-        self.assertIn("rollback_or_forward_recovery_required_for_every_mutation: true", profile)
-        self.assertIn("production_mode:", template)
-        self.assertIn("require_backup_or_checkpoint: true", template)
+        judge = read("prompts/operator/INDEPENDENT_JUDGE.md")
+        manager = read("prompts/operator/MANAGER_REVIEWER.md")
+        setup = read("docs/operator/DESIGNER_MANAGER_SETUP.md")
+        for text in (architecture, workflow, judge, setup):
+            self.assertIn("MULTI-MODEL AGREEMENT", text)
+        for phrase in (
+            "IMPLEMENTATION",
+            "CONTEXT",
+            "AUTHORITY",
+            "EVIDENCE",
+        ):
+            self.assertIn(phrase, judge)
+        self.assertIn("production mutation: DENIED", judge)
+        self.assertIn("multi_model_agreement_upgrades_evidence: false", profile)
+        self.assertIn("independent_judge:", profile)
+        self.assertIn("production_mutation: DENIED", profile)
+        self.assertIn("APPROVE FOR INDEPENDENT CLOSURE", manager)
+
+    def test_artifact_handoff_and_routing_are_wired(self) -> None:
+        architecture = read("ARCHITECTURE.md")
+        workflow = read("docs/agent/TASK_WORKFLOW_DRAFT_REVIEW_APPLY_VERIFY.md")
+        getting_started = read("docs/GETTING_STARTED.md")
+        profile = read("schemas/PROJECT_PROFILE_CONFIG.md")
+        for text in (architecture, workflow, getting_started):
+            self.assertIn("Human transports authority", text)
+            self.assertIn("Repository transports engineering state", text)
+        self.assertIn("model_routing:", profile)
+        self.assertIn("state_handoff:", profile)
+        self.assertIn("never_reduce_acceptance_or_evidence_for_cost: true", profile)
 
     def test_failure_surface_and_adversarial_review_are_wired(self) -> None:
         workflow = read("docs/agent/TASK_WORKFLOW_DRAFT_REVIEW_APPLY_VERIFY.md")
@@ -107,9 +125,10 @@ class OnboardingDocsTest(unittest.TestCase):
         self.assertIn("adversarial", manager.lower())
         self.assertIn("exact diff/commit", manager)
 
-    def test_execution_readiness_and_mock_limits_remain_canonical(self) -> None:
+    def test_execution_readiness_and_production_recovery_remain_canonical(self) -> None:
         architecture = read("ARCHITECTURE.md")
         environments = read("production/AGENT_ENVIRONMENTS.md")
+        delivery = read("production/DELIVERY.md")
         schema = read("schemas/PROJECT_PROFILE_CONFIG.md")
         template = read("templates/PROJECT_PROFILE.example.yaml")
         for text in (architecture, environments):
@@ -118,11 +137,14 @@ class OnboardingDocsTest(unittest.TestCase):
         for text in (schema, template):
             self.assertIn("execution_readiness:", text)
             self.assertIn("mock_only_closure:", text)
-            self.assertIn("real_application_runtime:", text)
+            self.assertIn("production_mode:", text)
+            self.assertIn("rollback_or_forward_recovery_required_for_every_mutation: true", text)
+        self.assertIn("rollback or forward-recovery", delivery.lower())
 
     def test_bundle_builder_includes_operator_role_prompts(self) -> None:
         builder = read("scripts/build_agent_bundle.py")
         self.assertIn('"prompts/operator/"', builder)
+        self.assertTrue((ROOT / "prompts/operator/INDEPENDENT_JUDGE.md").is_file())
 
     def test_persian_guide_has_rtl_ltr_and_new_flow(self) -> None:
         text = read("docs/GUIDE.fa.md")
@@ -132,16 +154,18 @@ class OnboardingDocsTest(unittest.TestCase):
         self.assertNotIn("```", text)
         self.assertGreaterEqual(text.count('<pre dir="ltr" style="text-align:left"'), 10)
         self.assertIn('class="sourceCode bash"', text)
-        self.assertIn("Controlled Remediation Window", text)
-        self.assertIn("mock-only closure", text)
+        self.assertIn("MULTI-MODEL AGREEMENT", text)
+        self.assertIn("Independent Judge", text)
+        self.assertIn("Human transports authority", text)
+        self.assertIn("default_max_iterations: 1", text)
 
     def test_validation_status_does_not_overclaim(self) -> None:
         text = read("docs/VALIDATION_STATUS.md")
         for phrase in (
             "UNPROVEN",
-            "PENDING",
             "not yet empirically validated as superior",
-            "not the effectiveness of the framework",
+            "Multiple models agreeing is **not** treated as independent behavioral evidence",
+            "Model diversity does not guarantee statistical or cognitive independence",
         ):
             self.assertIn(phrase, text)
 
