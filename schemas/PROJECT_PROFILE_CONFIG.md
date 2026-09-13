@@ -1,6 +1,6 @@
 # Project Profile Config Schema
 
-**Schema version:** 1.6  
+**Schema version:** 1.7  
 **Updated:** 2026-09-13
 
 A target project should keep one small durable profile, usually `.agentic/PROJECT_PROFILE.yaml`. It declares the intended operating bar; current receipts establish reality.
@@ -11,6 +11,32 @@ Recommended shape:
 profile_version: 1
 project_id: <stable-id>
 updated_at: <RFC3339>
+
+project_mode:
+  mode: VIBE_PROTOTYPE|PRODUCT_BUILD|MAINTENANCE
+  vibe_prototype:
+    sacrificial_by_default: true|false
+    production_baseline: false
+    sensitive_or_production_data: DENIED|OWNER_APPROVAL|PROJECT_DEFINED
+    promotion_requires_rebaseline: true|false
+  product_build:
+    require_product_brief: true|false
+    require_quality_or_eval_contract: true|false
+    require_architecture_discovery: true|false
+    require_walking_skeleton: true|false
+    require_architecture_checkpoint: true|false
+
+swamp_guard:
+  enabled: true|false
+  check_at_material_checkpoints: true|false
+  states: [CLEAR, WATCH, ALERT, STOP_REBASELINE]
+  repeated_remediation_alert_after: <integer>
+  require_eval_before_ai_rag_tuning: true|false
+  require_vertical_slice_before_broad_feature_growth: true|false
+  require_decision_for_major_architecture_change: true|false
+  require_rebaseline_for_vibe_to_product: true|false
+  stop_on_unresolved_sensitive_data_boundary: true|false
+  stop_on_source_of_truth_ambiguity: true|false
 
 codebase_scale: SMALL|MEDIUM|LARGE
 readiness_tier: BASIC|STANDARD|HIGH_ASSURANCE
@@ -66,6 +92,10 @@ review_policy:
   multi_model_agreement_upgrades_evidence: false
 
 role_access:
+  project_architect:
+    source: READ_ONLY|PROJECT_DEFINED
+    product_mutation: DENIED
+    production_mutation: DENIED
   designer:
     source: READ_ONLY|PROJECT_DEFINED
     production_read: OWNER_APPROVAL|DENIED
@@ -85,6 +115,7 @@ role_access:
 
 model_routing:
   vendor_neutral: true
+  project_architect: HIGH_REASONING_WHEN_JUSTIFIED|PROJECT_DEFINED
   executor: TASK_ADEQUATE_COST_EFFICIENT|PROJECT_DEFINED
   manager: HIGH_REASONING_WHEN_JUSTIFIED|PROJECT_DEFINED
   independent_judge: HIGH_REASONING_SEPARATE_CONTEXT|PROJECT_DEFINED
@@ -104,8 +135,8 @@ flow_metrics:
 agent_environment_policy:
   local: AUTO_ALLOWED|OWNER_APPROVAL|DENIED
   ephemeral_test: AUTO_ALLOWED|OWNER_APPROVAL|DENIED
-  shared_test: AUTO_ALLOWED|OWNER_APPROVAL|DENIED
-  staging: AUTO_ALLOWED|OWNER_APPROVAL|DENIED
+  shared_test: OWNER_APPROVAL|AUTO_ALLOWED|DENIED
+  staging: OWNER_APPROVAL|AUTO_ALLOWED|DENIED
   production_read: AUTO_ALLOWED|OWNER_APPROVAL|DENIED
   production_mutation: OWNER_APPROVAL|DENIED
 
@@ -145,6 +176,9 @@ architecture_policy:
   pattern_mode: AGENT_PROPOSES_OWNER_MAY_OVERRIDE|OWNER_SPECIFIES|AGENT_AUTONOMOUS_WITHIN_GUARDRAILS
   require_rationale_for_new_abstraction: true
   avoid_pattern_without_boundary_or_failure_mode: true
+  freeze_hard_to_change_invariants_not_easy_choices: true
+  architecture_decisions:
+    require_context_decision_consequences_revisit_trigger: true|false
 
 temporary_overrides:
   directory: .agentic/overrides
@@ -157,6 +191,32 @@ temporary_overrides:
 ## Recommended balanced default
 
 ```yaml
+project_mode:
+  mode: PRODUCT_BUILD
+  vibe_prototype:
+    sacrificial_by_default: true
+    production_baseline: false
+    sensitive_or_production_data: DENIED
+    promotion_requires_rebaseline: true
+  product_build:
+    require_product_brief: true
+    require_quality_or_eval_contract: true
+    require_architecture_discovery: true
+    require_walking_skeleton: true
+    require_architecture_checkpoint: true
+
+swamp_guard:
+  enabled: true
+  check_at_material_checkpoints: true
+  states: [CLEAR, WATCH, ALERT, STOP_REBASELINE]
+  repeated_remediation_alert_after: 2
+  require_eval_before_ai_rag_tuning: true
+  require_vertical_slice_before_broad_feature_growth: true
+  require_decision_for_major_architecture_change: true
+  require_rebaseline_for_vibe_to_product: true
+  stop_on_unresolved_sensitive_data_boundary: true
+  stop_on_source_of_truth_ambiguity: true
+
 agent_mutation_policy:
   mode: STRICT_PREVIEW
   group_related_changes_into_batches: true
@@ -169,15 +229,6 @@ agent_mutation_policy:
     maximum_without_escalation: 2
     extra_iteration_requires_new_material_finding: true
     manager_review_required_before_closure: true
-
-workspace_safety:
-  preserve_unknown_dirty_work: true
-  destructive_git_requires_explicit_authority: true
-
-external_effects:
-  real_provider_calls: EXPLICIT_AUTHORITY_REQUIRED
-  paid_api_calls: EXPLICIT_AUTHORITY_REQUIRED
-  message_or_notification_sends: EXPLICIT_AUTHORITY_REQUIRED
 
 review_policy:
   pre_manager_adversarial_review: REQUIRED_FOR_MEDIUM_HIGH
@@ -192,9 +243,9 @@ review_policy:
   multi_model_agreement_upgrades_evidence: false
 
 role_access:
-  designer:
+  project_architect:
     source: READ_ONLY
-    production_read: DENIED
+    product_mutation: DENIED
     production_mutation: DENIED
   executor:
     source: BOUNDED_WRITE
@@ -211,21 +262,11 @@ role_access:
 
 model_routing:
   vendor_neutral: true
+  project_architect: HIGH_REASONING_WHEN_JUSTIFIED
   executor: TASK_ADEQUATE_COST_EFFICIENT
   manager: HIGH_REASONING_WHEN_JUSTIFIED
   independent_judge: HIGH_REASONING_SEPARATE_CONTEXT
   never_reduce_acceptance_or_evidence_for_cost: true
-
-state_handoff:
-  repository_transports_engineering_state: true
-  human_transports_authority: true
-  require_current_task_ref: true
-  require_current_repository_ref: true
-  session_reset_after_durable_checkpoint: ALLOWED
-
-flow_metrics:
-  enabled: true
-  collect_material_tasks_only: true
 
 production_mode:
   enabled: false
@@ -238,7 +279,13 @@ production_mode:
     require_blast_radius_control: true
 ```
 
-This keeps first mutation approval explicit, makes one consolidated remediation round the normal case, and keeps independent closure read-only by default.
+## Vibe-mode rule
+
+`VIBE_PROTOTYPE` is a learning mode, not a production-readiness level. It may intentionally trade architecture completeness for speed, but it may not silently become the production baseline. Promotion to `PRODUCT_BUILD` requires product/architecture re-baselining and explicit classification of prototype code as reusable, review-required, rewrite, or discard.
+
+## Swamp-Guard rule
+
+The Swamp Guard is evaluated at material checkpoints. `WATCH` and `ALERT` surface early compounding complexity. `STOP_REBASELINE` stops broad continuation when architecture drift, unresolved data/security boundaries, source-of-truth ambiguity, eval-free AI/RAG tuning, or prototype-to-production drift would make local patches more expensive than restoring a coherent baseline.
 
 ## Independent-review rule
 
