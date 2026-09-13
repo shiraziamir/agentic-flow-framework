@@ -41,19 +41,22 @@ class OnboardingDocsTest(unittest.TestCase):
                     continue
                 self.assertTrue((source.parent / clean).resolve().exists(), f"{rel}: {target}")
 
-    def test_landing_page_has_small_newcomer_route(self) -> None:
+    def test_landing_page_is_fast_and_complete(self) -> None:
         text = read("README.md")
         for phrase in (
-            "Why this repository exists",
-            "Start here — do not read the whole repository",
+            "Why use it?",
+            "The model in 20 seconds",
             "Quality requirements stay fixed",
-            "Controlled remediation",
-            "Required execution environment",
-            "Workspace and external-effect safety",
-            "Compact evidence",
+            "Production mode",
+            "Fast adoption",
+            "Key rules",
+            "Read only what you need",
+            "What this project does **not** claim",
         ):
             self.assertIn(phrase, text)
-        self.assertIn("four human-facing files", text)
+        self.assertIn("rollback or explicit forward-recovery", text)
+        self.assertIn("NO ROLLBACK / RECOVERY PLAN", text)
+        self.assertLess(len(text), 12000, "README should remain a fast landing page")
 
     def test_risk_adaptive_policy_is_canonical(self) -> None:
         architecture = read("ARCHITECTURE.md")
@@ -74,6 +77,18 @@ class OnboardingDocsTest(unittest.TestCase):
         self.assertIn("external_effects:", profile)
         self.assertIn("workspace_safety:", profile)
         self.assertIn("flow_metrics:", profile)
+
+    def test_production_mutation_requires_recovery_readiness(self) -> None:
+        architecture = read("ARCHITECTURE.md")
+        delivery = read("production/DELIVERY.md")
+        profile = read("schemas/PROJECT_PROFILE_CONFIG.md")
+        template = read("templates/PROJECT_PROFILE.example.yaml")
+        self.assertIn("Every production mutation requires rollback or explicit forward-recovery readiness", architecture)
+        self.assertIn("NO ROLLBACK / FORWARD-RECOVERY PLAN", delivery)
+        self.assertIn("production_mode:", profile)
+        self.assertIn("rollback_or_forward_recovery_required_for_every_mutation: true", profile)
+        self.assertIn("production_mode:", template)
+        self.assertIn("require_backup_or_checkpoint: true", template)
 
     def test_failure_surface_and_adversarial_review_are_wired(self) -> None:
         workflow = read("docs/agent/TASK_WORKFLOW_DRAFT_REVIEW_APPLY_VERIFY.md")
