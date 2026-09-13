@@ -83,6 +83,16 @@ agent_environment_policy:
   production_read: OWNER_APPROVAL
   production_mutation: OWNER_APPROVAL
 
+production_mode:
+  enabled: false
+  rollback_or_forward_recovery_required_for_every_mutation: true
+  require_abort_condition: true
+  require_post_change_verification: true
+  irreversible_change:
+    require_forward_recovery_plan: true
+    require_backup_or_checkpoint: true
+    require_blast_radius_control: true
+
 architecture_policy:
   pattern_mode: AGENT_PROPOSES_OWNER_MAY_OVERRIDE
   require_rationale_for_new_abstraction: true
