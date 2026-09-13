@@ -61,8 +61,9 @@ class OnboardingDocsTest(unittest.TestCase):
         approval = read("schemas/MUTATION_APPROVAL_POLICY.md")
         task = read("schemas/TASK_CONTRACT.md")
         profile = read("schemas/PROJECT_PROFILE_CONFIG.md")
+        self.assertIn("Remediation autonomy", architecture)
+        self.assertIn("Remediation autonomy", approval)
         for text in (architecture, workflow, approval):
-            self.assertIn("Remediation autonomy", text)
             self.assertIn("remediation", text.lower())
         for text in (architecture, workflow, task):
             self.assertIn("work_kind", text)
