@@ -5,13 +5,6 @@ updated_at: 2026-09-13T00:00:00Z
 codebase_scale: MEDIUM
 readiness_tier: STANDARD
 
-surfaces:
-  frontend: false
-  backend: true
-  shared: true
-  data: true
-  infra: true
-
 quality:
   test_strategy: TEST_FIRST_FOR_MATERIAL_CLAIMS
   mutation_or_path_proof:
@@ -31,6 +24,35 @@ execution_readiness:
   mock_only_closure: DENIED_FOR_INTEGRATION_OR_STRONGER
   when_unavailable: BLOCK_AND_REQUEST_ENVIRONMENT
 
+agent_mutation_policy:
+  mode: STRICT_PREVIEW
+  group_related_changes_into_batches: true
+  require_current_vs_proposed_state: true
+  require_planned_checks_before_apply: true
+  require_rollback_for_material_changes: true
+  remediation_windows:
+    enabled: true
+    default_max_iterations: 2
+    manager_review_required_before_closure: true
+
+workspace_safety:
+  preserve_unknown_dirty_work: true
+  destructive_git_requires_explicit_authority: true
+
+external_effects:
+  real_provider_calls: EXPLICIT_AUTHORITY_REQUIRED
+  paid_api_calls: EXPLICIT_AUTHORITY_REQUIRED
+  message_or_notification_sends: EXPLICIT_AUTHORITY_REQUIRED
+
+review_policy:
+  pre_manager_adversarial_review: REQUIRED_FOR_MEDIUM_HIGH
+  consolidated_manager_findings: true
+  independent_closure: REQUIRED_FOR_HIGH
+
+flow_metrics:
+  enabled: true
+  collect_material_tasks_only: true
+
 operations:
   metrics: REQUIRED
   logs: REQUIRED
@@ -45,13 +67,6 @@ security:
   dependency_review: REQUIRED
   secret_scanning: REQUIRED
   least_privilege: REQUIRED
-
-agent_mutation_policy:
-  mode: STRICT_PREVIEW
-  group_related_changes_into_batches: true
-  require_current_vs_proposed_state: true
-  require_planned_checks_before_apply: true
-  require_rollback_for_material_changes: true
 
 usage_reporting:
   quota_snapshot: OPTIONAL
