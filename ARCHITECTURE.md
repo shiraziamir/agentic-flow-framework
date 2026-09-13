@@ -28,6 +28,8 @@ Reader docs, research, historical reports and generated exports are explanatory/
 
 > A claim may be no broader than the current receipt that directly establishes it.
 
+> Mock evidence proves only the modeled boundary; it does not inherit real integration, persistence, migration, deployment or production semantics.
+
 > Quality requirements stay fixed; process ceremony adapts to risk.
 
 > An Executor that can edit a behavior but cannot exercise the real changed path is not execution-ready for that claim.
