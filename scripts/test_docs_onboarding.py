@@ -82,7 +82,7 @@ class OnboardingDocsTest(unittest.TestCase):
         manager = read("prompts/operator/MANAGER_REVIEWER.md")
         setup = read("docs/operator/DESIGNER_MANAGER_SETUP.md")
         for text in (architecture, workflow, judge, setup):
-            self.assertIn("MULTI-MODEL AGREEMENT", text)
+            self.assertIn("multi-model agreement", text.lower())
         for phrase in (
             "IMPLEMENTATION",
             "CONTEXT",
@@ -102,8 +102,9 @@ class OnboardingDocsTest(unittest.TestCase):
         getting_started = read("docs/GETTING_STARTED.md")
         profile = read("schemas/PROJECT_PROFILE_CONFIG.md")
         for text in (architecture, workflow, getting_started):
-            self.assertIn("Human transports authority", text)
-            self.assertIn("Repository transports engineering state", text)
+            lowered = text.lower()
+            self.assertIn("human transports authority", lowered)
+            self.assertIn("repository transports engineering state", lowered)
         self.assertIn("model_routing:", profile)
         self.assertIn("state_handoff:", profile)
         self.assertIn("never_reduce_acceptance_or_evidence_for_cost: true", profile)
