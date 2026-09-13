@@ -1,6 +1,6 @@
 # Agentic Flow Framework
 
-**Version:** 1.9 · **Vendor-neutral** · **Repository-first** · **Risk-adaptive**  
+**Framework version:** 1.9 · **Vendor-neutral** · **Repository-first** · **Risk-adaptive**  
 **فارسی:** [راهنمای جامع فارسی](docs/GUIDE.fa.md)
 
 > **Use coding agents fast without letting “looks done” become project truth.**
