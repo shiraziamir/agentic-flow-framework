@@ -1,9 +1,9 @@
 # Task Contract Schema
 
-**Schema version:** 1.4  
-**Updated:** 2026-09-09T17:22:00+03:30
+**Schema version:** 1.5  
+**Updated:** 2026-09-13
 
-A portable material task contract should contain:
+A portable material task contract should contain the following fields. Keep it concise; the contract defines authority, success and evidence boundaries, not every implementation detail.
 
 ```yaml
 task_id: <stable-id>
@@ -11,39 +11,37 @@ version: <integer or semver>
 created_at: <RFC3339>
 updated_at: <RFC3339>
 status: DRAFT|FROZEN|AUTHORIZED|IN_PROGRESS|EVIDENCE_READY|CLOSED|BLOCKED
-governance: HIGH|MEDIUM|EVIDENCE_ONLY
+
+risk:
+  level: LOW|MEDIUM|HIGH
+
+work_kind:
+  mode: IMPLEMENTATION|REMEDIATION|EVIDENCE_ONLY
+
+# legacy compatibility only; prefer risk + work_kind above
+governance: HIGH|MEDIUM|EVIDENCE_ONLY|null
 
 goal: <observable owner outcome>
 symptom: <what is actually observed>
-hypotheses:
-  - <theory, explicitly not fact>
+hypotheses: []
 
 classification:
-  ref: <schemas/CHANGE_CLASSIFICATION.md-conformant artifact/ref>
+  ref: <schemas/CHANGE_CLASSIFICATION.md artifact/ref>
   primary_surface: FRONTEND|BACKEND|SHARED|DATA|INFRA|CI_CD|TOOLING|DOCS_EVIDENCE
   change_kind: <kind>
-  cross_cutting_flags: [<flags>]
-  operational_flags: [<flags>]
+  cross_cutting_flags: []
+  operational_flags: []
   runtime_mutation_scope: NONE|LOCAL|TESTENV|PRODUCTION
-  affected_consumers: [<consumer>]
-  verification_profiles: [GENERAL, <selected profiles>]
-
-production:
-  profile_ref: <schemas/PRODUCTION_PROFILE.md artifact/ref|NONE>
-  readiness_tier: BASIC|STANDARD|HIGH_ASSURANCE|NOT_APPLICABLE|UNKNOWN
-  profiles_affected: [DELIVERY, OBSERVABILITY, DATA_DURABILITY, TROUBLESHOOTING, SECURITY_FIRST, AI_LOG_ANALYSIS, RESILIENCE_CHAOS, CODE_ARCHITECTURE]
-  known_gap_refs: []
-  creates_or_changes_operational_gap: true|false
+  affected_consumers: []
+  verification_profiles: [GENERAL]
 
 scope:
-  edit: [<paths/modules>]
-  reference: [<paths/modules>]
-  exclude: [<paths/modules>]
+  edit: []
+  reference: []
+  exclude: []
 
-baseline:
-  - <check/behavior known before mutation>
-uncertainties:
-  - <fact to resolve before mutation>
+baseline: []
+uncertainties: []
 
 definition_of_done:
   - id: D1
@@ -55,16 +53,10 @@ planned_claims:
     claim_kind: <schemas/CLAIM_RECEIPT.md kind>
     minimum_receipt: <required verification rung>
 
-required_evidence:
-  - <receipt, with ref/artifact/environment identity where relevant>
-important_checks_not_required:
-  - check: <material check intentionally outside task>
-    reason: <why>
-
-stop_conditions:
-  - <condition that forbids improvisation>
-escalation_conditions:
-  - <condition requiring stronger judgment, higher governance, reclassification or readiness review>
+required_evidence: []
+important_checks_not_required: []
+stop_conditions: []
+escalation_conditions: []
 
 authorization:
   apply_authorization_ref: <ref|null>
@@ -72,6 +64,16 @@ authorization:
   consumed_on_attempt: true|false|null
   attempts_used: <integer|null>
   rerun_requires_new_authorization: true|false|null
+
+remediation_window:
+  enabled: true|false
+  review_ref: <ref|null>
+  finding_ids: []
+  max_iterations: <integer|null>
+  iterations_used: <integer>
+  allowed_files_or_resources: []
+  allowed_change_classes: []
+  owner_review_required_before_closure: true|false
 
 measurement_qualification:
   required: true|false
@@ -82,20 +84,38 @@ measurement_qualification:
   changed_behavior_exercised: true|false|NOT_APPLICABLE
   lowest_adequate_environment: LOCAL_REAL|EPHEMERAL_TEST|SHARED_TEST|STAGING|PRODUCTION_READ|PROJECT_DEFINED
   real_boundaries_required: []
-  mock_only_closure_limit: <narrow claims mocks may establish; DENIED for integration-or-stronger by default>
+  mock_only_closure_limit: <narrow claims only; DENIED for integration-or-stronger by default>
   environment_unavailable_action: BLOCK_AND_REQUEST_ENVIRONMENT|REPORT_UNVERIFIED
   writable_path_isolation_required: true|false
   baseline_ref: <ref|null>
   forbidden_preconditioning: []
   invalid_evidence_disposition: VALID_FOR_CLAIM|PARTIAL_FOR_CLAIM|VOID_FOR_CLAIM|HISTORICAL_ONLY|UNKNOWN|null
 
-skills:
-  selected: [<canonical-skill-id>]
-routing:
-  expected_roles:
-    discovery: T0|T1|T2|T3
-    execution: T0|T1|T2|T3
-    closure: T0|T1|T2|T3
+external_effects:
+  real_provider_calls: DENIED|EXPLICIT_AUTHORITY_REQUIRED|AUTHORIZED_BY_REF
+  authority_ref: <ref|null>
+
+workspace_safety:
+  preserve_unknown_dirty_work: true
+  destructive_git_requires_explicit_authority: true
+
+supervision:
+  draft_review_required: true|false
+  pre_manager_adversarial_review_required: true|false
+  closure_review_required: true|false
+  independent_closure_required: true|false
+  blind_spot_audit_required: true|false
+
+flow_metrics:
+  first_pass_review_passed: true|false|unknown
+  remediation_iterations: <integer>
+  manager_review_rounds: <integer>
+  authorization_round_trips: <integer>
+  unplanned_scope_escalations: <integer>
+  environment_blocked: true|false
+  agent_safety_incidents: <integer>
+  task_cycle_time: <optional duration|null>
+
 budget:
   soft_input_tokens: <integer|null>
   hard_input_tokens: <integer|null>
@@ -103,52 +123,63 @@ budget:
   hard_cost_usd: <number|null>
   warn_on_waste: true
   quality_may_be_reduced_for_budget: false
-supervision:
-  draft_review_required: true|false
-  closure_review_required: true|false
-  independent_closure_required: true|false
-  blind_spot_audit_required: true|false
+
 content_hash: <hash/ref when frozen|null>
 ```
 
+## Risk and work kind are different
+
+Do not mix impact with activity type.
+
+```text
+risk.level  = consequence/uncertainty of the change
+work_kind   = implementation vs remediation vs evidence-only work
+```
+
+Examples:
+
+```text
+HIGH + IMPLEMENTATION   persistence redesign
+HIGH + REMEDIATION      correcting findings in a sensitive transaction path
+LOW  + EVIDENCE_ONLY    fixing a broken documentation receipt
+```
+
+Legacy `governance` remains readable for migration but new profiles/tasks should prefer the two-dimensional form.
+
 ## Draft-review rule
 
-A material DRAFT is reviewed **before APPLY** for:
+A material draft is reviewed before APPLY for:
 
-1. correct governance and engineering surface/risk classification;
-2. observable goal/DoD rather than implementation-only wording;
-3. affected consumers/scope and STOP boundaries;
-4. planned claim → minimum receipt mapping;
-5. surface-specific verification/cross-cutting annexes;
-6. production-readiness impacts for any production-capable project;
-7. build/deploy/observability/security/data/recovery implications triggered by the change;
-8. meaningful negative/error/security/persistence/live paths where applicable;
-9. important checks intentionally omitted;
-10. whether a separate/cold closure reviewer is required;
-11. whether the planned evidence run itself needs runtime/environment/baseline qualification;
-12. whether bounded execution authority is single-use and what consumes it.
+1. risk/work-kind classification;
+2. observable goal/DoD;
+3. scope and STOP boundaries;
+4. claim → minimum receipt mapping;
+5. triggered failure surfaces;
+6. environment/real-boundary readiness;
+7. security/data/operations implications;
+8. intentionally omitted checks;
+9. need for cold/adversarial and independent review;
+10. bounded authority and external-side-effect permissions.
 
-The draft reviewer may return `ACCEPT_DRAFT`, `AMEND_DRAFT`, `NEEDS_EVIDENCE`, or `REJECT_DRAFT`. Acceptance freezes the contract; it does not itself authorize APPLY unless the active governance explicitly combines those gates.
+Acceptance freezes the contract; it does not itself authorize APPLY unless project policy explicitly combines those gates.
 
-## Evidence-environment recovery rule
+## Risk-adaptive defaults
 
-Use `schemas/EVIDENCE_RECOVERY.md` when the evidence run may depend on a deployed/runtime artifact, shared/test environment, mutable baseline, provider budget/state, or host-side writable paths.
+- `LOW`: focused execution/test/review; avoid high-risk ceremony.
+- `MEDIUM`: short preflight, bounded execution, cold review, same-task remediation where possible.
+- `HIGH`: frozen contract, explicit initial authorization, broad failure-surface review, exact evidence, Manager review and independent closure when required.
 
-If a run executes against the wrong/stale runtime or otherwise cannot measure the intended claim:
+For same-task findings, prefer a controlled remediation window over restarting the lifecycle for each local fix. Remediation autonomy never authorizes scope expansion.
 
-- preserve the run as historical evidence;
-- classify it explicitly, including `VOID_FOR_CLAIM` where appropriate;
-- do not overwrite it with a rerun;
-- classify whether the defect belongs to implementation, evidence environment, baseline, authorization, or a mixture;
-- treat a finite/single-run authorization as consumed on attempt unless the durable authorization says otherwise;
-- obtain new authorization for a rerun or new rebuild/restart/mutation scope when required;
-- qualify the repaired measuring environment before spending provider calls or running the fresh live evidence sequence.
+## Evidence and environment recovery
 
-Fixing the measuring instrument can remain a same-task recovery when product design/source does not need to change. Do not silently widen a verification recovery into implementation scope.
+Use `schemas/EVIDENCE_RECOVERY.md` when evidence depends on deployed/runtime identity, shared/test environment, mutable baseline, provider budget/state or host-side writable paths.
 
-## Capability-maturity wording
+Wrong/stale runtime evidence is preserved as historical and may be `VOID_FOR_CLAIM`; it is not silently replaced. An environment repair does not authorize unrelated product-source changes.
 
-Do not collapse these into one completion claim:
+## Capability wording
+
+Do not collapse:
 
 ```text
 DESIGNED
@@ -160,23 +191,10 @@ DEPLOYED_ARTIFACT_PROVEN
 PRODUCTION_BEHAVIOR_PROVEN
 ```
 
-A task may legitimately close with some higher states unproven when they are outside its frozen contract. Report the boundary explicitly.
+A task can close with higher states unproven when they are outside the frozen contract. Report the boundary.
 
-## Production-readiness rule
+## Flow metrics are process telemetry
 
-For a project intended to run in production:
+`flow_metrics` are used to improve the harness, not score individuals. Their purpose is to separate genuine quality cost from agent defects, governance friction and environment friction.
 
-- use a current `schemas/PRODUCTION_PROFILE.md` or report the missing profile as `UNKNOWN/UNVERIFIED` rather than assuming readiness;
-- a change that introduces a new database, queue, external provider, privileged path, public endpoint, deployment mechanism, telemetry path or durable data can create new production requirements;
-- material missing/partial/unverified capabilities become `schemas/OPERATIONAL_GAP.md` artifacts with owner/risk/closure requirements;
-- production readiness is not a per-task boolean: closure states what this task verified/changed and what gaps remain.
-
-## Governance defaults
-
-- `HIGH`: architecture/persistence/production/security/public-contract or otherwise high-impact work. Full draft → review → freeze → separate apply → independent closure.
-- `MEDIUM`: bounded same-task correction. Prefer an approved amendment rather than restarting the whole lifecycle.
-- `EVIDENCE_ONLY`: docs/evidence/test-contract correction with no new runtime authority. Durable owner-approved amendment + hash/ref is normally sufficient.
-
-If APPLY discovers a new material primary/consumer surface, operational risk or readiness requirement not represented by the frozen classification/verification/production plan, STOP and amend rather than silently widening scope or weakening evidence.
-
-Budget fields are optional. They make spend/context visible; they never authorize lowering the acceptance bar. Unknown usage stays unknown.
+Budget and quota information are also telemetry. They never authorize lowering the acceptance bar.
