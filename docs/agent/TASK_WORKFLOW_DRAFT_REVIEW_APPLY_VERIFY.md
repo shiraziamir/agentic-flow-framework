@@ -1,142 +1,157 @@
-# Task Workflow — DRAFT → REVIEW → APPLY → VERIFY
+# Task Workflow — Risk-Adaptive Draft → Execute → Verify
 
-**Agent-facing practical guide.** Load this when a material task is being planned, changed, implemented, or closed.
+**Agent-facing canonical workflow for material tasks.**
 
-## Purpose
+## Goal
 
-Separate task design from implementation so scope, acceptance and verification are clear before mutation. The goal is not bureaucracy; the goal is to stop accidental scope growth and unsupported closure claims.
-
-Mutation authority is controlled separately by `schemas/MUTATION_APPROVAL_POLICY.md`. A project may require a compact current-vs-proposed preview before every mutation batch even after the task itself has been reviewed.
-
-## 1. DRAFT
-
-Use:
+Keep the quality bar stable while changing ceremony according to risk.
 
 ```text
-prompts/workflow/DRAFT_TASK.md
+risk up   → stronger boundaries, broader preflight, stronger evidence/review
+risk down → fewer gates, smaller reports, faster execution
 ```
 
-Create or update the durable task contract before material APPLY.
+Do not confuse rigor with repeated permission prompts.
 
-The draft should answer:
+## 1. Classify the work
+
+Prefer two independent dimensions:
+
+```yaml
+risk_level: LOW|MEDIUM|HIGH
+work_kind: IMPLEMENTATION|REMEDIATION|EVIDENCE_ONLY
+```
+
+Legacy task contracts may still use `governance: HIGH|MEDIUM|EVIDENCE_ONLY`; interpret `EVIDENCE_ONLY` as work kind rather than as a risk level when migrating.
+
+Typical workflow:
+
+| Risk | Default workflow |
+|---|---|
+| LOW | execute → focused test → compact self-review → commit/report |
+| MEDIUM | short preflight → execute → cold code review → bounded remediation → Manager review |
+| HIGH | frozen contract → engineering/failure preflight → explicit initial authorization → execute → adversarial review → Manager consolidated review → remediation window → final/independent closure when required |
+
+## 2. Draft the observable contract
+
+For material work, define before mutation:
+
+- goal and symptom;
+- in-scope / out-of-scope surfaces;
+- observable Definition of Done;
+- planned claims and minimum receipts;
+- required environment and real boundaries;
+- important checks intentionally omitted;
+- STOP/escalation conditions.
+
+The contract defines **WHAT + SUCCESS**, not an implementation script.
+
+## 3. Engineering preflight
+
+For MEDIUM/HIGH or advisory-required tasks, inspect the current system before editing.
+
+At minimum answer:
 
 ```text
-What exactly is changing?
-What is explicitly out of scope?
-Which code / data / infra / CI / production surfaces are affected?
-What observable Definition of Done must be true?
-What claims do we expect to make at closure?
-What minimum receipt proves each claim?
-Which tests and environments are required?
-Which checks are intentionally omitted?
-What causes STOP / amendment / escalation?
+What owns the affected state?
+What is the real call/data path?
+Where are exceptions/failures swallowed or propagated?
+What are the authoritative vs derived states?
+What is the smallest coherent change?
+What test seam and real boundary prove it?
 ```
 
-Do not start with implementation details alone. A good draft defines the observable result and evidence boundary.
+### Failure-surface matrix
 
-## 2. REVIEW
+Use a triggered matrix instead of blindly applying every failure case to every task.
 
-Use:
+Baseline questions for material behavioral work:
 
 ```text
-prompts/workflow/REVIEW_DRAFT.md
+NORMAL PATH
+BOUNDARY / INVALID INPUT
+DEPENDENCY OR I/O FAILURE
+CLEANUP / ROLLBACK FAILURE
+OBSERVABILITY / HEALTH PROPAGATION
+TEST-ORACLE FALSIFICATION
 ```
 
-Review the draft before high-risk mutation. The reviewer checks for missing consumers, environments, data effects, security/authorization changes, deployment/rollback implications, observability/recovery impact, weak acceptance criteria and claims that cannot be verified with the planned environment.
-
-For HIGH-risk work, the reviewer should be independent/cold where practical and remain read-only during review.
-
-Possible outcomes:
+Add only when applicable:
 
 ```text
-PASS
-PASS WITH REQUIRED CHANGES
-REVISE
-STOP / NEEDS OWNER DECISION
+THREAD CONCURRENCY
+PROCESS CONCURRENCY
+CRASH / RESTART
+DURABILITY / PARTIAL WRITE
+PERMISSION / IDENTITY
+EXTERNAL PROVIDER
+MIGRATION / SCHEMA
+CACHE / CONSISTENCY
 ```
 
-## 3. FREEZE / APPLY AUTHORIZATION
+For each applicable row, state the expected invariant, failure signal and planned evidence. This is intended to reduce serial remediation rounds by finding the failure surface before coding.
 
-For HIGH-risk work, freeze the reviewed task and obtain separate authorization before mutation.
+Under `STRICT_PREVIEW`, include the implementation preflight in the first change preview and wait for `APPROVE` / `APPLY`.
 
-For ordinary bounded work, project policy may allow the reviewed task itself to authorize APPLY.
+## 4. Execute in an adequate environment
 
-Never treat a request for production access, a model recommendation or a reviewer suggestion as authority by itself.
+Implement only inside the frozen/approved boundaries.
 
-## 4. CHANGE PREVIEW / MUTATION APPROVAL
+Use the lowest authorized environment that can directly exercise the changed behavior. Mock-only evidence may close only unit/model claims; it cannot silently inherit persistence, migration, integration, user-flow, deployment or production semantics.
 
-Check `.agentic/PROJECT_PROFILE.yaml` and `schemas/MUTATION_APPROVAL_POLICY.md`.
+During execution:
 
-Under `STRICT_PREVIEW`, before each bounded mutation batch report:
+- run focused checks early;
+- preserve existing project conventions unless explicitly changed;
+- do not weaken tests to make output green;
+- do not silently broaden scope;
+- protect dirty/uncommitted work;
+- do not make real provider/external calls unless explicitly authorized.
+
+## 5. Pre-Manager adversarial review
+
+Before spending Manager attention on MEDIUM/HIGH work, use a cold/read-only reviewer or separate review context where practical.
+
+Review the actual diff and relevant surrounding source for:
+
+- incorrect assumptions and missing consumers;
+- duplicated state authorities;
+- swallowed truth / broad exception handling;
+- cleanup/rollback leaks;
+- concurrency or crash gaps;
+- false-positive tests or proxy assertions;
+- missing propagation to health/observability;
+- unsafe Git/workspace operations;
+- unauthorized provider/external effects;
+- scope drift.
+
+The Executor may fix obvious findings inside existing authority when the change remains within the frozen scope and mutation policy.
+
+## 6. Manager consolidated review
+
+The Manager reviews the exact commit/PR head, not only the Executor summary.
+
+Prefer returning one consolidated finding set:
 
 ```text
-CURRENT STATE      what is true now
-PROPOSED STATE     what will be true after the batch
-WHY                reason for the change
-WILL CHANGE        files/resources expected to mutate
-IMPACT             behavior/API/security/data/operations impact
-VERIFY             planned tests/checks
-ROLLBACK/RECOVERY  when material
-OUT OF SCOPE       explicit boundary
+R1 ...
+R2 ...
+R3 ...
 ```
 
-Then stop and wait for explicit `APPROVE` / `APPLY`.
+rather than repeatedly opening a new authorization cycle for every local defect.
 
-Approval is limited to the previewed batch. Group tightly related edits into one batch when they share one purpose and verification boundary; do not create line-by-line approval spam.
+If findings are bounded and same-task, the Manager can authorize a `remediation_window` per `schemas/MUTATION_APPROVAL_POLICY.md`.
 
-Task approval and mutation approval are distinct:
+## 7. Controlled remediation
 
-```text
-TASK AUTHORIZATION
-= this work is allowed conceptually
+Inside a valid remediation window, the Executor may perform up to the authorized number of fix/test/self-review iterations for the listed findings and allowed files/resources.
 
-MUTATION APPROVAL
-= this specific bounded change is allowed now
-```
+A materially new scope, provider, migration, public contract, security boundary, production action, dependency or architecture strategy invalidates the window and triggers STOP + amendment/re-authorization.
 
-Neither one automatically grants production/destructive authority.
+## 8. Verify claims, not activity
 
-## 5. APPLY
-
-Use:
-
-```text
-prompts/workflow/APPLY_TASK.md
-```
-
-Implement only inside the approved task scope **and**, where required, the approved mutation preview.
-
-During APPLY:
-
-- keep exact repository/task/environment identity visible;
-- run focused checks as soon as useful;
-- preserve existing project conventions unless the task explicitly changes them;
-- use the lowest environment that can prove the required behavior;
-- do not weaken a test, mock a real boundary, disable a control or broaden scope merely to get green output;
-- record new material facts that affect verification or production posture.
-
-If implementation discovers a materially new database, provider, public interface, production environment, security boundary, migration, durable-data requirement, operational dependency, architecture strategy, or a materially different file/resource set than the approved preview:
-
-```text
-STOP
-→ record evidence / newly discovered current state
-→ amend / reclassify task if needed
-→ present revised change preview
-→ review / authorize as required
-→ continue only inside the new boundary
-```
-
-## 6. VERIFY + REPORT
-
-Use:
-
-```text
-prompts/workflow/VERIFY_AND_REPORT.md
-```
-
-Map every material DoD item and planned claim to current receipts.
-
-Verification strength should match the claim:
+Map each DoD/claim to current receipts.
 
 ```text
 IDENTITY
@@ -158,107 +173,67 @@ unit test PASS      != end-user flow proven
 HTTP 200            != persistence proven
 CI green            != deployed artifact proven
 backup configured   != restore proven
-scanner green       != secure
-reviewer PASS       != missing runtime receipt
+reviewer PASS       != missing runtime evidence
 ```
 
-After mutation, report the actual delta against the approved preview. If something planned was not changed, or something changed unexpectedly, state it explicitly.
+Report exact states: `PASS | FAIL | PARTIAL | SKIPPED | UNVERIFIED` and truth classes `OBSERVED | DERIVED | INFERRED | UNKNOWN | CONTRADICTED`.
 
-Report exact reality:
+## 9. Compact receipts, raw evidence elsewhere
+
+Evidence richness must not require verbose task reports.
+
+Preferred receipt:
+
+```yaml
+claim: C4
+environment: ephemeral-postgres-17
+command: pytest tests/integration/test_commit_uncertainty.py
+result: PASS 7/7
+artifact_ref: artifacts/T125/integration-03.log
+proves: commit uncertainty classification
+does_not_prove: production provider behavior
+```
+
+Store raw logs/artifacts separately when useful. The report should index evidence, not repeat hundreds of lines of it.
+
+## 10. Closure and checkpoint
+
+For HIGH risk, independent/cold closure remains recommended when required by project policy. Review in this order:
 
 ```text
-PASS
-FAIL
-PARTIAL
-SKIPPED
-UNVERIFIED
-```
-
-Truth classes remain:
-
-```text
-OBSERVED
-DERIVED
-INFERRED
-UNKNOWN
-CONTRADICTED
-```
-
-Do not hide skipped or unavailable checks.
-
-### Optional usage/quota footer
-
-After the engineering status is complete, check the project's `usage_reporting` policy. If `quota_snapshot` is enabled/optional **and trustworthy telemetry is available**, append one compact footer using `schemas/USAGE_QUOTA_SNAPSHOT.md` and `docs/agent/USAGE_AWARE_TASK_REPORTING.md`.
-
-For Claude Code:
-
-```bash
-python3 <framework>/scripts/claude_usage_snapshot.py
-```
-
-Example:
-
-```text
-Usage
-- session: 15% used / 85% remaining
-- weekly: 23% used / 77% remaining
-- source: CLAUDE_STATUSLINE_RATE_LIMITS
-- freshness: current
-```
-
-If telemetry is missing:
-
-```text
-Usage
-- session: unavailable
-- weekly: unavailable
-- source: UNAVAILABLE
-```
-
-Quota reporting happens **after** claim/evidence reporting so it cannot be confused with task proof. Low quota can trigger an operator notification/checkpoint recommendation, but never silently reduces required verification.
-
-## 7. INDEPENDENT CLOSURE
-
-Use independent/cold closure when project risk, task classification or the evidence surface requires it.
-
-The reviewer should prefer this order:
-
-```text
-frozen task / project profile
-→ approved mutation preview(s)
-→ actual diff / source
-→ raw receipts / gaps
+frozen task/profile
+→ approved boundaries/remediation window
+→ exact diff/source
+→ raw receipts/gaps
 → falsifying checks
 → executor narrative last
 ```
 
-Reviewer judgment can challenge evidence but cannot replace a missing behavioral receipt.
+Preserve a compact checkpoint: repository/environment identity, task state, verified claims, omitted checks, open gaps/risks and next action.
 
-## 8. CHECKPOINT
+## 11. Measure Flow friction
 
-At closure, preserve a compact durable checkpoint:
+For material tasks, record cheap process counters when available:
 
-- repository/artifact/environment identity;
-- task status;
-- approved mutation batch(es) when applicable;
-- verified claims and receipts;
-- checks not run;
-- open gaps / overrides;
-- unresolved risks;
-- usage quota snapshot when configured and observable;
-- next action if any.
-
-Do not store chain-of-thought or full transcripts as project state.
-
-## Small tasks
-
-Do not force the full HIGH-risk ceremony onto trivial edits. The invariant is proportional control:
-
-```text
-risk up   → stronger draft/review/authorization/evidence
-risk down → lighter workflow
+```yaml
+flow_metrics:
+  first_pass_review_passed: true|false|unknown
+  remediation_iterations: <integer>
+  manager_review_rounds: <integer>
+  authorization_round_trips: <integer>
+  unplanned_scope_escalations: <integer>
+  environment_blocked: true|false
+  agent_safety_incidents: <integer>
+  task_cycle_time: <optional duration>
 ```
 
-However, if the project explicitly selects `STRICT_PREVIEW`, even a small mutation still gets a short preview and approval. Keep that preview compact and batch related edits.
+These are process-improvement signals, not developer-performance scores. Use them to distinguish:
 
-Likewise, quota reporting defaults to **material task/checkpoint** cadence; do not spend extra tool calls/notifications on every trivial read or tiny interaction unless the operator explicitly asks for per-turn reporting.
+```text
+quality cost
+vs agent defect cost
+vs governance friction
+vs environment friction
+```
+
+The objective is fewer unnecessary round-trips without weakening the acceptance bar.
