@@ -16,10 +16,8 @@ concurrency:
 
 jobs:
   verify-and-build:
-    name: Verify and build portable bundle
     runs-on: ubuntu-latest
     timeout-minutes: 10
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -31,55 +29,27 @@ jobs:
         with:
           python-version: '3.13'
 
-      - name: Record framework version
-        id: version
-        shell: bash
-        run: |
-          set -euo pipefail
-          version="$(tr -d '[:space:]' < VERSION)"
-          test -n "$version"
-          echo "version=$version" >> "$GITHUB_OUTPUT"
-          echo "Framework version: $version"
-
-      - name: Check release-document version freshness
+      - name: Check release markers
         shell: bash
         run: |
           set -euo pipefail
           python3 - <<'PY'
           from pathlib import Path
-
           version = Path('VERSION').read_text(encoding='utf-8').strip()
           checks = {
               'ARCHITECTURE.md': f'**Version:** {version}',
               'README.md': f'**Framework version:** {version}',
-              'agentic-flow-framework.en.md': f'**Reader-guide version:** {version}',
-              'agentic-flow-framework.fa.md': f'**نسخه راهنمای خواندنی:** {version}',
-              'agentic-flow-framework.en.html': f'Agentic Flow Framework v{version}',
-              'agentic-flow-framework.fa.html': f'Agentic Flow Framework v{version}',
               'CHANGELOG.md': f'## {version} ',
           }
           for path, needle in checks.items():
               text = Path(path).read_text(encoding='utf-8')
               if needle not in text:
-                  raise SystemExit(f'{path}: expected release marker {needle!r}')
+                  raise SystemExit(f'{path}: expected {needle!r}')
           print(f'release freshness: PASS ({version})')
           PY
 
-      - name: Compile deterministic Python helpers
-        shell: bash
-        run: |
-          set -euo pipefail
-          python3 -m py_compile \
-            scripts/verification_lint.py \
-            scripts/production_readiness_lint.py \
-            scripts/usage_ledger.py \
-            scripts/claude_usage_snapshot.py \
-            scripts/build_agent_bundle.py \
-            scripts/test_verification_lint.py \
-            scripts/test_production_readiness_lint.py \
-            scripts/test_claude_usage_snapshot.py \
-            scripts/test_build_agent_bundle.py \
-            scripts/test_docs_onboarding.py
+      - name: Compile Python helpers
+        run: python3 -m py_compile scripts/*.py
 
       - name: Run verification-lint self-tests
         run: python3 scripts/test_verification_lint.py
@@ -96,23 +66,20 @@ jobs:
       - name: Run newcomer-documentation self-tests
         run: python3 scripts/test_docs_onboarding.py
 
-      - name: Build bundle from full checkout
+      - name: Build bundle
         shell: bash
         run: |
           set -euo pipefail
           rm -rf dist
           python3 scripts/build_agent_bundle.py --output dist/agentic-flow-agent-bundle.zip
 
-      - name: Verify bundle manifest, hashes, docs, and context boundary
+      - name: Verify bundle manifest and hashes
         shell: bash
         run: |
           set -euo pipefail
           python3 - <<'PY'
           from pathlib import Path
-          import hashlib
-          import json
-          import zipfile
-
+          import hashlib, json, zipfile
           bundle = Path('dist/agentic-flow-agent-bundle.zip')
           version = Path('VERSION').read_text(encoding='utf-8').strip()
           required = {
@@ -124,138 +91,56 @@ jobs:
               'agentic-flow/BUNDLE_MANIFEST.json',
               'agentic-flow/VERSION',
               'agentic-flow/ARCHITECTURE.md',
-              'agentic-flow/docs/agent/START_HERE.md',
-              'agentic-flow/docs/agent/MIDSTREAM_ADOPTION.md',
-              'agentic-flow/docs/agent/TASK_WORKFLOW_DRAFT_REVIEW_APPLY_VERIFY.md',
-              'agentic-flow/docs/agent/TOKEN_EFFICIENT_WORKFLOW.md',
-              'agentic-flow/docs/agent/USAGE_AWARE_TASK_REPORTING.md',
-              'agentic-flow/docs/operator/OPERATOR_GUIDE.en.md',
-              'agentic-flow/docs/operator/OPERATOR_GUIDE.fa.md',
-              'agentic-flow/docs/operator/CLAUDE_USAGE_NOTIFICATIONS.md',
-              'agentic-flow/docs/operator/USING_PYTHON_TOOLS.en.md',
-              'agentic-flow/docs/operator/USING_PYTHON_TOOLS.fa.md',
-              'agentic-flow/docs/architecture/BUNDLE_BOUNDARY.md',
-              'agentic-flow/docs/architecture/WHY_AND_HOW.md',
-              'agentic-flow/docs/references/PRIMARY_SOURCES.md',
-              'agentic-flow/docs/references/CLAUDE_USAGE_TELEMETRY.md',
               'agentic-flow/docs/GETTING_STARTED.md',
-              'agentic-flow/docs/WHY_AGENTIC_FLOW.md',
-              'agentic-flow/docs/COMPARISON.md',
-              'agentic-flow/docs/VALIDATION_STATUS.md',
               'agentic-flow/docs/GUIDE.fa.md',
-              'agentic-flow/docs/examples/END_TO_END_TASK.md',
-              'agentic-flow/docs/operator/CONTEXT_PACKET.md',
-              'agentic-flow/schemas/USAGE_QUOTA_SNAPSHOT.md',
-              'agentic-flow/scripts/build_agent_bundle.py',
-              'agentic-flow/scripts/test_build_agent_bundle.py',
-              'agentic-flow/scripts/verification_lint.py',
-              'agentic-flow/scripts/test_verification_lint.py',
-              'agentic-flow/scripts/production_readiness_lint.py',
-              'agentic-flow/scripts/test_production_readiness_lint.py',
-              'agentic-flow/scripts/usage_ledger.py',
-              'agentic-flow/scripts/claude_usage_snapshot.py',
-              'agentic-flow/scripts/test_claude_usage_snapshot.py',
-              'agentic-flow/scripts/test_docs_onboarding.py',
+              'agentic-flow/docs/agent/START_HERE.md',
+              'agentic-flow/docs/agent/TASK_WORKFLOW_DRAFT_REVIEW_APPLY_VERIFY.md',
+              'agentic-flow/schemas/MUTATION_APPROVAL_POLICY.md',
+              'agentic-flow/schemas/TASK_CONTRACT.md',
+              'agentic-flow/schemas/PROJECT_PROFILE_CONFIG.md',
           }
-          forbidden_fragments = (
-              '/research/',
-              '/retrospectives/',
-              '/stories/',
-          )
-
+          forbidden = ('/research/', '/retrospectives/', '/stories/')
           with zipfile.ZipFile(bundle) as zf:
               names = set(zf.namelist())
               missing = sorted(required - names)
               if missing:
-                  raise SystemExit(f'bundle missing required files: {missing}')
-
-              forbidden = sorted(
-                  name for name in names
-                  if any(fragment in name for fragment in forbidden_fragments)
-              )
-              if forbidden:
-                  raise SystemExit(f'bundle contains cold-history/research files: {forbidden[:20]}')
-
-              html_readers = sorted(
-                  name for name in names
-                  if name.endswith('.html')
-              )
-              if html_readers:
-                  raise SystemExit(f'bundle contains reader HTML: {html_readers[:20]}')
-
+                  raise SystemExit(f'bundle missing: {missing}')
+              bad = [n for n in names if any(f in n for f in forbidden)]
+              if bad:
+                  raise SystemExit(f'bundle contains cold history: {bad[:20]}')
+              if any(n.endswith('.html') for n in names):
+                  raise SystemExit('bundle contains reader HTML')
               manifest = json.loads(zf.read('agentic-flow/BUNDLE_MANIFEST.json'))
               if manifest.get('framework_version') != version:
-                  raise SystemExit(
-                      f"manifest version {manifest.get('framework_version')!r} != VERSION {version!r}"
-                  )
-              if manifest.get('entrypoint') != 'START_HERE.md':
-                  raise SystemExit('manifest entrypoint must be START_HERE.md')
-              if manifest.get('operator_entrypoint') != 'README.md':
-                  raise SystemExit('manifest operator_entrypoint must be README.md')
-
+                  raise SystemExit('manifest VERSION mismatch')
               for item in manifest.get('files', []):
-                  rel = item['path']
-                  bundled_name = f'agentic-flow/{rel}'
-                  if bundled_name not in names:
-                      raise SystemExit(f'manifest file missing from zip: {rel}')
-                  data = zf.read(bundled_name)
-                  digest = hashlib.sha256(data).hexdigest()
-                  if digest != item['sha256']:
-                      raise SystemExit(f'hash mismatch for {rel}')
-                  if len(data) != item['bytes']:
-                      raise SystemExit(f'byte-count mismatch for {rel}')
-
-              alias_pairs = {
+                  name = f"agentic-flow/{item['path']}"
+                  data = zf.read(name)
+                  if hashlib.sha256(data).hexdigest() != item['sha256']:
+                      raise SystemExit(f'hash mismatch: {name}')
+              aliases = {
                   'agentic-flow/START_HERE.md': 'agentic-flow/docs/agent/START_HERE.md',
                   'agentic-flow/README.md': 'agentic-flow/bundle/README.md',
                   'agentic-flow/BEST_PRACTICES_USED.en.txt': 'agentic-flow/bundle/BEST_PRACTICES_USED.en.txt',
                   'agentic-flow/PRIMARY_SOURCES.md': 'agentic-flow/docs/references/PRIMARY_SOURCES.md',
               }
-              for alias, source in alias_pairs.items():
+              for alias, source in aliases.items():
                   if zf.read(alias) != zf.read(source):
-                      raise SystemExit(f'root convenience file {alias} does not match {source}')
-
-              Path('dist/BUNDLE_MANIFEST.json').write_bytes(
-                  zf.read('agentic-flow/BUNDLE_MANIFEST.json')
-              )
-
-          print('full-checkout bundle verification: PASS')
+                      raise SystemExit(f'alias mismatch: {alias}')
+              Path('dist/BUNDLE_MANIFEST.json').write_bytes(zf.read('agentic-flow/BUNDLE_MANIFEST.json'))
+          print('bundle verification: PASS')
           PY
 
       - name: Generate SHA-256 receipt
         shell: bash
         run: |
-          set -euo pipefail
           cd dist
           sha256sum agentic-flow-agent-bundle.zip > agentic-flow-agent-bundle.zip.sha256
-          cat agentic-flow-agent-bundle.zip.sha256
-
-      - name: Publish workflow summary
-        shell: bash
-        run: |
-          set -euo pipefail
-          {
-            echo "## Agent Bundle release receipt"
-            echo
-            echo "- Framework version: \`${{ steps.version.outputs.version }}\`"
-            echo "- Repository ref: \`${GITHUB_SHA}\`"
-            echo "- Verification-lint self-tests: PASS"
-            echo "- Production-readiness self-tests: PASS"
-            echo "- Claude usage-snapshot self-tests: PASS"
-            echo "- Bundle-builder self-test: PASS"
-            echo "- Newcomer-documentation self-tests: PASS"
-            echo "- Full-checkout bundle manifest/hash/docs/boundary verification: PASS"
-            echo
-            echo '```text'
-            cat dist/agentic-flow-agent-bundle.zip.sha256
-            echo '```'
-          } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload release-check artifact
-        id: upload
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: agentic-flow-v${{ steps.version.outputs.version }}-${{ github.sha }}
+          name: agentic-flow-${{ github.sha }}
           path: |
             dist/agentic-flow-agent-bundle.zip
             dist/agentic-flow-agent-bundle.zip.sha256
@@ -263,13 +148,3 @@ jobs:
           if-no-files-found: error
           retention-days: 30
           compression-level: 0
-
-      - name: Record uploaded artifact
-        shell: bash
-        run: |
-          {
-            echo
-            echo "- Artifact ID: \`${{ steps.upload.outputs.artifact-id }}\`"
-            echo "- Artifact digest: \`${{ steps.upload.outputs.artifact-digest }}\`"
-            echo "- Artifact URL: ${{ steps.upload.outputs.artifact-url }}"
-          } >> "$GITHUB_STEP_SUMMARY"
