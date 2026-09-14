@@ -14,6 +14,7 @@ Access mode: DIRECT_GIT_READ|CONTEXT_PACKET
 Read only what is needed:
 - <framework>/docs/agent/TASK_WORKFLOW_DRAFT_REVIEW_APPLY_VERIFY.md
 - <framework>/schemas/ENGINEERING_ADVISORY.md
+- <framework>/schemas/SYSTEM_TRUTH_MAP.md when applicable
 - the target project's current profile/instructions relevant to this task
 
 Work read-only against product code and runtime state.
@@ -47,6 +48,8 @@ A. FROZEN CONTRACT PROPOSAL
 - security/data/operational constraints
 - external side effects that require separate authority
 - STOP/amendment conditions
+- System Truth Map ref when applicable
+- known data-authority/trust-boundary/scale-boundary implications
 
 Do not prescribe implementation details unless they are genuine owner/frozen constraints.
 
@@ -80,6 +83,36 @@ For each applicable row state:
 - planned evidence/test seam;
 - real boundary/environment needed.
 
+For MEDIUM/HIGH work also propose the DUAL-LENS preflight.
+
+LOCAL LENS
+- business invariant(s)
+- failure semantics
+- advisory algorithm / pseudocode when useful
+- behavior scenarios
+- mutation/path-proof targets
+
+SYSTEM LENS
+Review every row and classify only with evidence/reasoning:
+- WRITE
+- READ
+- AGGREGATE
+- CACHE
+- RESTART
+- FAILURE
+- RECOVERY
+- ADMIN
+- METRIC
+- TENANT_ISOLATION
+- SCALE
+- PRIVACY
+- COST
+
+Allowed states:
+UNAFFECTED | VERIFIED | CHANGED_AND_TESTED | OPEN_RISK | NOT_APPLICABLE
+
+Do not default rows to UNAFFECTED. Surface data-authority changes, cache/projection authority mistakes, restart/recovery gaps, tenant leakage, unbounded growth, privacy changes or provider-spend implications.
+
 [MUST]
 List only invariants grounded in the frozen contract, owner constraints or observed repository reality.
 
@@ -102,6 +135,8 @@ Require the Executor before first mutation to report IMPLEMENTATION DESIGN PROPO
 - affected files/resources
 - why it is the smallest coherent solution
 - triggered failure-surface matrix
+- LOCAL LENS plan
+- SYSTEM LENS matrix / known OPEN_RISKs
 - verification/failure-injection strategy
 - execution readiness: authorized environment and real changed path
 - workspace/dirty-state safety considerations
