@@ -1,153 +1,399 @@
 # راهنمای اپراتور — Agentic Flow
 
-**این فایل مخصوص اپراتور است و Agent نباید آن را به‌صورت دائمی preload کند.**  
-**نسخه:** 1.7  
-**به‌روزرسانی:** 2026-09-09
+**Runbook اصلی اپراتور. Agent نباید این فایل را به‌صورت دائمی preload کند مگر اینکه Task اپراتوری به آن نیاز داشته باشد.**  
+**نسخه فریم‌ورک:** 1.10  
+**به‌روزرسانی:** 2026-09-14
 
-## هدف
+این سند توضیح واحد و عملیاتی Agentic Flow برای اپراتور است: نقش‌ها چگونه با هم کار می‌کنند، مدل مراقب و مدل اجراکننده چه تفاوتی دارند، چه Guardrailهایی فعال‌اند، چه چیزی دست انسان می‌ماند و سیستم در چه شرایطی باید Alert بدهد یا متوقف شود. Authority نهایی همچنان در `ARCHITECTURE.md` و Schemaهاست؛ این فایل روش استفاده از آن‌ها را توضیح می‌دهد.
 
-این چارچوب باید کنترل ریسک را بالا ببرد، بدون اینکه هر کار کوچک را به مراسم اداری تبدیل کند. اپراتور صاحب تصمیم‌های مربوط به ریسک کسب‌وکار، مجوز Production، پذیرش ریسک و تغییرات معماری مهم است. Agent داخل این مرزها کار می‌کند و باید واقعیت، Receipt و Gap را گزارش کند؛ نه اینکه ابهام را با جمله‌های مطمئن پنهان کند.
-
-## نصب به‌صورت Drop-in
-
-Artifact قابل‌حمل خودش یک `README.md` در Root دارد. پوشه‌ی `agentic-flow/` داخل ZIP را در Repository مقصد به این شکل Extract کنید:
+## ۱. مدل کنترل در یک نگاه
 
 ```text
-.agentic-flow/
+PRODUCT OWNER / OPERATOR
+WHY / WHAT / priority / business trade-offs / accepted risk / production authority
+        │
+        ├── greenfield یا معماری نامطمئن ──► PROJECT ARCHITECT (read-only)
+        │                                      │
+        │                                      ▼
+        │                           architecture options + eval contract
+        │                                      │
+        ▼                                      ▼
+DESIGNER / TASK ARCHITECT ──► MANAGER / REVIEWER ──► EXECUTOR
+طراحی Task به‌صورت read-only      freeze + authority       اجرای محدود
+                                                             │
+                                                             ▼
+                                                  COLD / ADVERSARIAL REVIEW
+                                                             │
+                                                             ▼
+                                                  MANAGER CONSOLIDATED REVIEW
+                                                             │
+                                                    bounded remediation
+                                                             │
+                                                             ▼
+                                               INDEPENDENT JUDGE (read-only)
+                                               برای HIGH-risk در صورت نیاز
+                                                             │
+                                                             ▼
+                                                     OPERATOR decision
+                                               merge / production / business risk
 ```
 
-سپس این Prompt را به Agent بدهید:
+اصل مرکزی:
 
 ```text
-Read .agentic-flow/START_HERE.md and adopt Agentic Flow for this repository.
-Do not start or change product work until adoption validation is complete.
+Human transports authority and priority.
+Repository transports engineering state.
 ```
 
-اگر Agent از قبل وسط کار برنامه‌نویسی است:
+## ۲. نقش‌ها و حدود اختیار
+
+| نقش | مسئولیت اصلی | Mutation پیش‌فرض | Production mutation |
+|---|---|---:|---:|
+| Operator / Product Owner | هدف، اولویت، trade-off، ریسک، Production authority | اختیار انسانی | فقط تصمیم صریح انسان |
+| Project Architect | تبدیل Product Intent به constraint، eval و گزینه معماری | read-only | ممنوع |
+| Designer / Task Architect | تبدیل هدف محدود به Task Contract | read-only | ممنوع |
+| Manager / Reviewer | freeze کردن Task، کنترل authority، بررسی diff و receipt | read/review | پیش‌فرض ممنوع |
+| Executor | اجرای HOW داخل مرزهای freeze‌شده | bounded write | فقط با مجوز جداگانه Owner |
+| Cold / Adversarial Reviewer | پیدا کردن فرض غلط و defect قبل از Manager | read-only | ممنوع |
+| Independent Judge | closure مستقل برای HIGH-risk | read-only | ممنوع |
+
+اسم متفاوت مدل به‌تنهایی استقلال ایجاد نمی‌کند. استقلال واقعی تا جای ممکن باید در چهار بعد باشد:
 
 ```text
-Read .agentic-flow/docs/agent/MIDSTREAM_ADOPTION.md.
-Adopt the framework without discarding current edits or fabricating prior review/authorization.
-Return the adoption snapshot and conflicts before continuing product mutation.
+IMPLEMENTATION
+CONTEXT
+AUTHORITY
+EVIDENCE
 ```
 
-## Baseline پروژه
-
-یک فایل زیر ایجاد کنید:
+و:
 
 ```text
-.agentic/PROJECT_PROFILE.yaml
+MULTI-MODEL AGREEMENT != INDEPENDENT BEHAVIORAL EVIDENCE
 ```
 
-از `templates/PROJECT_PROFILE.example.yaml` شروع کنید. این فایل باید کوچک بماند و فقط سطح مورد انتظار پروژه را مشخص کند؛ مانند `readiness tier`، سیاست Test، سطح دسترسی Agent به Environmentها، Backup/Metric/Restore requirementها و سیاست Patternها. تاریخچه Taskها و متن‌های طولانی نباید در این فایل قرار بگیرند.
+## ۳. Modeهای پروژه
 
-## Workflow تسک
+### VIBE_PROTOTYPE
 
-برای تغییرهای مهم Agent را مستقیم به Coding نفرستید. Workflow عادی:
+فعال‌سازی:
+
+```yaml
+project_mode:
+  mode: VIBE_PROTOTYPE
+```
+
+وقتی سؤال اصلی این است که «آیا ایده کار می‌کند؟» یا «کاربر این تجربه را دوست دارد؟» از این Mode استفاده کنید. سرعت یادگیری اولویت دارد؛ معماری می‌تواند provisional و بخشی از کد sacrificial باشد.
 
 ```text
-DRAFT
-→ REVIEW
-→ FREEZE / APPLY AUTHORIZATION در صورت نیاز
-→ APPLY
-→ VERIFY + REPORT
-→ Independent Closure در صورت نیاز
+VIBE_PROTOTYPE != PRODUCTION BASELINE
 ```
 
-راهنمای عملی Agent:
+این Mode مجوز Production readiness، استفاده از داده حساس یا Production mutation نمی‌دهد. عبور به `PRODUCT_BUILD` نیازمند re-baseline، Architecture Checkpoint و دسته‌بندی کد prototype است:
 
 ```text
-docs/agent/TASK_WORKFLOW_DRAFT_REVIEW_APPLY_VERIFY.md
+REUSE_AS_IS | REUSE_AFTER_REVIEW | REWRITE | DISCARD
 ```
 
-Promptهای اجرایی در `prompts/workflow/` هستند. شدت Governance باید متناسب با Risk باشد؛ تغییر کوچک نباید مجبور به تشریفات High-risk شود.
+### PRODUCT_BUILD
 
-## ابزارهای deterministic با Python
+برای ساخت Product baseline. Product constraint، quality/eval contract و تصمیم‌های معماری باربر باید قبل از رشد وسیع featureها به‌اندازه کافی روشن باشند.
 
-راهنمای کامل دستورها:
+### MAINTENANCE
+
+برای پروژه‌ای که baseline معتبر دارد. اگر boundary مهم عوض شد یا Swamp Guard drift ساختاری دید، دوباره به Architecture Discovery برگردید.
+
+## ۴. شروع پروژه از صفر
+
+ایده نباید مستقیم به Executor داده شود.
 
 ```text
-docs/operator/USING_PYTHON_TOOLS.fa.md
+PRODUCT INTENT
+→ PRODUCT BRIEF
+→ QUALITY / EVAL CONTRACT
+→ ARCHITECTURE DISCOVERY
+→ 2–3 MINIMAL OPTIONS در صورت نیاز
+→ LOAD-BEARING DECISIONS
+→ WALKING SKELETON
+→ ARCHITECTURE CHECKPOINT
+→ PRODUCT BASELINE
+→ NORMAL TASK FLOW
 ```
 
-نسخه انگلیسی:
+اپراتور باید سؤال‌های محصول را جواب بدهد، نه اینکه نقش Senior Architect بازی کند: کاربر کیست، چه outcomeی می‌خواهد، رفتار غیرقابل قبول چیست، privacy/freshness/latency/cost چقدر مهم است و trade-off تجاری چیست.
+
+Project Architect شکل سیستم را کشف می‌کند و نباید زود وارد coding شود. چیزهای سخت‌تغییر را freeze می‌کنیم؛ انتخاب‌های ارزان‌تغییر را تا زمانی که evidence نداریم باز نگه می‌داریم.
+
+برای AI/RAG، tuning جدی روی chunking، embedding، top-k، reranking، prompt یا vector vendor قبل از eval baseline نماینده ممنوع است.
+
+راهنمای canonical: `docs/agent/PROJECT_INCEPTION_ARCHITECTURE.md`  
+Prompt: `prompts/operator/PROJECT_ARCHITECT.md`
+
+## ۵. Task Hierarchy — جلوگیری از گم‌شدن هدف اصلی
+
+هر workstream فقط یک هدف durable اصلی دارد:
 
 ```text
-docs/operator/USING_PYTHON_TOOLS.en.md
+PRIMARY_TASK = هدف فعلی اصلی
+SIDE_TASK    = کار کمکی محدود
+INTERRUPT    = وقفه فوری و محدود
 ```
 
-بررسی معمول Framework قبل از Release:
-
-```bash
-python3 scripts/test_verification_lint.py
-python3 scripts/test_production_readiness_lint.py
-python3 scripts/test_build_agent_bundle.py
-python3 scripts/build_agent_bundle.py
-```
-
-هدف هر Script:
+قانون:
 
 ```text
-verification_lint.py
-  پیدا کردن تناقض مکانیکی در Task / Evidence / Status
-
-production_readiness_lint.py
-  پیدا کردن تناقض مکانیکی در Production Profile / Gap
-
-build_agent_bundle.py
-  ساخت ZIP قابل‌حمل و Manifest
-
-usage_ledger.py
-  ثبت و گزارش Counterهای واقعی Usage/Token در صورت وجود Telemetry
+RECENCY IS NOT PRIORITY.
+CONVERSATIONAL MOMENTUM CANNOT PROMOTE A SIDE TASK.
 ```
 
-PASS شدن Linter به معنی درست بودن Runtime، Security، Deployment، Monitoring یا Restore نیست. Script فقط چیزی را که قانون deterministic دارد بررسی می‌کند؛ Claim واقعی همچنان Receipt واقعی لازم دارد.
+هر `SIDE_TASK` باید `primary_task_ref`، success condition محدود، scope/budget، return condition و promotion authority داشته باشد. بعد از اتمام، نتیجه ثبت می‌شود و Flow به Primary Task برمی‌گردد.
 
-## تصمیم‌هایی که بهتر است صریحاً دست اپراتور بمانند
+طولانی‌شدن بحث، خطای تازه یا چند prompt پشت‌سرهم، promotion محسوب نمی‌شود. Promotion فقط با تصمیم صریح Manager/Operator انجام می‌شود.
 
-موارد زیر معمولاً باید مجوز Human/Owner داشته باشند:
-
-- تغییر Production یا عملیات مخرب روی داده؛
-- پذیرش Gap مهم Security/Data/Recovery؛
-- پایین‌آوردن دائمی Requirementهای Backup/Observability/Security؛
-- تغییر Pattern معماری در چند Module یا Public Contract؛
-- تغییر Task فریز‌شده‌ی High-risk؛
-- قبول‌کردن Acceptance Gate خراب.
-
-## Exception موقت
-
-اگر مثلاً یک Metric پرهزینه شده یا یک Control باید چند ساعت/روز خاموش شود، Baseline را بی‌صدا تغییر ندهید. از `schemas/TEMPORARY_OVERRIDE.md` استفاده کنید و `owner`، علت، `expiry`، ریسک ایجادشده، `compensating control` و روش اثبات Restore را ثبت کنید. Override منقضی‌شده نباید بی‌صدا باقی بماند.
-
-## Environment برای Agent
-
-Agent باید پایین‌ترین Environmentی را استفاده کند که Claim را واقعاً ثابت می‌کند. اگر ممکن است Environmentهای Ephemeral/Disposable برای Integration و E2E بسازید. دسترسی Shared Staging و Production باید Policy و Permission مشخص داشته باشد. درخواست Agent برای Environment به معنی مجوز نیست.
-
-## Review
-
-برای کار عادی، یک Session/Model سرد و جدا می‌تواند Closure Review انجام دهد. برای Security، Persistence، Public Contract، Production Semantics یا معماری مهم، Reviewer مستقل قوی‌تر یا Human استفاده کنید. اگر ممکن است Reviewer ابتدا Task، Diff و Receipt خام را ببیند و Report Agent را بعداً بخواند تا Anchoring کمتر شود.
-
-## کنترل Token و Context
-
-راهنمای عملی:
+اگر Side Task بیش از حد round بخورد، معماری unrelated بسازد یا تبدیل به هدف de-facto شود، Agent باید اعلام کند:
 
 ```text
-docs/agent/TOKEN_EFFICIENT_WORKFLOW.md
+SIDE_TASK DRIFT
+Recommended action: CLOSE | DEFER | PROMOTE_PROPOSAL
 ```
 
-فایل‌های Operator، Research و History را داخل Context دائمی Agent قرار ندهید. مدل قوی را برای Judgment و Ambiguity نگه دارید؛ کارهای Inventory، Log Reduction و Discovery قابل‌چک را می‌توان با ابزار deterministic یا Subagent ارزان Read-only انجام داد.
+برای `INTERRUPT` ابتدا Primary Task و resume state دقیق checkpoint می‌شود؛ بعد کار فوری انجام می‌شود و سپس یا resume می‌کنیم یا صریحاً reprioritize می‌کنیم.
 
-صرفه‌جویی Token مجوز پایین‌آوردن Evidence Bar نیست.
+## ۶. Lifecycle معمول Task
 
-## بررسی‌های دوره‌ای اپراتور
+Risk و نوع کار دو چیز متفاوت هستند:
 
-به‌صورت دوره‌ای این موارد ارزش بررسی دارند:
+```text
+risk.level = LOW | MEDIUM | HIGH
+work_kind  = IMPLEMENTATION | REMEDIATION | EVIDENCE_ONLY
+```
 
-- Project Profile و Gapها؛
-- Overrideهای منقضی‌شده؛
-- تازگی Restore Test؛
-- مالکیت SLO/Alert؛
-- Dependency/Security posture؛
-- گزارش مصرف Token/Cost در صورت وجود Telemetry؛
-- Retrospective برای اینکه Governance بیش از حد سنگین یا بیش از حد ضعیف نشده باشد.
+Flow پیش‌فرض:
 
-`project-retrospective` و `project-storytelling` فقط در صورت نیاز Load شوند و بخشی از Context روزمره Agent نباشند.
+```text
+LOW
+execute → focused test → compact self-review → report
+
+MEDIUM
+short preflight → execute → cold review → one bounded remediation → Manager review
+
+HIGH
+frozen contract
+→ failure-surface preflight
+→ explicit apply authority
+→ bounded execution
+→ adversarial review
+→ Manager consolidated findings
+→ one remediation round by default
+→ read-only Independent Judge when required
+→ Operator production/business decision
+```
+
+Round دوم remediation فقط با finding جدید و مادی قابل توجیه است. remediation تکراری خودش Swamp signal است.
+
+## ۷. Authorityها عمداً از هم جدا هستند
+
+یک «انجامش بده» نباید همه مجوزها تلقی شود:
+
+```text
+TASK AUTHORITY
+MUTATION AUTHORITY
+ENVIRONMENT AUTHORITY
+EXTERNAL-SIDE-EFFECT AUTHORITY
+PRODUCTION AUTHORITY
+```
+
+مثال:
+
+- Task approved != Mutation approved در `STRICT_PREVIEW`؛
+- مجوز تست != مجوز تماس با paid provider واقعی؛
+- staging read != production mutation؛
+- Judge PASS != مجوز deploy.
+
+برای adoption اولیه، `STRICT_PREVIEW` پیش‌فرض مناسب است. Editهای مرتبط را batch کنید؛ permission spam برای هر خط/فایل نسازید.
+
+## ۸. Swamp Guard — مراقبت دائمی از باتلاق
+
+Swamp Guard در checkpointهای مادی و قبل از گسترش معماری/tooling اجرا می‌شود:
+
+```text
+CLEAR | WATCH | ALERT | STOP_REBASELINE
+```
+
+Signalهای مهم:
+
+- redesign/remediation تکراری در یک subsystem؛
+- framework/datastore/abstraction جدید بدون نیاز محصول یا failure boundary؛
+- چند mechanism برای یک responsibility؛
+- AI/RAG tuning بدون eval؛
+- رشد feature قبل از vertical slice واقعی؛
+- تصمیم معماری فقط در chat؛
+- ابهام در source-of-truth یا state ownership؛
+- workaround موقت که دائمی شده؛
+- prototype که بی‌صدا production expectation گرفته؛
+- complexity که سریع‌تر از value اثبات‌شده رشد می‌کند؛
+- `SIDE_TASK` که توجه را از `PRIMARY_TASK` می‌دزدد.
+
+Alert باید این شکل را داشته باشد:
+
+```text
+SWAMP ALERT: <WATCH|ALERT|STOP_REBASELINE>
+Signal: ...
+Evidence: ...
+Why it matters: ...
+Recommended action: ...
+Continue allowed: YES|NO
+Authority needed: <none|Manager|Operator>
+```
+
+`STOP_REBASELINE` یعنی patch محلی را ادامه ندهید؛ state/evidence را حفظ کنید، به Architecture Discovery برگردید، simplify/measure/decide کنید و بعد از baseline منسجم ادامه دهید.
+
+## ۹. مدل مراقب و روند Review
+
+Executor نباید کار material خودش را close کند.
+
+برای MEDIUM/HIGH، در صورت policy، Cold/Adversarial Reviewer قبل از Manager exact diff را بررسی می‌کند. Manager ترجیحاً این ترتیب را دنبال می‌کند:
+
+```text
+frozen contract
+→ exact base/head / diff
+→ surrounding source
+→ raw tests / CI / receipts
+→ gaps / omitted checks
+→ Executor narrative last
+```
+
+Manager findingها را تا جای ممکن یکجا می‌دهد و برای اصلاحات same-task یک remediation window محدود صادر می‌کند.
+
+برای HIGH-risk، Independent Judge به‌صورت read-only claimها را دوباره در برابر source/diff/receipt بررسی می‌کند. Judge حق edit، ضعیف‌کردن Task، provider call یا production mutation ندارد.
+
+این یعنی «مدل مراقب» فقط یک مدل قوی‌تر نیست؛ باید authority و context و evidence آن هم از Executor جدا باشد.
+
+## ۱۰. قوانین Evidence
+
+Claim نباید از Receipt خودش بزرگ‌تر باشد:
+
+```text
+unit PASS          != integration proven
+mock PASS          != real boundary proven
+HTTP 200           != persistence proven
+CI green           != deployed behavior proven
+backup configured  != restore proven
+reviewer PASS      != runtime evidence
+three models PASS  != three independent engineers
+```
+
+پایین‌ترین Environment مجاز را استفاده کنید که changed path واقعی را exercise کند. اگر چنین محیطی وجود ندارد، نتیجه `UNVERIFIED` یا `BLOCKED` است؛ claim را ضعیف نکنید.
+
+## ۱۱. Handoff مبتنی بر Repository
+
+اپراتور نباید message bus بین مدل‌ها و sessionها باشد.
+
+Session جدید باید بتواند از artifactهای durable این موارد را بازیابی کند:
+
+```text
+project mode / architecture baseline
+PRIMARY_TASK
+active SIDE_TASK / INTERRUPT
+suspended/resume state
+exact repository base/head
+frozen task contract
+review findings
+remediation window
+receipts / gaps
+Swamp Guard state
+closure state
+next authority decision
+```
+
+قبل از clear/تعویض session، state durable را checkpoint کنید. تازگی conversation حق ندارد priority پروژه را عوض کند.
+
+## ۱۲. Production Control
+
+قبل از هر Production mutation این موارد باید وجود داشته باشند:
+
+```text
+exact target and change identity
+success / health signals
+abort condition
+rollback OR explicit forward-recovery path
+stateful/data rollback constraints
+recovery authority/owner
+post-change verification
+```
+
+```text
+NO ROLLBACK / RECOVERY PLAN
+→ NOT EXECUTION-READY FOR PRODUCTION MUTATION
+```
+
+اگر rollback امن نیست، forward recovery، backup/checkpoint، blast-radius control و STOP condition لازم است. Independent Judge همچنان read-only می‌ماند.
+
+## ۱۳. Workspace Safety و External Effects
+
+Dirty work با ownership نامعلوم state محافظت‌شده است. `reset/restore/clean` مخرب را صرفاً برای راحتی Agent استفاده نکنید.
+
+Provider call واقعی، paid API، ارسال پیام، deployment و destructive data action authority جدا می‌خواهند. نیاز تست به معنی مجوز side effect واقعی نیست.
+
+## ۱۴. Routing مدل و هزینه
+
+Framework vendor-neutral است:
+
+```text
+Project Architect → reasoning قوی‌تر وقتی ambiguity معماری بالاست
+Executor          → task-adequate / cost-efficient
+Manager           → judgment قوی‌تر در صورت نیاز
+Independent Judge → high reasoning + separate context
+```
+
+کاهش هزینه هیچ‌وقت evidence/acceptance bar را پایین نمی‌آورد.
+
+## ۱۵. اپراتور باید چه چیزهایی را دائماً چک کند؟
+
+در checkpointهای مهم بررسی کنید:
+
+- Project Mode هنوز درست است؟
+- `PRIMARY_TASK` هنوز صریح است و Side Task جایش را نگرفته؟
+- Side Taskها محدود و return conditionها رعایت شده‌اند؟
+- Swamp Alertها واقعاً بررسی شده‌اند یا نادیده گرفته شده‌اند؟
+- Architecture/Eval baseline با واقعیت محصول هم‌خوان است؟
+- HEAD بررسی‌شده همان candidate فعلی است؟
+- Receiptها current هستند و Claim بیش‌ازحد بزرگ نشده؟
+- Temporary override منقضی باقی نمانده؟
+- Restore/Recovery evidence کافی و تازه است؟
+- Production authority به Reviewer/Judge نشت نکرده؟
+- Governance خودش باعث round-trip بی‌فایده نشده؟
+
+## ۱۶. Quick Start اپراتور
+
+```text
+1. README.md را بخوان.
+2. .agentic/PROJECT_PROFILE.yaml را ایجاد/تأیید کن.
+3. VIBE_PROTOTYPE | PRODUCT_BUILD | MAINTENANCE را انتخاب کن.
+4. اگر greenfield/architecture نامطمئن است: Project Architect / Project Inception.
+5. یک PRIMARY_TASK ثبت کن.
+6. برای Task material از Designer استفاده کن.
+7. Manager contract را freeze و authority محدود می‌دهد.
+8. Executor اجرا و تست می‌کند.
+9. Cold review → Manager findings → یک remediation round.
+10. برای HIGH-risk در صورت نیاز Independent Judge.
+11. Operator درباره production/business risk تصمیم می‌گیرد.
+12. Repository state را به session بعد منتقل می‌کند.
+```
+
+## ۱۷. مراجع canonical
+
+- `ARCHITECTURE.md` — invariantهای اصلی.
+- `schemas/PROJECT_PROFILE_CONFIG.md` — Project Mode، Swamp Guard، Task Focus و authority defaults.
+- `schemas/TASK_CONTRACT.md` — Primary/Side/Interrupt، scope، claim و authority.
+- `docs/agent/PROJECT_INCEPTION_ARCHITECTURE.md` — greenfield/vibe/product inception.
+- `docs/agent/TASK_WORKFLOW_DRAFT_REVIEW_APPLY_VERIFY.md` — lifecycle Task.
+- `schemas/MUTATION_APPROVAL_POLICY.md` — apply/remediation authority.
+- `docs/operator/DESIGNER_MANAGER_SETUP.md` — setup نقش‌ها و permissionها.
+- `prompts/operator/PROJECT_ARCHITECT.md` — Prompt معماری.
+- `prompts/operator/TASK_DESIGNER.md` — Prompt Designer.
+- `prompts/operator/MANAGER_REVIEWER.md` — Prompt Manager.
+- `prompts/operator/INDEPENDENT_JUDGE.md` — Prompt Judge read-only.
+- `production/DELIVERY.md` — rollback/recovery production.
+
+Operator Guide روش استفاده را توضیح می‌دهد؛ canonical policy را override نمی‌کند.
