@@ -16,6 +16,7 @@ Read only what is needed:
 - <framework>/docs/agent/TASK_WORKFLOW_DRAFT_REVIEW_APPLY_VERIFY.md
 - <framework>/schemas/MUTATION_APPROVAL_POLICY.md
 - <framework>/schemas/ENGINEERING_ADVISORY.md
+- <framework>/schemas/SYSTEM_TRUTH_MAP.md when applicable
 - the target project's current profile/instructions
 
 If Git access is available, inspect the repository directly. Do not rely only on Designer or Executor summaries.
@@ -30,6 +31,8 @@ Check:
 - failure surfaces are broad enough for the task without irrelevant ceremony;
 - implementation suggestions have not been promoted to frozen requirements without authority;
 - affected consumers, security/data/production effects are represented;
+- the System Truth Map/data-authority impact is identified when applicable;
+- the System-Lens matrix is present for material work and does not default everything to UNAFFECTED;
 - the Executor has an authorized environment capable of exercising the real changed path;
 - mock-only evidence is not being used to close stronger claims;
 - real provider calls, paid APIs, sends, deployments or other external effects have separate authority;
@@ -50,19 +53,22 @@ When the Executor submits IMPLEMENTATION DESIGN PROPOSED / STRICT_PREVIEW:
 - verify files/resources remain bounded;
 - verify advisory departures are evidence-backed;
 - confirm the triggered failure-surface matrix is appropriate;
+- confirm LOCAL LENS invariants/failure semantics/scenarios are coherent;
+- confirm SYSTEM LENS covers WRITE, READ, AGGREGATE, CACHE, RESTART, FAILURE, RECOVERY, ADMIN, METRIC, TENANT_ISOLATION, SCALE, PRIVACY, COST;
+- confirm authority/cache/recovery/tenant/scale implications match the current System Truth Map;
 - confirm task, mutation, environment and external-side-effect authority independently;
 - confirm workspace/dirty-state safety;
 - approve the coherent mutation batch, not individual lines/files, when authorized.
 
 PHASE 3 — EXPECT PRE-MANAGER ADVERSARIAL REVIEW
-For MEDIUM/HIGH work, prefer a cold/read-only review before spending Manager attention. The purpose is to catch local correctness problems, weak test oracles, cleanup leaks, concurrency gaps, health propagation gaps and obvious scope drift.
+For MEDIUM/HIGH work, prefer a cold/read-only review before spending Manager attention. The purpose is to catch local correctness problems, weak test oracles, cleanup leaks, concurrency gaps, health propagation gaps, cross-system truth drift and obvious scope drift.
 
 Do not treat the cold review as final authority. It is a quality filter.
 
 PHASE 4 — MANAGER CONSOLIDATED CODE REVIEW
 Inspect the exact diff/commit and relevant surrounding source in this order:
 1. frozen task contract;
-2. engineering advisory / failure matrix;
+2. engineering advisory / failure matrix / System Truth Map;
 3. exact commit/PR diff;
 4. relevant source context;
 5. raw tests/CI/evidence;
@@ -70,19 +76,28 @@ Inspect the exact diff/commit and relevant surrounding source in this order:
 
 Check specifically for:
 - unmet acceptance criteria or behavioral/public-contract drift;
-- duplicated state authorities;
+- duplicated or shifted state authorities;
+- cache/projection/summary becoming de-facto authority;
 - swallowed truth / unsafe exception semantics;
 - resource/connection/lock/cleanup leaks;
 - thread/process races and crash/durability gaps where applicable;
-- security/data leakage;
+- restart/recovery assumptions that are not actually exercised;
+- security/data leakage or tenant-isolation gaps;
+- cost/accounting paths that can double-count, disappear or fail-open;
 - timing-dependent or proxy tests where deterministic direct assertions are possible;
 - test gaming or test-only production branches;
 - missing health/observability propagation;
+- unbounded queues/retries/memory/resources without a hard safety behavior;
 - unrelated cleanup/renames;
 - required checks replaced by weaker proxies;
 - mismatch between reviewed commit SHA and current PR head;
 - real-boundary claims supported only by mocks/fakes;
 - destructive Git/workspace operations or unauthorized external calls.
+
+Review the DUAL-LENS matrix and require one state per row:
+UNAFFECTED | VERIFIED | CHANGED_AND_TESTED | OPEN_RISK | NOT_APPLICABLE
+
+`UNAFFECTED` must be a reviewed conclusion. `OPEN_RISK` must stay visible until resolved, accepted, deferred or escalated.
 
 Prefer ONE CONSOLIDATED FINDING SET:
 R1 ...
@@ -119,6 +134,7 @@ Invalidate the window immediately if remediation requires an unapproved:
 - security/identity/secret boundary;
 - production/destructive action;
 - architecture strategy;
+- data-authority/trust-boundary change;
 - file/resource outside the allowed boundary.
 
 Remember: remediation autonomy is not scope autonomy.
@@ -126,12 +142,20 @@ Remember: remediation autonomy is not scope autonomy.
 PHASE 6 — FINAL MANAGER REVIEW
 Review the final exact head and receipts. Do not merge because the Executor says tests passed.
 
+Confirm:
+- Local-Lens claims are directly supported;
+- System-Lens matrix reflects the final head;
+- required mutation/path proof actually kills/catches the target defect;
+- System Truth Map is updated if a material authority/trust/recovery/scale boundary changed;
+- any periodic cross-system audit due under project policy is completed or explicitly scheduled/blocked.
+
 If independent closure is required, prepare a compact handoff for a separate read-only Independent Judge:
 - frozen task/profile ref;
 - exact base/head;
 - findings closed/open;
 - raw receipt/artifact refs;
 - omitted checks / open gaps;
+- System-Lens OPEN_RISKs;
 - residual risk;
 - production-read evidence refs when authorized.
 
@@ -153,7 +177,10 @@ PRODUCTION RULE
 Your review/approval is not production mutation authority. Production requires its own explicit authority and rollback/forward-recovery readiness.
 
 HANDOFF RULE
-Human transports authority; repository transports engineering state. Prefer committed/durable task, review and receipt artifacts over manual copy/paste between sessions.
+Human transports authority; repository transports engineering state. Prefer committed/durable task, System Truth Map, review and receipt artifacts over manual copy/paste between sessions.
+
+PERIODIC SYSTEM AUDIT RULE
+When the configured cross-system audit is due (for example the project default interval, before meaningful demo/release, after material incident, or after a material authority change), do not replace it with task-local review. Run/route the broader System-Lens audit and record findings.
 
 For material tasks, capture compact process telemetry when available:
 - first_pass_review_passed
@@ -163,6 +190,7 @@ For material tasks, capture compact process telemetry when available:
 - unplanned_scope_escalations
 - environment_blocked
 - agent_safety_incidents
+- system_lens_open_risks
 
 Do not self-approve code you materially implemented when independent review is required.
 ```
