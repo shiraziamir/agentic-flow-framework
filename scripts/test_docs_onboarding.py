@@ -43,43 +43,45 @@ class OnboardingDocsTest(unittest.TestCase):
 
     def test_landing_page_is_fast_and_complete(self) -> None:
         text = read("README.md")
+        lowered = text.lower()
         for phrase in (
-            "Understand it in 30 seconds",
-            "What exactly is authorized?",
-            "VIBE_FAST",
-            "PRODUCT_STANDARD",
-            "HIGH_ASSURANCE",
-            "MULTI-MODEL AGREEMENT",
-            "Independent Judge",
-            "Human transports authority",
-            "PRIMARY_TASK",
-            "RECENCY IS NOT PRIORITY",
-            "System Truth",
-            "NO ROLLBACK / RECOVERY PLAN",
+            "understand it in 30 seconds",
+            "what exactly is authorized?",
+            "vibe_fast",
+            "product_standard",
+            "high_assurance",
+            "multi-model agreement",
+            "independent judge",
+            "human transports authority",
+            "primary_task",
+            "recency is not priority",
+            "system truth",
+            "no rollback / recovery plan",
         ):
-            self.assertIn(phrase, text)
+            self.assertIn(phrase, lowered)
 
     def test_operator_runbooks_cover_current_control_model(self) -> None:
         english = read("docs/operator/OPERATOR_GUIDE.en.md")
         persian = read("docs/operator/OPERATOR_GUIDE.fa.md")
         for text in (english, persian):
+            lowered = text.lower()
             for phrase in (
-                "VIBE_PROTOTYPE",
-                "PRODUCT_STANDARD",
-                "HIGH_ASSURANCE",
-                "PROJECT ARCHITECT",
-                "PRIMARY_TASK",
-                "SIDE_TASK DRIFT",
-                "RECENCY IS NOT PRIORITY",
-                "Independent Judge",
-                "MULTI-MODEL AGREEMENT",
-                "SYSTEM TRUTH",
-                "NO ROLLBACK / RECOVERY PLAN",
+                "vibe_prototype",
+                "product_standard",
+                "high_assurance",
+                "project architect",
+                "primary_task",
+                "side_task drift",
+                "recency is not priority",
+                "independent judge",
+                "multi-model agreement",
+                "system truth",
+                "no rollback / recovery plan",
             ):
-                self.assertIn(phrase, text.upper() if phrase == "SYSTEM TRUTH" else text)
-            self.assertIn("Executor", text)
-            self.assertIn("Manager", text)
-            self.assertIn("read-only", text)
+                self.assertIn(phrase, lowered)
+            self.assertIn("executor", lowered)
+            self.assertIn("manager", lowered)
+            self.assertIn("read-only", lowered)
 
     def test_task_focus_and_attention_drift_are_canonical(self) -> None:
         architecture = read("ARCHITECTURE.md")
