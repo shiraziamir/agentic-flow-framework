@@ -11,8 +11,9 @@ The framework may be available as a cloned repository, sibling directory, or por
 3. Inspect the target repository read-only: branch/HEAD, dirty paths, current project/task, existing agent instructions, build/test commands and active environment changes.
 4. Locate or propose `.agentic/PROJECT_PROFILE.yaml` using `schemas/PROJECT_PROFILE_CONFIG.md`.
 5. Determine `project_mode.mode`: `VIBE_PROTOTYPE | PRODUCT_BUILD | MAINTENANCE`.
-6. Determine `agent_mutation_policy`; if absent during first adoption, use `STRICT_PREVIEW` as the safe default.
-7. Use verification/production/skills indexes as routers and load details lazily.
+6. Determine `operating_preset`: `VIBE_FAST | PRODUCT_STANDARD | HIGH_ASSURANCE`. If absent, prefer `PRODUCT_STANDARD` for maintainable product work and use explicit overrides only when justified.
+7. Determine `agent_mutation_policy`; if absent during first adoption, use `STRICT_PREVIEW` as the safe default.
+8. Use verification/production/skills indexes as routers and load details lazily.
 
 ## 2. New / greenfield / unclear architecture
 
@@ -31,14 +32,25 @@ PRODUCT INTENT
 → PRODUCT BRIEF
 → QUALITY / EVAL CONTRACT
 → ARCHITECTURE DISCOVERY
+→ SYSTEM TRUTH / DATA AUTHORITY MAP
+→ CURRENT SCALE BOUNDARY
 → MINIMAL OPTIONS
+→ LOAD-BEARING DECISIONS
 → WALKING SKELETON
 → ARCHITECTURE CHECKPOINT
 → PROJECT BASELINE
 → NORMAL TASK FLOW
 ```
 
-If `project_mode.mode: VIBE_PROTOTYPE`, optimize for learning speed but preserve this invariant:
+When required, materialize the project map at:
+
+```text
+.agentic/SYSTEM_TRUTH_MAP.yaml
+```
+
+using `templates/SYSTEM_TRUTH_MAP.example.yaml` and `schemas/SYSTEM_TRUTH_MAP.md`.
+
+If `project_mode.mode: VIBE_PROTOTYPE`, optimize for learning speed but preserve:
 
 ```text
 VIBE_PROTOTYPE != PRODUCTION BASELINE
@@ -48,23 +60,13 @@ Prototype code is provisional/sacrificial by default and may not silently inheri
 
 ## 3. Swamp Guard
 
-At every material checkpoint, before major architecture/tooling expansion, after repeated remediation, and before Vibe→Product or staging/production promotion, evaluate:
+At material checkpoints, before major architecture/tooling expansion, after repeated remediation, and before Vibe→Product or staging/production promotion, evaluate:
 
 ```text
 CLEAR | WATCH | ALERT | STOP_REBASELINE
 ```
 
-Watch for:
-
-- repeated architecture churn/rework in the same subsystem;
-- frameworks/datastores/abstractions added without product justification;
-- multiple mechanisms competing for one responsibility;
-- AI/RAG tuning before a representative eval baseline;
-- broad feature growth before the critical vertical slice works;
-- architecture decisions existing only in chat;
-- duplicate/ambiguous state ownership or source of truth;
-- prototype code accumulating production expectations;
-- operational complexity growing faster than demonstrated value.
+Watch for architecture churn, unjustified frameworks/datastores/abstractions, competing mechanisms, AI/RAG tuning before eval baseline, feature growth before a critical vertical slice, chat-only architecture decisions, ambiguous state ownership, prototype-to-production drift, side-task attention drift, unresolved System-Lens risks and complexity growing faster than demonstrated value.
 
 For severe cases return:
 
@@ -78,7 +80,7 @@ Continue allowed: NO
 Authority needed: Manager|Operator
 ```
 
-Do not hide a swamp signal to preserve momentum. The purpose is to stop compounding structural debt early.
+Do not hide a swamp signal to preserve momentum.
 
 ## 4. Mutation approval
 
@@ -119,11 +121,11 @@ Normal flow:
 
 ```text
 REQUEST
-→ DRAFT
-→ REVIEW
-→ FREEZE / APPLY AUTHORIZATION when required
-→ CHANGE PREVIEW / MUTATION APPROVAL when required
+→ establish PRIMARY/SIDE/INTERRUPT focus
+→ DRAFT / classify risk
+→ required review/authorization
 → APPLY
+→ Local Lens + risk-adaptive System Lens
 → VERIFY + REPORT
 → independent closure when required
 ```
@@ -136,9 +138,24 @@ If implementation reveals a materially new provider, database, public contract, 
 STOP → evidence → amend/reclassify → revised preview → authorize → continue
 ```
 
-If the discovery indicates architecture failure rather than local task scope, use the Swamp Guard and return to Project Inception/Architecture Discovery instead of stacking local patches.
+If discovery indicates architecture failure rather than local task scope, use the Swamp Guard and return to Project Inception/Architecture Discovery instead of stacking local patches.
 
-## 7. Verification discipline
+## 7. Dual-Lens rule without checklist theater
+
+```text
+LOCAL LENS  = does the changed behavior work correctly?
+SYSTEM LENS = what system truth may have changed?
+```
+
+Use risk-adaptive depth:
+
+- `LOW` + genuinely local: concise System-Lens impact summary; do not mechanically fill 13 rows.
+- `MEDIUM/HIGH`: record relevant System-Lens dimensions explicitly.
+- any change touching money, privacy, identity, tenant isolation, durability/recovery, destructive state or production semantics: record the affected dimensions regardless of nominal risk.
+
+`UNAFFECTED` is a reviewed conclusion, not a default filler. `OPEN_RISK` remains visible.
+
+## 8. Verification discipline
 
 A claim may not be stronger than its current receipt.
 
@@ -155,7 +172,7 @@ Report exact `PASS / FAIL / PARTIAL / SKIPPED / UNVERIFIED` states and preserve 
 
 For AI/RAG/search systems, do not treat demo quality as evaluation. A representative eval/quality contract is required before serious tuning or claims of improvement.
 
-## 8. Environment policy
+## 9. Environment policy
 
 Use the lowest environment that directly establishes the required claim:
 
@@ -169,9 +186,21 @@ LOCAL / HERMETIC
 → PRODUCTION MUTATION
 ```
 
-Mock-only evidence may close unit/model claims, not integration, persistence, migration, user-flow, deployment or production claims. If no adequate environment exists, return an environment request and keep the stronger claim `UNVERIFIED` or `BLOCKED`.
+Mock-only evidence may close unit/model claims, not integration, persistence, migration, user-flow, deployment or production claims. If no adequate environment exists, keep the stronger claim `UNVERIFIED` or `BLOCKED`.
 
-## 9. Production-bound work
+## 10. Cross-system audit
+
+Audit triggers are prioritized as:
+
+```text
+EVENT
+> RISK / AUTHORITY CHANGE
+> TASK-COUNT REMINDER
+```
+
+Real-customer release, material incident, or material security/data/authority/recovery change can trigger audit immediately. A configured `5–8 material tasks` cadence is only a reminder, not a reason to delay a needed audit or perform a pointless one.
+
+## 11. Production-bound work
 
 Production mutation is separate authority. Every production mutation requires rollback or explicit forward-recovery readiness before execution. A Judge/Reviewer PASS does not grant production authority.
 
@@ -186,7 +215,7 @@ ACCEPTED_RISK
 CLOSED
 ```
 
-## 10. Context / quota efficiency
+## 12. Context / quota efficiency
 
 For long or log-heavy work, read `docs/agent/TOKEN_EFFICIENT_WORKFLOW.md`.
 
@@ -196,12 +225,12 @@ Default behavior:
 - small affected working set;
 - bounded logs instead of raw dumps;
 - compact evidence handoffs instead of transcripts;
-- stronger model reasoning for ambiguity, architecture, security, diagnosis or closure risk;
+- stronger model reasoning only where ambiguity/risk justifies it;
 - checkpoint durable state before session reset.
 
 Acceptance quality must not be lowered to save tokens/quota.
 
-## 11. Agent vs cold documentation
+## 13. Agent vs cold documentation
 
 Normal coding-agent context may use:
 
@@ -215,20 +244,20 @@ selected skills/
 current project/task/evidence files
 ```
 
-Operator/reference/research/history files are cold by default. Load only when required.
+Operator/reference/research/history files are cold by default. They may exist in a portable bundle for humans without belonging in default agent context.
 
-## 12. Adoption completion
+## 14. Adoption completion
 
 Before product work begins/resumes, return a concise adoption receipt containing:
 
 - framework version/ref;
 - target repository branch/HEAD/dirty paths;
-- `project_mode` and whether architecture baseline is trusted;
+- project mode + operating preset;
+- whether architecture/System Truth baseline is trusted;
 - Swamp Guard state;
-- current task/profile/open gaps/overrides;
-- mutation policy;
+- current primary/active task and open gaps/overrides;
+- mutation/environment/external-effect authority;
 - build/test/deploy/rollback entrypoints or gaps;
-- environment authority;
 - unresolved conflicts.
 
 For greenfield/unclear projects, successful adoption does **not** mean start coding; route through Project Inception first. Under `STRICT_PREVIEW`, do not perform the first product mutation until the required preview/approval exists.
