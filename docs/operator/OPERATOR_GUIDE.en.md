@@ -15,11 +15,14 @@ WHY / WHAT / priority / business trade-offs / accepted risk / production authori
         ├── greenfield or uncertain architecture ──► PROJECT ARCHITECT (read-only)
         │                                             │
         │                                             ▼
-        │                                  architecture options + eval contract
+        │                             architecture + System Truth Map + eval contract
         │                                             │
         ▼                                             ▼
 DESIGNER / TASK ARCHITECT ──► MANAGER / REVIEWER ──► EXECUTOR
 read-only task design          freeze + authority       bounded implementation
+                                                        │
+                                                        ▼
+                                              LOCAL + SYSTEM LENS
                                                         │
                                                         ▼
                                              COLD / ADVERSARIAL REVIEW
@@ -45,9 +48,9 @@ The human transports **authority and priority**. The repository transports **eng
 | Role | Primary job | Default mutation authority | Production mutation |
 |---|---|---:|---:|
 | Operator / Product Owner | outcome, priority, trade-offs, risk, production authority | human authority | explicit human decision |
-| Project Architect | convert product intent into constraints, evals and architecture options | read-only | denied |
+| Project Architect | convert product intent into constraints, evals, System Truth Map and architecture options | read-only | denied |
 | Designer / Task Architect | turn a bounded objective into a frozen task contract | read-only | denied |
-| Manager / Reviewer | freeze task, control bounded authority, inspect exact diff/receipts | normally read/review | denied by default |
+| Manager / Reviewer | freeze task, control bounded authority, inspect exact diff/receipts and system effects | normally read/review | denied by default |
 | Executor | implement HOW inside frozen boundaries | bounded write | separately owner-authorized only |
 | Cold / Adversarial Reviewer | falsify assumptions and obvious defects before Manager attention | read-only | denied |
 | Independent Judge | independent closure for HIGH-risk/policy-required work | read-only | denied |
@@ -79,7 +82,7 @@ Production-readiness claims remain denied. Sensitive/production data and product
 
 ### PRODUCT_BUILD
 
-Use when building the product baseline. Product constraints, quality/eval contract and load-bearing architecture should be explicit before broad feature growth.
+Use when building the product baseline. Product constraints, quality/eval contract, System Truth Map and load-bearing architecture should be explicit before broad feature growth.
 
 ### MAINTENANCE
 
@@ -94,6 +97,8 @@ PRODUCT INTENT
 → PRODUCT BRIEF
 → QUALITY / EVAL CONTRACT
 → ARCHITECTURE DISCOVERY
+→ SYSTEM TRUTH / DATA AUTHORITY MAP
+→ CURRENT SCALE BOUNDARY
 → 2–3 MINIMAL OPTIONS when meaningful
 → LOAD-BEARING DECISIONS
 → WALKING SKELETON
@@ -109,9 +114,99 @@ The Project Architect owns system-shape discovery and must not prematurely code.
 For AI/RAG: do not seriously tune chunking, embeddings, top-k, reranking, prompts or vector vendors before a representative eval baseline exists.
 
 Canonical guide: `docs/agent/PROJECT_INCEPTION_ARCHITECTURE.md`  
+System/data map: `schemas/SYSTEM_TRUTH_MAP.md`  
 Prompt: `prompts/operator/PROJECT_ARCHITECT.md`
 
-## 5. Task hierarchy: protect the real objective
+## 5. Dual-Lens operating model
+
+Every material change is reviewed through two lenses:
+
+```text
+LOCAL LENS
+Is the changed behavior itself correct?
+
+SYSTEM LENS
+What truth does the whole system claim after this change?
+```
+
+### Local Lens
+
+The Executor/Reviewer checks the real call path, business invariant, failure semantics, resource/cleanup behavior, focused and related regression tests, and mutation/path proof for load-bearing tests.
+
+### System Lens
+
+The project keeps a compact `System Truth Map` covering components, trust boundaries, authoritative data, caches/projections, restart/failure/recovery behavior, tenant isolation and current scale boundaries.
+
+For each material task review this matrix:
+
+```text
+WRITE
+READ
+AGGREGATE
+CACHE
+RESTART
+FAILURE
+RECOVERY
+ADMIN
+METRIC
+TENANT_ISOLATION
+SCALE
+PRIVACY
+COST
+```
+
+Each row is one of:
+
+```text
+UNAFFECTED
+VERIFIED
+CHANGED_AND_TESTED
+OPEN_RISK
+NOT_APPLICABLE
+```
+
+Important rules:
+
+- `UNAFFECTED` is a reviewed conclusion, not a default.
+- A cache/projection/summary/metric is not authoritative merely because it is easy to read.
+- `OPEN_RISK` remains visible until resolved, accepted, deferred or escalated.
+- When a material authority, trust boundary, recovery rule or scale boundary changes, update the System Truth Map.
+- A locally green function does not close a system-level claim.
+
+The System Lens should stay short for small/local work; it becomes explicit for MEDIUM/HIGH or stateful/cost/privacy/tenant-sensitive work.
+
+## 6. Periodic cross-system audit
+
+Even correct tasks can gradually change relationships between components. Run a broader System-Lens audit on a project-configured cadence.
+
+Recommended heuristic triggers:
+
+```text
+every ~5–8 material tasks (default example: 6)
+before a meaningful demo deployment
+before every real-customer release
+after every material incident
+before/after a material data-authority or trust-boundary change
+```
+
+Review:
+
+```text
+FINANCIAL TRUTH
+PRIVACY TRUTH
+IDENTITY / AUTHORIZATION
+TENANT ISOLATION
+RESTART SURVIVAL
+BACKUP / RESTORE
+OBSERVABILITY TRUTH
+CAPACITY BOUNDS
+EXTERNAL-PROVIDER FAILURE / SPEND
+ADMIN RECOVERY
+```
+
+This is not another full code review. Its job is to detect relationship drift that task-local review can miss.
+
+## 7. Task hierarchy: protect the real objective
 
 At any moment a workstream has one durable primary objective.
 
@@ -141,7 +236,7 @@ Recommended action: CLOSE | DEFER | PROMOTE_PROPOSAL
 
 For an `INTERRUPT`, checkpoint the primary task and exact resume state first. After the urgent work, resume or explicitly re-prioritize.
 
-## 6. Normal task lifecycle
+## 8. Normal task lifecycle
 
 Risk and work kind are separate:
 
@@ -157,11 +252,11 @@ LOW
 execute → focused test → compact self-review → report
 
 MEDIUM
-short preflight → execute → cold review → one bounded remediation → Manager review
+short preflight → execute → Dual-Lens check → cold review → one bounded remediation → Manager review
 
 HIGH
 frozen contract
-→ failure-surface preflight
+→ failure/System-Lens preflight
 → explicit apply authority
 → bounded execution
 → adversarial review
@@ -173,7 +268,7 @@ frozen contract
 
 A second remediation iteration is exceptional and requires a new material finding. Repeated remediation is also a Swamp Guard signal.
 
-## 7. Authority is split deliberately
+## 9. Authority is split deliberately
 
 Never collapse these into one vague “go ahead”:
 
@@ -194,7 +289,7 @@ Examples:
 
 First-adoption default is `STRICT_PREVIEW`. Group related edits into coherent mutation batches; do not create permission spam per line/file.
 
-## 8. Swamp Guard — continuous anti-bog control
+## 10. Swamp Guard — continuous anti-bog control
 
 The Swamp Guard runs at material checkpoints and before architecture/tooling expansion:
 
@@ -214,7 +309,8 @@ Watch for:
 - permanent “temporary” workarounds;
 - prototype code quietly acquiring production expectations;
 - complexity growing faster than demonstrated value;
-- `SIDE_TASK` attention replacing the `PRIMARY_TASK`.
+- `SIDE_TASK` attention replacing the `PRIMARY_TASK`;
+- repeated System-Lens `OPEN_RISK`s or business authority drifting into a cache/projection.
 
 Required alert shape:
 
@@ -230,7 +326,7 @@ Authority needed: <none|Manager|Operator>
 
 `STOP_REBASELINE` means stop compounding patches, preserve evidence/current state, return to architecture discovery, simplify/measure/decide, then resume from a coherent baseline.
 
-## 9. Review choreography
+## 11. Review choreography
 
 The Executor does not close its own material work.
 
@@ -238,10 +334,11 @@ For MEDIUM/HIGH, use a cold/adversarial review before Manager attention when con
 
 ```text
 frozen contract
+→ System Truth Map / engineering advisory
 → exact base/head / diff
 → surrounding source
 → raw tests / CI / receipts
-→ gaps / omitted checks
+→ Dual-Lens matrix / OPEN_RISKs
 → Executor narrative last
 ```
 
@@ -249,7 +346,7 @@ Manager returns one consolidated finding set where practical. Same-task fixes us
 
 For HIGH-risk closure, the Independent Judge is read-only and separately checks claims against exact source/diff and receipts. It cannot edit code, weaken the task, call providers or mutate production.
 
-## 10. Evidence rules
+## 12. Evidence rules
 
 A claim may be no broader than the receipt that directly establishes it.
 
@@ -265,7 +362,7 @@ three models PASS  != three independent engineers
 
 Use the lowest authorized environment that can exercise the real changed path. If that environment does not exist, report `UNVERIFIED`/`BLOCKED`; do not weaken the claim.
 
-## 11. Repository-driven handoff
+## 13. Repository-driven handoff
 
 The operator should not become a message bus between sessions/models.
 
@@ -273,6 +370,7 @@ Durable state should let a fresh session recover:
 
 ```text
 project mode / architecture baseline
+System Truth Map ref/version
 PRIMARY_TASK
 active SIDE_TASK / INTERRUPT if any
 suspended/resume state
@@ -281,6 +379,8 @@ frozen task contract
 review findings
 remediation window
 receipts / gaps
+System-Lens OPEN_RISKs
+cross-system audit state
 Swamp Guard state
 closure state
 next authority decision
@@ -288,7 +388,7 @@ next authority decision
 
 Checkpoint durable state before clearing/replacing a session. Session recency must never replace project priority.
 
-## 12. Production control
+## 14. Production control
 
 Every production mutation requires, before execution:
 
@@ -309,13 +409,13 @@ NO ROLLBACK / RECOVERY PLAN
 
 If rollback is unsafe/impossible, require forward recovery, backup/checkpoint, blast-radius controls and explicit STOP conditions. The Independent Judge remains read-only.
 
-## 13. Workspace safety and external effects
+## 15. Workspace safety and external effects
 
 Unknown/unowned dirty work is protected state. Do not use destructive Git restore/reset/clean as a convenience.
 
 Real provider calls, paid APIs, sends/messages, deployments and destructive data operations need their own explicit authority. A test requirement does not imply authority for a real external side effect.
 
-## 14. Model/cost routing
+## 16. Model/cost routing
 
 The framework is vendor-neutral. Route by capability and cost, not brand:
 
@@ -328,7 +428,7 @@ Independent Judge → high reasoning + separate context
 
 Cost optimization never lowers acceptance or evidence quality.
 
-## 15. What the operator should inspect regularly
+## 17. What the operator should inspect regularly
 
 At meaningful checkpoints, confirm:
 
@@ -336,6 +436,9 @@ At meaningful checkpoints, confirm:
 - `PRIMARY_TASK` is explicit and has not been displaced by side work;
 - side tasks are bounded and return conditions are respected;
 - Swamp Guard state is reviewed, not ignored;
+- System Truth Map still matches load-bearing implementation;
+- System-Lens `OPEN_RISK`s are resolved/owned rather than accumulating silently;
+- cross-system audit is not overdue;
 - architecture/eval baseline still matches product reality;
 - exact reviewed HEAD still matches the candidate;
 - required receipts are current and claim-strength is honest;
@@ -344,28 +447,31 @@ At meaningful checkpoints, confirm:
 - production authority has not leaked into reviewer/judge roles;
 - governance friction is not producing repeated pointless round-trips.
 
-## 16. Operator quick-start
+## 18. Operator quick-start
 
 ```text
 1. Read README.md.
 2. Create/confirm .agentic/PROJECT_PROFILE.yaml.
 3. Choose VIBE_PROTOTYPE | PRODUCT_BUILD | MAINTENANCE.
 4. If greenfield/untrusted architecture: run Project Architect / Project Inception.
-5. Record one PRIMARY_TASK.
-6. Use Designer for material task contract.
-7. Manager freezes contract and grants bounded authority.
-8. Executor implements/tests.
-9. Cold review → Manager consolidated findings → one remediation round.
-10. Independent Judge for HIGH-risk when required.
-11. Operator decides production/business risk.
-12. Repository carries state to the next session.
+5. Build/confirm System Truth Map + current scale boundary.
+6. Record one PRIMARY_TASK.
+7. Use Designer for material task contract + Dual-Lens preflight.
+8. Manager freezes contract and grants bounded authority.
+9. Executor implements/tests.
+10. Local Lens + System Lens → Cold review → Manager findings → one remediation round.
+11. Independent Judge for HIGH-risk when required.
+12. Run periodic cross-system audit when due.
+13. Operator decides production/business risk.
+14. Repository carries state to the next session.
 ```
 
-## 17. Canonical references
+## 19. Canonical references
 
 - `ARCHITECTURE.md` — canonical invariants.
-- `schemas/PROJECT_PROFILE_CONFIG.md` — project mode, Swamp Guard, task-focus and authority defaults.
-- `schemas/TASK_CONTRACT.md` — primary/side/interrupt, scope, claims and authority.
+- `schemas/PROJECT_PROFILE_CONFIG.md` — project mode, Dual-Lens, Swamp Guard, task-focus and authority defaults.
+- `schemas/SYSTEM_TRUTH_MAP.md` — component map, data authority, recovery and scale boundaries.
+- `schemas/TASK_CONTRACT.md` — primary/side/interrupt, Local/System Lens, scope, claims and authority.
 - `docs/agent/PROJECT_INCEPTION_ARCHITECTURE.md` — greenfield/vibe/product inception.
 - `docs/agent/TASK_WORKFLOW_DRAFT_REVIEW_APPLY_VERIFY.md` — task lifecycle.
 - `schemas/MUTATION_APPROVAL_POLICY.md` — apply/remediation authority.
