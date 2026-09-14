@@ -2,17 +2,6 @@
 
 This is the portable distribution of Agentic Flow Framework.
 
-New operator route:
-
-```text
-docs/GETTING_STARTED.md
-docs/WHY_AGENTIC_FLOW.md
-docs/COMPARISON.md
-docs/VALIDATION_STATUS.md
-docs/GUIDE.fa.md
-docs/examples/END_TO_END_TASK.md
-```
-
 ## 1. Where to copy it
 
 Extract the **contents of the `agentic-flow/` directory** from the release ZIP into the target repository as:
@@ -21,7 +10,7 @@ Extract the **contents of the `agentic-flow/` directory** from the release ZIP i
 <target-repository>/.agentic-flow/
 ```
 
-After extraction, these paths should exist:
+Expected paths include:
 
 ```text
 .agentic-flow/README.md
@@ -30,34 +19,87 @@ After extraction, these paths should exist:
 .agentic-flow/VERSION
 .agentic-flow/docs/agent/
 .agentic-flow/docs/operator/
+.agentic-flow/schemas/
+.agentic-flow/templates/
 ```
 
-Do not merge the framework files into the application's source folders. Keep `.agentic-flow/` as a distinct framework directory.
+Keep `.agentic-flow/` separate from application source.
 
 ## 2. What to tell the coding agent
 
-For a new or idle session, paste:
+New/idle session:
 
 ```text
 Read .agentic-flow/START_HERE.md and adopt Agentic Flow for this repository.
-Do not start or change product work until adoption validation is complete.
+Inspect the repository read-only first. Do not start or change product work until adoption validation is complete.
 ```
 
-If coding is already in progress, paste:
+Work already in progress:
 
 ```text
 Read .agentic-flow/START_HERE.md and adopt Agentic Flow for this repository.
-Work is already in progress, so follow MIDSTREAM_ADOPTION before further product mutation.
+Follow MIDSTREAM_ADOPTION before further product mutation.
 Preserve current edits and do not invent prior review or authorization.
 ```
 
-A copy-ready prompt also exists at:
+A copy-ready prompt also exists at `.agentic-flow/INSTALL_PROMPT.txt`.
+
+## 3. Choose a practical preset
+
+Do not copy every possible framework option into the project profile.
+
+Start with:
 
 ```text
-.agentic-flow/INSTALL_PROMPT.txt
+VIBE_FAST
+PRODUCT_STANDARD
+HIGH_ASSURANCE
 ```
 
-## 3. Which files are for whom
+and override only genuine project differences in `.agentic/PROJECT_PROFILE.yaml`.
+
+Project phase remains separate:
+
+```text
+VIBE_PROTOTYPE | PRODUCT_BUILD | MAINTENANCE
+```
+
+For a normal maintainable product, `PRODUCT_STANDARD` is the default starting point.
+
+## 4. New project / unclear architecture
+
+Do not jump directly from product idea to code. Read:
+
+```text
+docs/agent/PROJECT_INCEPTION_ARCHITECTURE.md
+```
+
+Normal path:
+
+```text
+PRODUCT INTENT
+→ PRODUCT / EVAL CONSTRAINTS
+→ ARCHITECTURE DISCOVERY
+→ SYSTEM TRUTH / DATA AUTHORITY MAP
+→ CURRENT SCALE BOUNDARY
+→ WALKING SKELETON
+→ ARCHITECTURE CHECKPOINT
+→ PRODUCT BASELINE
+```
+
+When the project needs a System Truth Map, create:
+
+```text
+<target-repository>/.agentic/SYSTEM_TRUTH_MAP.yaml
+```
+
+from:
+
+```text
+templates/SYSTEM_TRUTH_MAP.example.yaml
+```
+
+## 5. Which files are for whom
 
 Coding Agent starts with:
 
@@ -66,40 +108,31 @@ START_HERE.md
 docs/agent/
 ```
 
-Human/operator documentation is separate:
+Human/operator docs are present for the operator:
 
 ```text
 docs/operator/
 ```
 
-Architecture explanation and source provenance are separate and cold by default:
+Reference/research layers are cold by default.
+
+**Presence in the ZIP does not mean coding-agent preload.** The bundle is self-contained for both human and agent, while default working context remains small.
+
+## 6. Practical task workflow
 
 ```text
-ARCHITECTURE.md
-docs/architecture/
-PRIMARY_SOURCES.md
-docs/references/
-```
-
-The presence of operator/reference files in the ZIP does **not** mean the coding agent should preload them.
-
-## 4. Practical workflow
-
-For material changes the normal flow is:
-
-```text
-DRAFT
-→ REVIEW
-→ FREEZE / APPLY AUTHORIZATION when required
-→ APPLY
-→ VERIFY + REPORT
-→ optional usage quota snapshot
+PRIMARY TASK
+→ bounded task contract
+→ required authorization
+→ implementation
+→ Local Lens + risk-adaptive System Lens
+→ evidence / review
+→ one bounded remediation by default
 → independent closure when required
+→ separate production authority
 ```
 
-For material work, use separate Designer, Manager and Executor roles. Prefer direct Git access with an isolated Executor branch/PR and Manager review of the exact commit head. If a role lacks Git access, use `docs/operator/CONTEXT_PACKET.md` with explicit limitations.
-
-A behavior-changing Executor must have an authorized environment capable of exercising the real changed path. Mock-only evidence cannot close integration-or-stronger claims.
+LOW/local work stays compact. MEDIUM/HIGH and sensitive boundaries use explicit relevant System-Lens dimensions.
 
 Read:
 
@@ -107,68 +140,47 @@ Read:
 docs/agent/TASK_WORKFLOW_DRAFT_REVIEW_APPLY_VERIFY.md
 ```
 
-For context and token efficiency read:
+For material work, prefer separate Designer, Manager and Executor roles. Manager reviews the exact commit/PR head, not only the Executor narrative.
+
+## 7. Evidence and production rules
+
+A behavior-changing Executor must have an authorized environment capable of exercising the real changed path. Mock-only evidence cannot close integration-or-stronger claims.
 
 ```text
-docs/agent/TOKEN_EFFICIENT_WORKFLOW.md
+CI green             != deployed behavior
+backup configured    != restore proven
+model/reviewer PASS  != runtime evidence
 ```
 
-For optional per-task provider quota reporting read:
+Production mutation is separately authorized and requires rollback or explicit forward-recovery readiness before execution.
 
-```text
-docs/agent/USAGE_AWARE_TASK_REPORTING.md
-schemas/USAGE_QUOTA_SNAPSHOT.md
-```
+## 8. Deterministic helpers
 
-If Claude Code is the current harness, the bundle contains:
-
-```text
-scripts/claude_usage_snapshot.py
-docs/operator/CLAUDE_USAGE_NOTIFICATIONS.md
-docs/references/CLAUDE_USAGE_TELEMETRY.md
-```
-
-The helper reports session/weekly **used and remaining** percentages when they are actually observable. Missing telemetry is `UNAVAILABLE`, never fabricated. Quota is an operator/routing signal and must not weaken task verification.
-
-## 5. Python tools
-
-Operator instructions for the deterministic Python helpers are here:
+Operator instructions:
 
 ```text
 docs/operator/USING_PYTHON_TOOLS.en.md
 docs/operator/USING_PYTHON_TOOLS.fa.md
 ```
 
-These tools check mechanical invariants, normalize observable telemetry, and build/verify the bundle. They do not replace behavioral tests, security judgment, restore drills, deployment verification, or human/independent review where required.
+The bundle includes deterministic verification/readiness/documentation helpers, including Dual-Lens wiring checks. These do not replace behavioral tests, security judgment, restore drills, deployment verification or human/independent review where required.
 
-## 6. Best practices and sources
-
-English plain-text summary of the practices used:
+## 9. Sources and canonical policy
 
 ```text
-BEST_PRACTICES_USED.en.txt
+ARCHITECTURE.md                    canonical policy
+PRIMARY_SOURCES.md                top-level source index alias
+docs/references/PRIMARY_SOURCES.md full source index
+docs/VALIDATION_STATUS.md         what the framework actually proves / does not prove
 ```
 
-Primary external sources:
-
-```text
-PRIMARY_SOURCES.md
-docs/references/PRIMARY_SOURCES.md
-```
-
-Canonical framework policy:
-
-```text
-ARCHITECTURE.md
-```
-
-## 7. Integrity files
+## 10. Integrity files
 
 The release artifact also contains:
 
 ```text
 BUNDLE_MANIFEST.json
-agentic-flow-agent-bundle.zip.sha256   # supplied next to the bundle by CI
+agentic-flow-agent-bundle.zip.sha256
 ```
 
-`BUNDLE_MANIFEST.json` records the source files, byte counts, and SHA-256 values used to create the portable bundle.
+`BUNDLE_MANIFEST.json` records source paths, byte counts and SHA-256 values used to create the portable bundle.
