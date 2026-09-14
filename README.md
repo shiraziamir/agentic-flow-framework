@@ -26,6 +26,7 @@ PRODUCT INTENT
 → PRODUCT BRIEF
 → QUALITY / EVAL CONTRACT
 → ARCHITECTURE DISCOVERY
+→ SYSTEM TRUTH / DATA AUTHORITY MAP
 → 2–3 MINIMAL OPTIONS
 → WALKING SKELETON
 → ARCHITECTURE CHECKPOINT
@@ -36,6 +37,30 @@ PRODUCT INTENT
 The Product Owner owns **WHY / WHAT / business trade-offs**. The Project Architect owns **system-shape discovery**. The Executor owns **implementation**.
 
 Read [Project Inception & Architecture Discovery](docs/agent/PROJECT_INCEPTION_ARCHITECTURE.md) or use the copy-ready [Project Architect prompt](prompts/operator/PROJECT_ARCHITECT.md).
+
+## Dual-Lens engineering — every material change gets two views
+
+```text
+Local Lens  — Is the changed behavior implemented correctly?
+System Lens — What truth does the whole system claim after this change?
+```
+
+The Local Lens covers the diff, focused behavior, failure paths, regression checks and mutation-sensitive tests. The System Lens checks whether the change altered any of these system truths:
+
+```text
+WRITE · READ · AGGREGATE · CACHE · RESTART · FAILURE · RECOVERY
+ADMIN · METRIC · TENANT_ISOLATION · SCALE · PRIVACY · COST
+```
+
+Each material task records one status per dimension:
+
+```text
+UNAFFECTED | VERIFIED | CHANGED_AND_TESTED | OPEN_RISK | NOT_APPLICABLE
+```
+
+This catches the class of defect where a function is green but the system is now lying—for example cost read from a cache instead of its authoritative ledger, a restart losing state, a cleanup failure never reaching health, or tenant isolation disappearing in an aggregate path.
+
+Project-level truth lives in the compact [System Truth Map](schemas/SYSTEM_TRUTH_MAP.md): components, trust boundaries, authoritative data, caches/projections, restart/recovery behavior, tenant isolation and current scale boundaries.
 
 ## Vibe Coding is a supported mode—but it is explicit
 
@@ -128,7 +153,8 @@ Typical swamp signals:
 - “temporary” exceptions become permanent structure;
 - a prototype quietly accumulates production expectations;
 - complexity grows faster than demonstrated product value;
-- a `SIDE_TASK` consumes repeated rounds or architecture attention and starts replacing the primary objective.
+- a `SIDE_TASK` consumes repeated rounds or architecture attention and starts replacing the primary objective;
+- repeated System-Lens `OPEN_RISK` findings remain unresolved.
 
 Hard cases trigger:
 
@@ -140,15 +166,16 @@ SWAMP ALERT: STOP_REBASELINE
 → continue only from a coherent baseline
 ```
 
-The goal is not to kill experimentation. The goal is to stop **unmeasured complexity or attention drift from becoming architecture by accident**.
+The goal is not to kill experimentation. The goal is to stop **unmeasured complexity, system-truth drift or attention drift from becoming architecture by accident**.
 
 ## Why use it?
 
 - **Less scope drift** — tasks are bounded before implementation.
 - **Less priority drift** — side work cannot silently replace the primary objective.
-- **Better greenfield starts** — product intent is converted into constraints, evals and architecture options before serious coding.
+- **Better greenfield starts** — product intent is converted into constraints, evals, a system-truth map and architecture options before serious coding.
+- **Local + system correctness** — every material change checks both its code path and cross-system effects.
 - **Less architecture debt** — hard-to-change invariants are frozen early; easy experiment variables remain open.
-- **Early swamp detection** — architecture churn, framework proliferation, eval-free tuning and side-task attention drift trigger alerts/re-baselining.
+- **Early swamp detection** — architecture churn, framework proliferation, eval-free tuning, unresolved system risks and side-task drift trigger alerts/re-baselining.
 - **Less false confidence** — mocks, CI, screenshots and reviewer agreement cannot silently prove stronger behavior.
 - **Safer autonomy** — agents move quickly inside explicit boundaries instead of asking permission for every line.
 - **Real testing** — behavior claims require an environment that can exercise the changed path.
@@ -165,6 +192,7 @@ Operator intent
 → Designer: task contract + engineering advisory
 → Manager: review / freeze / bounded authority
 → Executor: implement + real-enough tests
+→ Local Lens + System Lens
 → cold/adversarial review
 → Manager: one consolidated finding set
 → one bounded remediation round by default
@@ -177,8 +205,8 @@ Operator intent
 | Risk | Default flow |
 |---|---|
 | LOW | implement → focused test → compact review |
-| MEDIUM | short preflight → implement → cold review → one bounded remediation → Manager review |
-| HIGH | frozen contract → failure-surface preflight → bounded execution → adversarial review → Manager review/remediation → read-only independent closure |
+| MEDIUM | short preflight → implement → Dual-Lens check → cold review → one bounded remediation → Manager review |
+| HIGH | frozen contract → failure/System-Lens preflight → bounded execution → adversarial review → Manager review/remediation → read-only independent closure |
 
 ## One rule that prevents fake confidence
 
@@ -215,6 +243,8 @@ The Independent Judge is **read-only by default**. Production mutation remains a
 
 ```text
 prototype works       != product architecture validated
+local function works  != whole-system truth preserved
+cache has a number    != authoritative business truth
 recent side task      != primary objective
 long side discussion  != task promotion
 plan exists           != implementation
@@ -233,17 +263,21 @@ three models say PASS != three independent engineers
 2. Read [Getting Started](docs/GETTING_STARTED.md).
 3. **Operator:** read the [Operator Runbook](docs/operator/OPERATOR_GUIDE.en.md) or [راهنمای اپراتور فارسی](docs/operator/OPERATOR_GUIDE.fa.md) to understand the full control model and guardrails.
 4. If greenfield/early-stage, choose `VIBE_PROTOTYPE` or `PRODUCT_BUILD` and run [Project Inception](docs/agent/PROJECT_INCEPTION_ARCHITECTURE.md) before serious coding.
-5. Keep one durable `PRIMARY_TASK`; classify discovered work as `SIDE_TASK` or `INTERRUPT` instead of allowing implicit reprioritization.
-6. Give the Executor [`docs/agent/START_HERE.md`](docs/agent/START_HERE.md).
-7. Start with `STRICT_PREVIEW`; group related edits into bounded batches.
-8. For material tasks, use the [Designer](prompts/operator/TASK_DESIGNER.md) and [Manager](prompts/operator/MANAGER_REVIEWER.md) prompts.
-9. For HIGH-risk closure, use the read-only [Independent Judge](prompts/operator/INDEPENDENT_JUDGE.md).
-10. Require real-enough test access for the claims being closed.
-11. Let repository artifacts carry project/task/review/receipt state; involve the human for actual product, authority, priority, risk and business decisions.
+5. Establish/update the [System Truth Map](schemas/SYSTEM_TRUTH_MAP.md) for stateful, tenant-sensitive, privacy-sensitive, cost-sensitive or production-oriented work.
+6. Keep one durable `PRIMARY_TASK`; classify discovered work as `SIDE_TASK` or `INTERRUPT` instead of allowing implicit reprioritization.
+7. Give the Executor [`docs/agent/START_HERE.md`](docs/agent/START_HERE.md).
+8. Start with `STRICT_PREVIEW`; group related edits into bounded batches.
+9. For material tasks, use the [Designer](prompts/operator/TASK_DESIGNER.md) and [Manager](prompts/operator/MANAGER_REVIEWER.md) prompts.
+10. Require both Local-Lens verification and the fixed System-Lens effect matrix for material changes.
+11. For HIGH-risk closure, use the read-only [Independent Judge](prompts/operator/INDEPENDENT_JUDGE.md).
+12. Require real-enough test access for the claims being closed.
+13. Let repository artifacts carry project/task/review/receipt state; involve the human for actual product, authority, priority, risk and business decisions.
 
 ## Key rules
 
 - **VIBE_PROTOTYPE is an experiment mode, not a production-readiness claim.**
+- **Every material change gets a Local Lens and a System Lens.**
+- **Caches/projections are not authoritative unless explicitly declared.**
 - **Recency is not priority; conversational momentum cannot promote a side task.**
 - **One durable `PRIMARY_TASK` per workstream; side-task promotion requires explicit Manager/Operator decision.**
 - **Freeze hard-to-change invariants, not easy-to-change implementation choices.**
@@ -264,7 +298,7 @@ three models say PASS != three independent engineers
 
 For a human newcomer:
 
-1. **This README** — purpose, Vibe mode, task focus and operating model.
+1. **This README** — purpose, Vibe mode, Dual-Lens model, task focus and operating model.
 2. **[Getting Started](docs/GETTING_STARTED.md)** — adoption steps.
 3. **[Operator Runbook](docs/operator/OPERATOR_GUIDE.en.md)** / **[راهنمای اپراتور](docs/operator/OPERATOR_GUIDE.fa.md)** — complete role choreography and guardrails.
 4. **[Project Inception](docs/agent/PROJECT_INCEPTION_ARCHITECTURE.md)** — greenfield/vibe/product architecture lifecycle.
@@ -285,6 +319,7 @@ docs/agent/START_HERE.md
 ## Deeper references
 
 - [Operator Runbook](docs/operator/OPERATOR_GUIDE.en.md) / [Persian Operator Runbook](docs/operator/OPERATOR_GUIDE.fa.md) — full control-plane operation and guardrails.
+- [System Truth Map](schemas/SYSTEM_TRUTH_MAP.md) — project components, data authority, recovery and scale boundaries.
 - [Project Architect Prompt](prompts/operator/PROJECT_ARCHITECT.md) — architecture discovery without premature coding.
 - [Why Agentic Flow](docs/WHY_AGENTIC_FLOW.md) — problem and evidence map.
 - [Comparison](docs/COMPARISON.md) — trade-offs vs ordinary coding-agent use.
@@ -297,7 +332,7 @@ docs/agent/START_HERE.md
 
 ## What this project does **not** claim
 
-Agentic Flow does **not** claim that more process is always better, that different models are statistically independent, that Vibe mode makes prototype code production-ready, that AI always makes engineering faster, or that this framework has been empirically proven superior to every alternative. The goal is narrower: **move quickly while making product constraints, task priority, architecture, scope, authority, evidence, recovery and closure explicit—and detect the architectural or attention swamp before it compounds.**
+Agentic Flow does **not** claim that more process is always better, that different models are statistically independent, that Vibe mode makes prototype code production-ready, that AI always makes engineering faster, or that this framework has been empirically proven superior to every alternative. The goal is narrower: **move quickly while making product constraints, system truth, task priority, architecture, scope, authority, evidence, recovery and closure explicit—and detect the architectural, system or attention swamp before it compounds.**
 
 ## Repository checks
 
