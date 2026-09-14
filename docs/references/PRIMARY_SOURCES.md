@@ -1,7 +1,7 @@
 # Primary Sources and Engineering References
 
-**Version:** 1.1  
-**Updated:** 2026-09-12  
+**Version:** 1.2  
+**Updated:** 2026-09-14  
 **Purpose:** human/reference index; not always-on agent context.
 
 This file records the main external sources used to design Agentic Flow Framework. Canonical framework policy lives in `ARCHITECTURE.md`; these links are evidence/research inputs, not independent authority. Time-sensitive vendor behavior must be rechecked when it affects a decision.
@@ -38,6 +38,16 @@ For the stability classification of Claude Code quota sources, see `docs/referen
 | Microsoft | https://learn.microsoft.com/en-us/azure/architecture/patterns/anti-corruption-layer | adapters/anti-corruption layers around volatile/legacy external semantics |
 | Microsoft | https://learn.microsoft.com/en-us/dotnet/architecture/modern-web-apps-azure/architectural-principles | dependency inversion, modular/testable design principles |
 | Microsoft | https://learn.microsoft.com/en-us/azure/well-architected/reliability/design-patterns | reliability patterns selected for specific failure modes |
+| Martin Fowler | https://martinfowler.com/bliki/MutationTesting.html | mutation testing as a way to prove tests detect meaningful defects; selective/manual mutation for load-bearing tests |
+
+## System modeling, threat review and business-logic safety
+
+| Organization | Source | Used for |
+|---|---|---|
+| OWASP | https://cheatsheetseries.owasp.org/cheatsheets/Threat_Modeling_Cheat_Sheet.html | early system modeling, data flows, trust boundaries, threat identification, review/validation |
+| OWASP | https://cheatsheetseries.owasp.org/cheatsheets/Secure_Code_Review_Cheat_Sheet.html | data-flow review, trust zones, transaction integrity, race conditions, resource limits and rollback/error-path review |
+| OWASP | https://cheatsheetseries.owasp.org/cheatsheets/Business_Logic_Security_Cheat_Sheet.html | business-process threat questions: ordering, repeats, concurrent actors, value-producing operations and abuse cases |
+| OWASP | https://cheatsheetseries.owasp.org/cheatsheets/Secure_Coding_with_AI_Cheat_Sheet.html | trust boundaries and least-privilege considerations for agentic coding environments |
 
 ## DevOps, delivery and testing
 
@@ -48,6 +58,7 @@ For the stability classification of Claude Code quota sources, see `docs/referen
 | Microsoft | https://learn.microsoft.com/en-us/azure/well-architected/operational-excellence/safe-deployments | progressive exposure, health gates, rollout abort/rollback and safe deployment |
 | Microsoft | https://learn.microsoft.com/en-us/azure/well-architected/operational-excellence/testing | layered continuous testing, production-like/ephemeral environments, testing proportionate to risk |
 | Microsoft | https://learn.microsoft.com/en-us/azure/well-architected/mission-critical/mission-critical-deployment-testing | mission-critical staging/deployment testing and production-like validation |
+| Google SRE | https://sre.google/sre-book/testing-reliability/ | testing reliability across layers, non-hermetic production/configuration checks and detecting integrated-path mismatches |
 | Google SRE | https://sre.google/workbook/canarying-releases/ | canarying and closing the gap between test environments and real production traffic |
 | GitHub | https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/about-protected-branches | required checks can be successful/skipped/neutral; green gate is not proof every test ran |
 
@@ -57,6 +68,7 @@ For the stability classification of Claude Code quota sources, see `docs/referen
 |---|---|---|
 | Google SRE | https://sre.google/sre-book/monitoring-distributed-systems/ | symptom/cause distinction and four golden signals: latency, traffic, errors, saturation |
 | Google SRE | https://sre.google/workbook/alerting-on-slos/ | SLI/SLO/error-budget alerting |
+| Google SRE | https://sre.google/workbook/monitoring/ | testing monitoring/alert behavior and validating that operational signals actually fire as expected |
 | Prometheus | https://prometheus.io/docs/practices/instrumentation/ | instrumentation and metric design |
 | Prometheus | https://prometheus.io/docs/practices/naming/ | metric naming/units/labels |
 | Prometheus | https://prometheus.io/docs/practices/alerting/ | actionable symptom-oriented alerts |
@@ -65,7 +77,7 @@ For the stability classification of Claude Code quota sources, see `docs/referen
 | Kubernetes | https://kubernetes.io/docs/concepts/cluster-administration/logging/ | cluster-level logging lifecycle beyond pod/node lifetime |
 | Kubernetes | https://kubernetes.io/docs/concepts/cluster-administration/observability/ | metrics/logs/traces as primary observability signals |
 
-## Database durability and recovery
+## Database durability, caching and recovery
 
 | Organization | Source | Used for |
 |---|---|---|
@@ -73,6 +85,7 @@ For the stability classification of Claude Code quota sources, see `docs/referen
 | PostgreSQL | https://www.postgresql.org/docs/current/continuous-archiving.html | WAL archiving and point-in-time recovery |
 | MySQL | https://dev.mysql.com/doc/refman/8.4/en/point-in-time-recovery-binlog.html | full backup plus binary logs for PITR |
 | Microsoft | https://learn.microsoft.com/en-us/azure/well-architected/reliability/ | reliability/recovery design and rehearsal principles |
+| Microsoft | https://learn.microsoft.com/en-us/azure/architecture/patterns/cache-aside | cache-aside semantics, origin/source relationship, staleness and failure fallback considerations |
 
 ## Secure development and supply chain
 
