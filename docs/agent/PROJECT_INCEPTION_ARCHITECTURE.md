@@ -13,6 +13,8 @@ PRODUCT INTENT
 → PRODUCT BRIEF
 → QUALITY / EVAL CONTRACT
 → ARCHITECTURE DISCOVERY
+→ SYSTEM TRUTH / DATA AUTHORITY MAP
+→ CURRENT SCALE BOUNDARY
 → 2–3 MINIMAL OPTIONS
 → LOAD-BEARING DECISIONS
 → WALKING SKELETON
@@ -65,6 +67,8 @@ Before entering PRODUCT_BUILD, establish:
 - product brief;
 - evaluation / quality contract;
 - security/data boundaries;
+- System Truth / Data Authority Map;
+- current scale boundary and safety limits;
 - hard-to-change invariants;
 - selected architecture option and decision rationale;
 - a walking skeleton that exercises the critical path;
@@ -118,7 +122,95 @@ Create a small representative evaluation set early. Do not optimize chunk size, 
 
 For conventional software, the equivalent is observable acceptance tests and architecture fitness functions for load-bearing properties.
 
-## 4. Architecture discovery
+## 4. Build the System Truth Map before broad coding
+
+Create a compact system/data map using `schemas/SYSTEM_TRUTH_MAP.md`.
+
+### Component map
+
+Identify when applicable:
+
+```text
+ENTRY POINTS
+TRUST BOUNDARIES
+DATABASES
+CACHES
+QUEUES
+EXTERNAL PROVIDERS
+BACKGROUND WORKERS
+ADMIN OPERATIONS
+METRICS / ALERTS
+DEPLOYMENT / ROLLBACK / RECOVERY
+```
+
+### Data authority map
+
+For each load-bearing datum, record:
+
+```text
+name
+authoritative source
+derived/cached copies
+writer(s)
+reader(s)
+TTL/freshness
+maximum size/bound
+privacy class
+restart behavior
+failure behavior
+recovery procedure
+tenant-isolation mechanism
+```
+
+Examples of load-bearing data include spend/accounting, entitlement, identity, tenant ownership, durable attempts, customer state and recovery checkpoints.
+
+A cache/projection/summary/metric is not automatically authoritative. If authority is unavailable, define whether the system blocks, degrades, becomes unavailable, or uses an explicitly approved stale fallback. Do not invent a safe-looking substitute such as zero or empty success.
+
+## 5. Small threat/failure review
+
+Do not create a hundred-page document. Perform a compact adversarial review of the proposed system:
+
+```text
+What can leak?
+What can be counted twice?
+What can be silently lost?
+What survives restart?
+What becomes stale?
+What can grow without a bound?
+What happens under concurrency?
+What happens when a dependency lies or partially fails?
+What can one tenant do to another?
+What can cause unexpected provider spend?
+What can an administrator safely do later?
+```
+
+Record material risks/decisions and translate them into requirements, STOP conditions, tests or architecture boundaries.
+
+## 6. Define the current scale boundary
+
+Do not over-engineer for hypothetical scale, but do not hide the current ceiling.
+
+For important resources record:
+
+```text
+expected load
+known ceiling or UNKNOWN
+soft warning
+hard safety limit when unbounded growth could be dangerous
+failure behavior
+scale-up trigger
+```
+
+Example:
+
+```text
+Current target: controlled demo / early tenants
+Not claimed: 10,000 concurrent users
+Required now: bounded memory, bounded queues, bounded retries
+Deferred: distributed coordination / multi-region failover
+```
+
+## 7. Architecture discovery
 
 The Project Architect works read-only / design-only first and presents 2–3 **minimal viable architecture options** when meaningful alternatives exist.
 
@@ -142,7 +234,7 @@ Prefer the simplest architecture that satisfies current product constraints.
 
 Do not choose a framework, datastore, vector database, queue, agent framework or abstraction merely because it is popular or familiar.
 
-## 5. Freeze invariants, not easy implementation choices
+## 8. Freeze invariants, not easy implementation choices
 
 Freeze early when a decision is load-bearing and expensive to change, for example:
 
@@ -179,7 +271,7 @@ FREEZE HARD-TO-CHANGE INVARIANTS
 NOT EASY-TO-CHANGE IMPLEMENTATION CHOICES
 ```
 
-## 6. Walking skeleton
+## 9. Walking skeleton
 
 Before broad feature development, build the smallest end-to-end path that crosses the real architecture boundaries.
 
@@ -209,11 +301,12 @@ Can the critical path be observed and tested?
 Can the selected storage/provider be replaced if needed?
 Can evaluation locate failure instead of just report “bad answer”?
 Are latency/cost remotely compatible with the product constraint?
+Does the System Truth Map still match the implemented walking skeleton?
 ```
 
 If not, change architecture now while the system is still small.
 
-## 7. Architecture decision records
+## 10. Architecture decision records
 
 Record only important, hard-to-reverse decisions. Keep ADRs short:
 
@@ -226,7 +319,7 @@ REVISIT TRIGGER
 
 Avoid documenting every local implementation choice as architecture.
 
-## 8. Swamp Guard — continuous anti-bog check
+## 11. Swamp Guard — continuous anti-bog check
 
 The agent/Manager MUST evaluate the Swamp Guard at material checkpoints:
 
@@ -265,7 +358,8 @@ Raise `WATCH` or `ALERT` when one or more are observed:
 - tests increasingly proving proxies rather than user-visible behavior;
 - growing operational complexity without a product constraint that justifies it;
 - repeated “temporary” exceptions becoming permanent structure;
-- a prototype accumulating production expectations without re-baselining.
+- a prototype accumulating production expectations without re-baselining;
+- the System Truth Map cannot identify authority/recovery for a new load-bearing state.
 
 ### Hard-stop / re-baseline signals
 
@@ -294,9 +388,9 @@ Continue allowed: YES|NO
 Authority needed: <none|Manager|Operator>
 ```
 
-The objective is not to stop experimentation. It is to stop **unmeasured complexity from becoming the architecture by accident**.
+The objective is not to stop experimentation. It is to stop **unmeasured complexity or system-truth ambiguity from becoming architecture by accident**.
 
-## 9. Vibe-to-product transition gate
+## 12. Vibe-to-product transition gate
 
 Never transition by merely renaming the prototype “production”.
 
@@ -305,6 +399,7 @@ VIBE_PROTOTYPE
 → preserve useful learnings/evals
 → product brief
 → architecture discovery
+→ system truth / data authority map
 → security/data boundaries
 → choose what prototype code is reusable vs disposable
 → walking skeleton on intended product baseline
@@ -323,7 +418,7 @@ DISCARD
 
 Unknown code does not default to `REUSE_AS_IS`.
 
-## 10. Relationship to the normal task flow
+## 13. Relationship to the normal task flow
 
 Project inception chooses and validates the project baseline. It does not replace task governance.
 
@@ -331,13 +426,13 @@ Once `PRODUCT_BUILD` baseline is accepted:
 
 ```text
 Project Inception / Architecture Discovery
-→ PROJECT BASELINE
+→ PROJECT BASELINE + SYSTEM TRUTH MAP
 → docs/agent/TASK_WORKFLOW_DRAFT_REVIEW_APPLY_VERIFY.md
 ```
 
 If the Swamp Guard later detects structural drift, temporarily return to architecture discovery rather than solving every architecture problem as a sequence of local task patches.
 
-## 11. RAG-specific minimum checklist
+## 14. RAG-specific minimum checklist
 
 Before serious RAG implementation, establish at least:
 
@@ -353,10 +448,12 @@ representative eval set
 retrieval and groundedness measures
 latency/cost target
 observability of retrieval vs generation failure
+System Truth Map for documents, indexes/caches, spend and tenant boundaries
+current scale target / safety bounds
 ```
 
 Do **not** freeze vendor, vector database, chunk size, embedding model, top-k, reranker or agent framework until product constraints/evals justify them.
 
-## 12. Research basis
+## 15. Research basis
 
-This lifecycle follows the same broad direction found in agent-first and evolutionary-architecture practice: establish enforceable architectural boundaries early, keep implementation simple, use executable evaluation/fitness functions, make hard-to-reverse decisions explicit, and validate architecture through short feedback loops rather than large speculative design documents. See `docs/references/PRIMARY_SOURCES.md` for provenance.
+This lifecycle follows the same broad direction found in agent-first, threat-modeling and evolutionary-architecture practice: establish enforceable architectural boundaries early, map trust/data authority, keep implementation simple, use executable evaluation/fitness functions, make hard-to-reverse decisions explicit, and validate architecture through short feedback loops rather than large speculative design documents. See `docs/references/PRIMARY_SOURCES.md` for provenance.
