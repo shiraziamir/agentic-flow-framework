@@ -1,6 +1,6 @@
 # Project Profile Config Schema
 
-**Schema version:** 1.8  
+**Schema version:** 1.9  
 **Updated:** 2026-09-14
 
 A target project should keep one small durable profile, usually `.agentic/PROJECT_PROFILE.yaml`. It declares the intended operating bar; current receipts establish reality.
@@ -48,6 +48,32 @@ swamp_guard:
   stop_on_unresolved_sensitive_data_boundary: true|false
   stop_on_source_of_truth_ambiguity: true|false
   watch_on_side_task_attention_drift: true|false
+  watch_on_repeated_system_lens_open_risk: true|false
+
+dual_lens:
+  enabled: true|false
+  require_system_truth_map_for_product_build: true|false
+  require_data_authority_map_when_stateful_or_cost_sensitive: true|false
+  require_system_effect_matrix_for_material_tasks: true|false
+  require_behavior_scenarios_for_material_business_logic: true|false
+  require_mutation_or_path_proof_for_load_bearing_tests: true|false
+  system_effect_states: [UNAFFECTED, VERIFIED, CHANGED_AND_TESTED, OPEN_RISK, NOT_APPLICABLE]
+  cross_system_audit:
+    enabled: true|false
+    material_task_interval: <integer|null>
+    recommended_interval_range: <string|null>
+    before_demo_deployment: true|false
+    before_real_customer_release: true|false
+    after_material_incident: true|false
+    before_or_after_material_authority_change: true|false
+
+scale_boundaries:
+  require_current_target: true|false
+  require_expected_load_or_unknown: true|false
+  require_known_ceiling_or_unknown: true|false
+  require_hard_safety_limit_for_unbounded_resources: true|false
+  require_failure_behavior: true|false
+  require_scale_up_trigger: true|false
 
 codebase_scale: SMALL|MEDIUM|LARGE
 readiness_tier: BASIC|STANDARD|HIGH_ASSURANCE
@@ -140,6 +166,8 @@ state_handoff:
   require_active_task_role: true
   require_resume_checkpoint_for_interrupt: true
   require_current_repository_ref: true
+  require_system_truth_map_ref_when_applicable: true|false
+  require_system_lens_open_risks: true|false
   session_reset_after_durable_checkpoint: ALLOWED|PROJECT_DEFINED
 
 flow_metrics:
@@ -241,6 +269,32 @@ swamp_guard:
   stop_on_unresolved_sensitive_data_boundary: true
   stop_on_source_of_truth_ambiguity: true
   watch_on_side_task_attention_drift: true
+  watch_on_repeated_system_lens_open_risk: true
+
+dual_lens:
+  enabled: true
+  require_system_truth_map_for_product_build: true
+  require_data_authority_map_when_stateful_or_cost_sensitive: true
+  require_system_effect_matrix_for_material_tasks: true
+  require_behavior_scenarios_for_material_business_logic: true
+  require_mutation_or_path_proof_for_load_bearing_tests: true
+  system_effect_states: [UNAFFECTED, VERIFIED, CHANGED_AND_TESTED, OPEN_RISK, NOT_APPLICABLE]
+  cross_system_audit:
+    enabled: true
+    material_task_interval: 6
+    recommended_interval_range: "5-8"
+    before_demo_deployment: true
+    before_real_customer_release: true
+    after_material_incident: true
+    before_or_after_material_authority_change: true
+
+scale_boundaries:
+  require_current_target: true
+  require_expected_load_or_unknown: true
+  require_known_ceiling_or_unknown: true
+  require_hard_safety_limit_for_unbounded_resources: true
+  require_failure_behavior: true
+  require_scale_up_trigger: true
 
 agent_mutation_policy:
   mode: STRICT_PREVIEW
@@ -301,6 +355,8 @@ state_handoff:
   require_active_task_role: true
   require_resume_checkpoint_for_interrupt: true
   require_current_repository_ref: true
+  require_system_truth_map_ref_when_applicable: true
+  require_system_lens_open_risks: true
   session_reset_after_durable_checkpoint: ALLOWED
 
 production_mode:
@@ -314,6 +370,19 @@ production_mode:
     require_blast_radius_control: true
 ```
 
+## Dual-Lens rule
+
+Material changes are not complete merely because the local code path is green.
+
+```text
+LOCAL LENS  = changed behavior correctness
+SYSTEM LENS = resulting system truth
+```
+
+Use `schemas/SYSTEM_TRUTH_MAP.md` for project-level components/data authority/recovery/scale. Material tasks record the fixed System-Lens effect matrix and preserve `OPEN_RISK`s honestly. A cache/projection/summary/metric cannot silently become authoritative business truth.
+
+The cross-system audit interval is a configurable heuristic, not a scientific constant. The balanced default uses 6 material tasks (inside the recommended 5–8 range), plus release/demo/incident/authority-change triggers.
+
 ## Task-focus rule
 
 The project keeps one durable primary task per workstream. Side tasks are bounded supporting work and do not become primary through recency, conversation length or local complexity. When a side task exceeds its focus budget, the agent must surface `SIDE_TASK DRIFT` and propose `CLOSE | DEFER | PROMOTE_PROPOSAL`. Promotion requires explicit Manager/Operator decision. Interrupts checkpoint and later resume the prior primary task unless reprioritization is explicitly approved.
@@ -324,7 +393,7 @@ The project keeps one durable primary task per workstream. Side tasks are bounde
 
 ## Swamp-Guard rule
 
-The Swamp Guard is evaluated at material checkpoints. `WATCH` and `ALERT` surface early compounding complexity, including side-task attention drift. `STOP_REBASELINE` stops broad continuation when architecture drift, unresolved data/security boundaries, source-of-truth ambiguity, eval-free AI/RAG tuning, prototype-to-production drift or runaway side work would make local patches more expensive than restoring a coherent baseline.
+The Swamp Guard is evaluated at material checkpoints. `WATCH` and `ALERT` surface early compounding complexity, including side-task attention drift and accumulating System-Lens open risks. `STOP_REBASELINE` stops broad continuation when architecture drift, unresolved data/security boundaries, source-of-truth ambiguity, eval-free AI/RAG tuning, prototype-to-production drift or runaway side work would make local patches more expensive than restoring a coherent baseline.
 
 ## Independent-review rule
 
@@ -332,7 +401,7 @@ A second model is not automatically an independent reviewer. For independent clo
 
 ## Handoff rule
 
-The human/operator should carry authority decisions, not routine engineering messages. Primary/active task identity, reviewed refs, findings, receipts, gaps and next actions should be recoverable from durable repository artifacts so a fresh session can continue safely without promoting the most recent side task by accident.
+The human/operator should carry authority decisions, not routine engineering messages. Primary/active task identity, reviewed refs, findings, receipts, gaps, System-Lens open risks and next actions should be recoverable from durable repository artifacts so a fresh session can continue safely without promoting the most recent side task by accident.
 
 ## Production-mode rule
 
