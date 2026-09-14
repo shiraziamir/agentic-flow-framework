@@ -17,7 +17,7 @@ def main() -> None:
     with tempfile.TemporaryDirectory() as temp_dir:
         root = Path(temp_dir)
         fixtures = {
-            "VERSION": "1.9\n",
+            "VERSION": "1.11\n",
             "ARCHITECTURE.md": "# architecture\n",
             "bundle/README.md": "# bundle readme\n",
             "bundle/BEST_PRACTICES_USED.en.txt": "best practices\n",
@@ -29,13 +29,15 @@ def main() -> None:
             "schemas/MUTATION_APPROVAL_POLICY.md": "# approval\n",
             "schemas/TASK_CONTRACT.md": "# task\n",
             "schemas/PROJECT_PROFILE_CONFIG.md": "# profile\n",
+            "schemas/SYSTEM_TRUTH_MAP.md": "# system truth\n",
             "prompts/operator/TASK_DESIGNER.md": "# designer\n",
             "prompts/operator/MANAGER_REVIEWER.md": "# manager\n",
             "prompts/operator/INDEPENDENT_JUDGE.md": "# judge\n",
             "prompts/bootstrap/CLONE_AND_ADOPT.md": "# clone\n",
             "prompts/workflow/APPLY_TASK.md": "# apply\n",
             "prompts/supervisor/REVIEW.md": "# review\n",
-            "templates/PROJECT_PROFILE.example.yaml": "profile: 1\n",
+            "templates/PROJECT_PROFILE.example.yaml": "profile: 2\n",
+            "templates/SYSTEM_TRUTH_MAP.example.yaml": "system_truth_map_version: 1\n",
             "scripts/build_agent_bundle.py": "x\n",
             "scripts/test_build_agent_bundle.py": "x\n",
             "scripts/verification_lint.py": "x\n",
@@ -46,6 +48,7 @@ def main() -> None:
             "scripts/claude_usage_snapshot.py": "x\n",
             "scripts/test_claude_usage_snapshot.py": "x\n",
             "scripts/test_docs_onboarding.py": "x\n",
+            "scripts/test_dual_lens_docs.py": "x\n",
             "research/R.md": "cold\n",
             "retrospectives/R.md": "cold\n",
             "stories/S.md": "cold\n",
@@ -58,7 +61,7 @@ def main() -> None:
         manifest = build(root, output)
         selected = {item["path"] for item in manifest["files"]}
 
-        assert manifest["framework_version"] == "1.9"
+        assert manifest["framework_version"] == "1.11"
         assert manifest["entrypoint"] == "START_HERE.md"
         assert manifest["operator_entrypoint"] == "README.md"
 
@@ -70,11 +73,14 @@ def main() -> None:
             "schemas/MUTATION_APPROVAL_POLICY.md",
             "schemas/TASK_CONTRACT.md",
             "schemas/PROJECT_PROFILE_CONFIG.md",
+            "schemas/SYSTEM_TRUTH_MAP.md",
+            "templates/SYSTEM_TRUTH_MAP.example.yaml",
             "prompts/operator/TASK_DESIGNER.md",
             "prompts/operator/MANAGER_REVIEWER.md",
             "prompts/operator/INDEPENDENT_JUDGE.md",
             "prompts/bootstrap/CLONE_AND_ADOPT.md",
             "scripts/build_agent_bundle.py",
+            "scripts/test_dual_lens_docs.py",
         }
         assert required_selected <= selected
         assert "research/R.md" not in selected
@@ -97,6 +103,9 @@ def main() -> None:
                 "agentic-flow/prompts/operator/INDEPENDENT_JUDGE.md",
                 "agentic-flow/schemas/MUTATION_APPROVAL_POLICY.md",
                 "agentic-flow/schemas/TASK_CONTRACT.md",
+                "agentic-flow/schemas/SYSTEM_TRUTH_MAP.md",
+                "agentic-flow/templates/SYSTEM_TRUTH_MAP.example.yaml",
+                "agentic-flow/scripts/test_dual_lens_docs.py",
                 "agentic-flow/docs/GUIDE.fa.md",
             }
             assert required_zip <= names
