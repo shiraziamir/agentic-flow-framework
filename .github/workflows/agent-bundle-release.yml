@@ -60,11 +60,14 @@ jobs:
       - name: Run Claude usage-snapshot self-tests
         run: python3 scripts/test_claude_usage_snapshot.py
 
-      - name: Run bundle-builder self-test
-        run: python3 scripts/test_build_agent_bundle.py
-
       - name: Run newcomer-documentation self-tests
         run: python3 scripts/test_docs_onboarding.py
+
+      - name: Run Dual-Lens and productization self-tests
+        run: python3 scripts/test_dual_lens_docs.py
+
+      - name: Run bundle-builder self-test
+        run: python3 scripts/test_build_agent_bundle.py
 
       - name: Build bundle
         shell: bash
@@ -98,6 +101,8 @@ jobs:
               'agentic-flow/schemas/MUTATION_APPROVAL_POLICY.md',
               'agentic-flow/schemas/TASK_CONTRACT.md',
               'agentic-flow/schemas/PROJECT_PROFILE_CONFIG.md',
+              'agentic-flow/schemas/SYSTEM_TRUTH_MAP.md',
+              'agentic-flow/templates/SYSTEM_TRUTH_MAP.example.yaml',
           }
           forbidden = ('/research/', '/retrospectives/', '/stories/')
           with zipfile.ZipFile(bundle) as zf:
