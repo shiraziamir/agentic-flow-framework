@@ -1,6 +1,6 @@
 # Task Contract Schema
 
-**Schema version:** 1.6  
+**Schema version:** 1.7  
 **Updated:** 2026-09-14
 
 A portable material task contract should contain the following fields. Keep it concise; the contract defines authority, success, priority and evidence boundaries, not every implementation detail.
@@ -55,6 +55,35 @@ scope:
 
 baseline: []
 uncertainties: []
+
+system_truth:
+  map_ref: <schemas/SYSTEM_TRUTH_MAP.md project artifact/ref|null>
+  authority_or_boundary_changes_expected: []
+  scale_boundary_changes_expected: []
+
+dual_lens:
+  local_lens:
+    advisory_algorithm_or_pseudocode_ref: <ref|null>
+    business_invariants: []
+    failure_semantics: []
+    behavioral_scenarios: []
+    mutation_or_path_proof_targets: []
+  system_lens:
+    WRITE: UNAFFECTED|VERIFIED|CHANGED_AND_TESTED|OPEN_RISK|NOT_APPLICABLE
+    READ: UNAFFECTED|VERIFIED|CHANGED_AND_TESTED|OPEN_RISK|NOT_APPLICABLE
+    AGGREGATE: UNAFFECTED|VERIFIED|CHANGED_AND_TESTED|OPEN_RISK|NOT_APPLICABLE
+    CACHE: UNAFFECTED|VERIFIED|CHANGED_AND_TESTED|OPEN_RISK|NOT_APPLICABLE
+    RESTART: UNAFFECTED|VERIFIED|CHANGED_AND_TESTED|OPEN_RISK|NOT_APPLICABLE
+    FAILURE: UNAFFECTED|VERIFIED|CHANGED_AND_TESTED|OPEN_RISK|NOT_APPLICABLE
+    RECOVERY: UNAFFECTED|VERIFIED|CHANGED_AND_TESTED|OPEN_RISK|NOT_APPLICABLE
+    ADMIN: UNAFFECTED|VERIFIED|CHANGED_AND_TESTED|OPEN_RISK|NOT_APPLICABLE
+    METRIC: UNAFFECTED|VERIFIED|CHANGED_AND_TESTED|OPEN_RISK|NOT_APPLICABLE
+    TENANT_ISOLATION: UNAFFECTED|VERIFIED|CHANGED_AND_TESTED|OPEN_RISK|NOT_APPLICABLE
+    SCALE: UNAFFECTED|VERIFIED|CHANGED_AND_TESTED|OPEN_RISK|NOT_APPLICABLE
+    PRIVACY: UNAFFECTED|VERIFIED|CHANGED_AND_TESTED|OPEN_RISK|NOT_APPLICABLE
+    COST: UNAFFECTED|VERIFIED|CHANGED_AND_TESTED|OPEN_RISK|NOT_APPLICABLE
+  open_risks: []
+  system_truth_map_update_required: true|false
 
 definition_of_done:
   - id: D1
@@ -130,6 +159,7 @@ flow_metrics:
   task_cycle_time: <optional duration|null>
   side_task_focus_reviews: <integer>
   side_task_promotions: <integer>
+  system_lens_open_risks: <integer>
 
 budget:
   soft_input_tokens: <integer|null>
@@ -167,6 +197,19 @@ Promotion is explicit and durable. It requires the configured Manager/Operator d
 
 An `INTERRUPT` is for urgent bounded preemption. Before execution, checkpoint the current primary task and record `resume_task_ref` + `resume_checkpoint_ref`. After the interrupt, resume the prior primary task unless an explicit reprioritization occurs.
 
+## Dual-Lens rule
+
+Material tasks are reviewed through both lenses:
+
+```text
+LOCAL LENS  = changed behavior correctness
+SYSTEM LENS = resulting system truth
+```
+
+The task contract should expose invariants, failure semantics and behavior scenarios early enough that implementation cannot merely optimize for green tests. Advisory pseudocode is encouraged for complex MEDIUM/HIGH work when it clarifies the intended algorithm, but it remains advisory unless frozen as an invariant.
+
+The System Lens uses the fixed matrix in the contract and `schemas/SYSTEM_TRUTH_MAP.md`. `OPEN_RISK` remains visible until resolved/accepted/deferred. A cache/projection/summary/metric cannot silently become authoritative business truth.
+
 ## Risk and work kind are different
 
 Do not mix impact with activity type.
@@ -194,19 +237,21 @@ A material draft is reviewed before APPLY for:
 4. scope and STOP boundaries;
 5. claim → minimum receipt mapping;
 6. triggered failure surfaces;
-7. environment/real-boundary readiness;
-8. security/data/operations implications;
-9. intentionally omitted checks;
-10. need for cold/adversarial and independent review;
-11. bounded authority and external-side-effect permissions.
+7. Local-Lens invariants/failure semantics/behavior scenarios;
+8. System-Lens effect matrix and System Truth Map impact;
+9. environment/real-boundary readiness;
+10. security/data/operations implications;
+11. intentionally omitted checks;
+12. need for cold/adversarial and independent review;
+13. bounded authority and external-side-effect permissions.
 
 Acceptance freezes the contract; it does not itself authorize APPLY unless project policy explicitly combines those gates.
 
 ## Risk-adaptive defaults
 
 - `LOW`: focused execution/test/review; avoid high-risk ceremony.
-- `MEDIUM`: short preflight, bounded execution, cold review, same-task remediation where possible.
-- `HIGH`: frozen contract, explicit initial authorization, broad failure-surface review, exact evidence, Manager review and independent closure when required.
+- `MEDIUM`: short preflight, bounded execution, Dual-Lens check, cold review, same-task remediation where possible.
+- `HIGH`: frozen contract, explicit initial authorization, broad failure/System-Lens review, exact evidence, Manager review and independent closure when required.
 
 For same-task findings, prefer a controlled remediation window over restarting the lifecycle for each local fix. Remediation autonomy never authorizes scope expansion.
 
@@ -234,6 +279,6 @@ A task can close with higher states unproven when they are outside the frozen co
 
 ## Flow metrics are process telemetry
 
-`flow_metrics` are used to improve the harness, not score individuals. Their purpose is to separate genuine quality cost from agent defects, governance friction, environment friction and attention drift.
+`flow_metrics` are used to improve the harness, not score individuals. Their purpose is to separate genuine quality cost from agent defects, governance friction, environment friction, attention drift and system-truth drift.
 
 Budget and quota information are also telemetry. They never authorize lowering the acceptance bar.
