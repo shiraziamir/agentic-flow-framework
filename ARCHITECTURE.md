@@ -2,7 +2,7 @@
 
 **Status:** CANONICAL SOURCE OF TRUTH  
 **Version:** 1.10  
-**Updated:** 2026-09-13
+**Updated:** 2026-09-14
 
 Agentic Flow is a repository-first, vendor-neutral operating architecture for coding agents. This file is intentionally a **small canonical map + invariant set**. Detailed contracts live in lower layers and are loaded only when the active project/task triggers them.
 
@@ -35,6 +35,10 @@ Reader docs, research, historical reports and generated exports are explanatory/
 > Freeze hard-to-change invariants; keep easy-to-change implementation choices open until evidence justifies them.
 
 > Unmeasured complexity must not become architecture by accident.
+
+> **Recency is not priority. Conversational momentum cannot promote a side task.**
+
+> At any moment there is one durable `PRIMARY_TASK`; side work must remain explicitly subordinate unless promoted by authorized decision.
 
 > A claim may be no broader than the current receipt that directly establishes it.
 
@@ -129,7 +133,9 @@ Typical signals include:
 - architecture decisions existing only in chat;
 - duplicate/ambiguous sources of truth or state ownership;
 - operational complexity growing faster than demonstrated product value;
-- prototype code silently acquiring production expectations.
+- prototype code silently acquiring production expectations;
+- a `SIDE_TASK` consuming repeated rounds, architecture attention or implementation scope beyond its bounded purpose;
+- the current `PRIMARY_TASK` disappearing from checkpoints while a recent side issue becomes the de-facto optimization target.
 
 Use `STOP_REBASELINE` when continuing would compound structural debt or safety risk—for example unresolved sensitive-data boundaries, prototype-to-production drift, major architecture change without decision/evidence, source-of-truth ambiguity causing repeated defects, or RAG optimization with no measurable eval contract.
 
@@ -163,7 +169,7 @@ The normal Executor route is:
 docs/agent/START_HERE.md
 → current project mode/profile
 → project inception when baseline is missing
-→ current task
+→ current PRIMARY_TASK + active task role
 → only triggered schemas/profiles/skills
 ```
 
@@ -185,7 +191,7 @@ A target project should normally maintain:
 
 Use `schemas/PROJECT_PROFILE_CONFIG.md` and `templates/PROJECT_PROFILE.example.yaml`.
 
-The profile defines project mode, Swamp Guard, intended testing, execution readiness, mutation modes, environment permissions, review policy, role access, model routing, workspace safety, external effects and production expectations. It is not proof those expectations are satisfied.
+The profile defines project mode, Swamp Guard, task-focus policy, intended testing, execution readiness, mutation modes, environment permissions, review policy, role access, model routing, workspace safety, external effects and production expectations. It is not proof those expectations are satisfied.
 
 Temporary exceptions use `schemas/TEMPORARY_OVERRIDE.md`; they are explicit, owned, expiring and do not silently rewrite the baseline.
 
@@ -206,7 +212,52 @@ REVISIT TRIGGER
 
 For AI/RAG systems, do not freeze vector vendor, chunk size, embedding model, top-k, reranker, prompt wording or agent framework merely from convention. Establish product/eval constraints first.
 
-## 10. Risk and work kind are separate
+## 10. Task hierarchy and attention control
+
+Every active work item is explicitly classified:
+
+```text
+PRIMARY_TASK   = current durable objective
+SIDE_TASK      = bounded supporting work; cannot redefine the primary objective
+INTERRUPT      = urgent preemption with explicit reason and resume target
+```
+
+There is one `PRIMARY_TASK` at a time. A side task may be useful, even urgent, but it does not become primary because it is recent, difficult, or has consumed several prompts.
+
+A side task must record:
+
+```text
+primary_task_ref
+parent_task_ref when applicable
+why it exists
+bounded success condition
+scope/budget
+return_condition
+promotion_authority
+```
+
+Normal rule:
+
+```text
+SIDE_TASK done
+→ record result
+→ return to PRIMARY_TASK
+```
+
+Promotion requires an explicit decision:
+
+```text
+SIDE_TASK
+→ PROMOTION PROPOSED
+→ Manager/Operator decision
+→ new PRIMARY_TASK only if approved
+```
+
+The agent must raise `SIDE_TASK DRIFT` when a side task exceeds its configured round/budget limit, starts creating unrelated architecture, or becomes the dominant optimization target. The response is to close/defer/promote explicitly—not to keep optimizing by conversational momentum.
+
+For a true `INTERRUPT`, checkpoint the primary task first, preserve its exact resume state, execute only the urgent bounded work, then either resume the primary task or explicitly re-prioritize.
+
+## 11. Risk and work kind are separate
 
 New task contracts should represent two dimensions:
 
@@ -238,7 +289,7 @@ frozen contract
 
 A second remediation iteration is exceptional: it requires a new material finding, remains inside the configured maximum and cannot silently expand scope. Exceeding the bounded loop is itself a Swamp Guard signal.
 
-## 11. Independent closure
+## 12. Independent closure
 
 A different model name is not enough to establish independence. Independent review should separate as many of these dimensions as risk requires:
 
@@ -257,13 +308,13 @@ MULTI-MODEL AGREEMENT != INDEPENDENT BEHAVIORAL EVIDENCE
 
 The Independent Judge is read-only by default. It may inspect source, exact diff, CI/receipts and authorized production telemetry, but it must not mutate product code, rewrite the task to manufacture a pass, or mutate production.
 
-## 12. Artifact-driven handoff and session reset
+## 13. Artifact-driven handoff and session reset
 
-Humans should not act as permanent message buses between agents. Durable handoff state should include current project mode/baseline, task/contract, repository/base/head identity, review findings, remediation state, receipts/gaps, closure state and next authority decision.
+Humans should not act as permanent message buses between agents. Durable handoff state should include current project mode/baseline, `PRIMARY_TASK`, active task role/ref, suspended/resume state, repository/base/head identity, review findings, remediation state, receipts/gaps, closure state and next authority decision.
 
-A fresh session should be able to continue without replaying the previous conversation.
+A fresh session should be able to continue without replaying the previous conversation and without confusing the most recent side task with project priority.
 
-## 13. Capability/cost routing
+## 14. Capability/cost routing
 
 The framework does not prescribe model brands. Projects may route roles by capability and cost:
 
@@ -276,7 +327,7 @@ Independent Judge → high-reasoning, separate context
 
 Cost routing must never lower the evidence or acceptance bar.
 
-## 14. Production mutation invariant
+## 15. Production mutation invariant
 
 Production mutation is a separate authority boundary. Before **every production change**, the active change record must identify:
 
@@ -298,7 +349,7 @@ missing rollback/recovery readiness
 → NOT EXECUTION_READY_FOR_PRODUCTION_MUTATION
 ```
 
-## 15. Canonical practical routes
+## 16. Canonical practical routes
 
 - Greenfield/vibe/product inception: `docs/agent/PROJECT_INCEPTION_ARCHITECTURE.md`
 - Project Architect prompt: `prompts/operator/PROJECT_ARCHITECT.md`

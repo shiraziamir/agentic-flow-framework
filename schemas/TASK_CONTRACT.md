@@ -1,9 +1,9 @@
 # Task Contract Schema
 
-**Schema version:** 1.5  
-**Updated:** 2026-09-13
+**Schema version:** 1.6  
+**Updated:** 2026-09-14
 
-A portable material task contract should contain the following fields. Keep it concise; the contract defines authority, success and evidence boundaries, not every implementation detail.
+A portable material task contract should contain the following fields. Keep it concise; the contract defines authority, success, priority and evidence boundaries, not every implementation detail.
 
 ```yaml
 task_id: <stable-id>
@@ -11,6 +11,19 @@ version: <integer or semver>
 created_at: <RFC3339>
 updated_at: <RFC3339>
 status: DRAFT|FROZEN|AUTHORIZED|IN_PROGRESS|EVIDENCE_READY|CLOSED|BLOCKED
+
+focus:
+  role: PRIMARY|SIDE|INTERRUPT
+  primary_task_ref: <task-id/ref>
+  parent_task_ref: <task-id/ref|null>
+  reason: <why this task exists now>
+  promotion_requires: MANAGER_OR_OPERATOR_DECISION
+  may_redefine_primary_objective: false
+  max_rounds_without_focus_review: <integer|null>
+  rounds_used: <integer>
+  return_condition: <when to resume/return to primary>
+  resume_task_ref: <task-id/ref|null>
+  resume_checkpoint_ref: <artifact/ref|null>
 
 risk:
   level: LOW|MEDIUM|HIGH
@@ -115,6 +128,8 @@ flow_metrics:
   environment_blocked: true|false
   agent_safety_incidents: <integer>
   task_cycle_time: <optional duration|null>
+  side_task_focus_reviews: <integer>
+  side_task_promotions: <integer>
 
 budget:
   soft_input_tokens: <integer|null>
@@ -126,6 +141,31 @@ budget:
 
 content_hash: <hash/ref when frozen|null>
 ```
+
+## Task-focus rule
+
+Exactly one durable task is `PRIMARY` at a time for a given workstream. `SIDE` and `INTERRUPT` work remain explicitly linked to that primary task.
+
+```text
+RECENT TASK != PRIMARY TASK
+LONG CONVERSATION != PROMOTION
+LOCAL COMPLEXITY != PRIORITY
+```
+
+A `SIDE` task may not redefine the primary objective, broaden architecture, or consume unbounded rounds merely because it is the current conversation topic.
+
+When a side task reaches `max_rounds_without_focus_review`, or its scope/importance materially expands:
+
+```text
+SIDE_TASK DRIFT
+→ restate PRIMARY_TASK
+→ report side-task result/open gap
+→ choose CLOSE | DEFER | PROMOTE_PROPOSAL
+```
+
+Promotion is explicit and durable. It requires the configured Manager/Operator decision and updates the task refs before further work proceeds as primary.
+
+An `INTERRUPT` is for urgent bounded preemption. Before execution, checkpoint the current primary task and record `resume_task_ref` + `resume_checkpoint_ref`. After the interrupt, resume the prior primary task unless an explicit reprioritization occurs.
 
 ## Risk and work kind are different
 
@@ -144,22 +184,21 @@ HIGH + REMEDIATION      correcting findings in a sensitive transaction path
 LOW  + EVIDENCE_ONLY    fixing a broken documentation receipt
 ```
 
-Legacy `governance` remains readable for migration but new profiles/tasks should prefer the two-dimensional form.
-
 ## Draft-review rule
 
 A material draft is reviewed before APPLY for:
 
-1. risk/work-kind classification;
-2. observable goal/DoD;
-3. scope and STOP boundaries;
-4. claim → minimum receipt mapping;
-5. triggered failure surfaces;
-6. environment/real-boundary readiness;
-7. security/data/operations implications;
-8. intentionally omitted checks;
-9. need for cold/adversarial and independent review;
-10. bounded authority and external-side-effect permissions.
+1. task focus (`PRIMARY|SIDE|INTERRUPT`) and durable primary ref;
+2. risk/work-kind classification;
+3. observable goal/DoD;
+4. scope and STOP boundaries;
+5. claim → minimum receipt mapping;
+6. triggered failure surfaces;
+7. environment/real-boundary readiness;
+8. security/data/operations implications;
+9. intentionally omitted checks;
+10. need for cold/adversarial and independent review;
+11. bounded authority and external-side-effect permissions.
 
 Acceptance freezes the contract; it does not itself authorize APPLY unless project policy explicitly combines those gates.
 
@@ -195,6 +234,6 @@ A task can close with higher states unproven when they are outside the frozen co
 
 ## Flow metrics are process telemetry
 
-`flow_metrics` are used to improve the harness, not score individuals. Their purpose is to separate genuine quality cost from agent defects, governance friction and environment friction.
+`flow_metrics` are used to improve the harness, not score individuals. Their purpose is to separate genuine quality cost from agent defects, governance friction, environment friction and attention drift.
 
 Budget and quota information are also telemetry. They never authorize lowering the acceptance bar.

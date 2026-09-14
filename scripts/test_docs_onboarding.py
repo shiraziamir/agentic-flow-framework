@@ -51,8 +51,34 @@ class OnboardingDocsTest(unittest.TestCase):
             "Human transports authority; repository transports engineering state.",
             "one remediation round by default",
             "rollback or explicit forward-recovery plan",
+            "PRIMARY_TASK",
+            "SIDE_TASK DRIFT",
+            "RECENCY IS NOT PRIORITY",
         ):
             self.assertIn(phrase, text)
+
+    def test_task_focus_and_attention_drift_are_canonical(self) -> None:
+        architecture = read("ARCHITECTURE.md")
+        workflow = read("docs/agent/TASK_WORKFLOW_DRAFT_REVIEW_APPLY_VERIFY.md")
+        task = read("schemas/TASK_CONTRACT.md")
+        profile = read("schemas/PROJECT_PROFILE_CONFIG.md")
+        template = read("templates/PROJECT_PROFILE.example.yaml")
+        for text in (architecture, workflow, task):
+            self.assertIn("PRIMARY_TASK", text)
+            self.assertIn("SIDE_TASK", text)
+            self.assertIn("INTERRUPT", text)
+        for text in (architecture, workflow):
+            self.assertIn("SIDE_TASK DRIFT", text)
+            self.assertIn("conversational momentum", text.lower())
+        self.assertIn("focus:", task)
+        self.assertIn("promotion_requires: MANAGER_OR_OPERATOR_DECISION", task)
+        for text in (profile, template):
+            self.assertIn("task_focus_policy:", text)
+            self.assertIn("require_single_primary_task: true", text)
+            self.assertIn("side_task_max_rounds_without_focus_review: 3", text)
+            self.assertIn("side_task_may_redefine_primary_objective: false", text)
+            self.assertIn("interrupt_requires_primary_checkpoint: true", text)
+            self.assertIn("alert_on_side_task_attention_drift: true", text)
 
     def test_risk_adaptive_policy_is_canonical(self) -> None:
         architecture = read("ARCHITECTURE.md")
@@ -83,12 +109,7 @@ class OnboardingDocsTest(unittest.TestCase):
         setup = read("docs/operator/DESIGNER_MANAGER_SETUP.md")
         for text in (architecture, workflow, judge, setup):
             self.assertIn("multi-model agreement", text.lower())
-        for phrase in (
-            "IMPLEMENTATION",
-            "CONTEXT",
-            "AUTHORITY",
-            "EVIDENCE",
-        ):
+        for phrase in ("IMPLEMENTATION", "CONTEXT", "AUTHORITY", "EVIDENCE"):
             self.assertIn(phrase, judge)
         self.assertIn("production mutation: DENIED", judge)
         self.assertIn("multi_model_agreement_upgrades_evidence: false", profile)
@@ -107,6 +128,8 @@ class OnboardingDocsTest(unittest.TestCase):
             self.assertIn("repository transports engineering state", lowered)
         self.assertIn("model_routing:", profile)
         self.assertIn("state_handoff:", profile)
+        self.assertIn("require_primary_task_ref: true", profile)
+        self.assertIn("require_active_task_role: true", profile)
         self.assertIn("never_reduce_acceptance_or_evidence_for_cost: true", profile)
 
     def test_failure_surface_and_adversarial_review_are_wired(self) -> None:

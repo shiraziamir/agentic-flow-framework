@@ -1,7 +1,7 @@
 # Project Profile Config Schema
 
-**Schema version:** 1.7  
-**Updated:** 2026-09-13
+**Schema version:** 1.8  
+**Updated:** 2026-09-14
 
 A target project should keep one small durable profile, usually `.agentic/PROJECT_PROFILE.yaml`. It declares the intended operating bar; current receipts establish reality.
 
@@ -26,6 +26,16 @@ project_mode:
     require_walking_skeleton: true|false
     require_architecture_checkpoint: true|false
 
+task_focus_policy:
+  require_single_primary_task: true|false
+  require_active_task_role: true|false
+  side_task_max_rounds_without_focus_review: <integer>
+  side_task_may_redefine_primary_objective: false
+  side_task_promotion: MANAGER_OR_OPERATOR_DECISION|PROJECT_DEFINED
+  interrupt_requires_primary_checkpoint: true|false
+  resume_primary_after_side_or_interrupt_by_default: true|false
+  alert_on_side_task_attention_drift: true|false
+
 swamp_guard:
   enabled: true|false
   check_at_material_checkpoints: true|false
@@ -37,6 +47,7 @@ swamp_guard:
   require_rebaseline_for_vibe_to_product: true|false
   stop_on_unresolved_sensitive_data_boundary: true|false
   stop_on_source_of_truth_ambiguity: true|false
+  watch_on_side_task_attention_drift: true|false
 
 codebase_scale: SMALL|MEDIUM|LARGE
 readiness_tier: BASIC|STANDARD|HIGH_ASSURANCE
@@ -125,6 +136,9 @@ state_handoff:
   repository_transports_engineering_state: true
   human_transports_authority: true
   require_current_task_ref: true
+  require_primary_task_ref: true
+  require_active_task_role: true
+  require_resume_checkpoint_for_interrupt: true
   require_current_repository_ref: true
   session_reset_after_durable_checkpoint: ALLOWED|PROJECT_DEFINED
 
@@ -205,6 +219,16 @@ project_mode:
     require_walking_skeleton: true
     require_architecture_checkpoint: true
 
+task_focus_policy:
+  require_single_primary_task: true
+  require_active_task_role: true
+  side_task_max_rounds_without_focus_review: 3
+  side_task_may_redefine_primary_objective: false
+  side_task_promotion: MANAGER_OR_OPERATOR_DECISION
+  interrupt_requires_primary_checkpoint: true
+  resume_primary_after_side_or_interrupt_by_default: true
+  alert_on_side_task_attention_drift: true
+
 swamp_guard:
   enabled: true
   check_at_material_checkpoints: true
@@ -216,6 +240,7 @@ swamp_guard:
   require_rebaseline_for_vibe_to_product: true
   stop_on_unresolved_sensitive_data_boundary: true
   stop_on_source_of_truth_ambiguity: true
+  watch_on_side_task_attention_drift: true
 
 agent_mutation_policy:
   mode: STRICT_PREVIEW
@@ -268,6 +293,16 @@ model_routing:
   independent_judge: HIGH_REASONING_SEPARATE_CONTEXT
   never_reduce_acceptance_or_evidence_for_cost: true
 
+state_handoff:
+  repository_transports_engineering_state: true
+  human_transports_authority: true
+  require_current_task_ref: true
+  require_primary_task_ref: true
+  require_active_task_role: true
+  require_resume_checkpoint_for_interrupt: true
+  require_current_repository_ref: true
+  session_reset_after_durable_checkpoint: ALLOWED
+
 production_mode:
   enabled: false
   rollback_or_forward_recovery_required_for_every_mutation: true
@@ -279,13 +314,17 @@ production_mode:
     require_blast_radius_control: true
 ```
 
+## Task-focus rule
+
+The project keeps one durable primary task per workstream. Side tasks are bounded supporting work and do not become primary through recency, conversation length or local complexity. When a side task exceeds its focus budget, the agent must surface `SIDE_TASK DRIFT` and propose `CLOSE | DEFER | PROMOTE_PROPOSAL`. Promotion requires explicit Manager/Operator decision. Interrupts checkpoint and later resume the prior primary task unless reprioritization is explicitly approved.
+
 ## Vibe-mode rule
 
 `VIBE_PROTOTYPE` is a learning mode, not a production-readiness level. It may intentionally trade architecture completeness for speed, but it may not silently become the production baseline. Promotion to `PRODUCT_BUILD` requires product/architecture re-baselining and explicit classification of prototype code as reusable, review-required, rewrite, or discard.
 
 ## Swamp-Guard rule
 
-The Swamp Guard is evaluated at material checkpoints. `WATCH` and `ALERT` surface early compounding complexity. `STOP_REBASELINE` stops broad continuation when architecture drift, unresolved data/security boundaries, source-of-truth ambiguity, eval-free AI/RAG tuning, or prototype-to-production drift would make local patches more expensive than restoring a coherent baseline.
+The Swamp Guard is evaluated at material checkpoints. `WATCH` and `ALERT` surface early compounding complexity, including side-task attention drift. `STOP_REBASELINE` stops broad continuation when architecture drift, unresolved data/security boundaries, source-of-truth ambiguity, eval-free AI/RAG tuning, prototype-to-production drift or runaway side work would make local patches more expensive than restoring a coherent baseline.
 
 ## Independent-review rule
 
@@ -293,7 +332,7 @@ A second model is not automatically an independent reviewer. For independent clo
 
 ## Handoff rule
 
-The human/operator should carry authority decisions, not routine engineering messages. Task state, reviewed refs, findings, receipts, gaps and next actions should be recoverable from durable repository artifacts so a fresh session can continue safely.
+The human/operator should carry authority decisions, not routine engineering messages. Primary/active task identity, reviewed refs, findings, receipts, gaps and next actions should be recoverable from durable repository artifacts so a fresh session can continue safely without promoting the most recent side task by accident.
 
 ## Production-mode rule
 

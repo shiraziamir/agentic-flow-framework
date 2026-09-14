@@ -1,6 +1,6 @@
 profile_version: 1
 project_id: example-service
-updated_at: 2026-09-13T00:00:00Z
+updated_at: 2026-09-14T00:00:00Z
 
 project_mode:
   mode: PRODUCT_BUILD
@@ -16,6 +16,16 @@ project_mode:
     require_walking_skeleton: true
     require_architecture_checkpoint: true
 
+task_focus_policy:
+  require_single_primary_task: true
+  require_active_task_role: true
+  side_task_max_rounds_without_focus_review: 3
+  side_task_may_redefine_primary_objective: false
+  side_task_promotion: MANAGER_OR_OPERATOR_DECISION
+  interrupt_requires_primary_checkpoint: true
+  resume_primary_after_side_or_interrupt_by_default: true
+  alert_on_side_task_attention_drift: true
+
 swamp_guard:
   enabled: true
   check_at_material_checkpoints: true
@@ -27,6 +37,7 @@ swamp_guard:
   require_rebaseline_for_vibe_to_product: true
   stop_on_unresolved_sensitive_data_boundary: true
   stop_on_source_of_truth_ambiguity: true
+  watch_on_side_task_attention_drift: true
 
 codebase_scale: MEDIUM
 readiness_tier: STANDARD
@@ -118,6 +129,9 @@ state_handoff:
   repository_transports_engineering_state: true
   human_transports_authority: true
   require_current_task_ref: true
+  require_primary_task_ref: true
+  require_active_task_role: true
+  require_resume_checkpoint_for_interrupt: true
   require_current_repository_ref: true
   session_reset_after_durable_checkpoint: ALLOWED
 
