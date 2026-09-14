@@ -4,18 +4,24 @@
 
 ## Goal
 
-Keep the quality bar stable while changing ceremony according to risk, while preventing recent side work from silently replacing the real objective and preventing local correctness from silently breaking system truth.
+Keep the quality bar stable while adapting ceremony to risk. Prevent three common failures:
+
+```text
+scope drift
+attention drift
+local correctness that breaks system truth
+```
 
 ```text
 risk up   → stronger boundaries, broader preflight, stronger evidence/review
 risk down → fewer gates, smaller reports, faster execution
 ```
 
-Do not confuse rigor with repeated permission prompts.
+Do not confuse rigor with repeated permission prompts or checklist filling.
 
-## 1. Establish task focus before task mechanics
+## 1. Establish task focus first
 
-At every durable checkpoint, identify:
+At every durable checkpoint identify:
 
 ```yaml
 primary_task_ref: <task/ref>
@@ -30,38 +36,19 @@ RECENCY IS NOT PRIORITY.
 CONVERSATIONAL MOMENTUM CANNOT PROMOTE A SIDE TASK.
 ```
 
-Use:
-
-- `PRIMARY` for the current durable objective;
-- `SIDE` for bounded supporting work discovered during the primary task;
-- `INTERRUPT` for urgent preemption that must temporarily suspend the primary task.
-
-A side task must keep a reference to the primary task, have a bounded success condition, a round/budget limit, and a return condition. After completion, return to the primary task by default.
-
-Promotion is explicit:
+A `SIDE` task keeps a primary-task reference, bounded success condition, scope/round budget and return condition. Normal behavior is:
 
 ```text
-SIDE_TASK
-→ PROMOTION PROPOSED
-→ Manager/Operator decision
-→ update durable refs
-→ only then become PRIMARY_TASK
+SIDE_TASK done
+→ record result
+→ return to PRIMARY_TASK
 ```
 
-If a side task exceeds its configured focus-review limit, starts creating unrelated architecture, or becomes the dominant optimization target, raise:
+Promotion requires explicit Manager/Operator decision. When a side task exceeds its budget, creates unrelated architecture or becomes the dominant optimization target, raise `SIDE_TASK DRIFT` and recommend `CLOSE | DEFER | PROMOTE_PROPOSAL`.
 
-```text
-SIDE_TASK DRIFT
-Primary: <ref>
-Side: <ref>
-Why drift is suspected: ...
-Rounds/scope consumed: ...
-Recommended: CLOSE | DEFER | PROMOTE_PROPOSAL
-```
+An `INTERRUPT` checkpoints the primary task before urgent bounded work and records exactly where/how to resume.
 
-For an `INTERRUPT`, checkpoint the primary task first and record exactly where/how to resume it.
-
-## 2. Classify the work
+## 2. Classify risk and work kind
 
 ```yaml
 risk_level: LOW|MEDIUM|HIGH
@@ -70,48 +57,46 @@ work_kind: IMPLEMENTATION|REMEDIATION|EVIDENCE_ONLY
 
 | Risk | Default workflow |
 |---|---|
-| LOW | execute → focused test → compact self-review → report |
-| MEDIUM | short preflight → execute → Dual-Lens check → cold review → one bounded remediation → Manager review |
-| HIGH | frozen contract → failure/System-Lens preflight → explicit authorization → execute → adversarial review → Manager consolidated review → one remediation round by default → read-only Independent Judge when required |
+| LOW | execute → focused test → compact diff review → compact System-Lens impact summary |
+| MEDIUM | short preflight → execute → Dual-Lens review → cold review → one bounded remediation → Manager review |
+| HIGH | frozen contract → failure/System-Lens preflight → explicit authorization → execute → adversarial review → Manager consolidated review → one remediation by default → read-only Independent Judge when required |
 
-If the task exposes that the project architecture baseline itself is missing/broken, do not keep treating it as a local task. Route to `docs/agent/PROJECT_INCEPTION_ARCHITECTURE.md`.
+If the task exposes a missing/broken architecture baseline, route to `docs/agent/PROJECT_INCEPTION_ARCHITECTURE.md` instead of stacking local patches.
 
 ## 3. Draft the observable contract
 
-Define before material mutation:
+Before material mutation define:
 
-- task focus and primary-task relationship;
+- task focus and relationship to primary work;
 - goal/symptom;
-- invariants and failure semantics;
-- in-scope / out-of-scope surfaces;
+- business/system invariants and failure semantics;
+- allowed mutation surface and explicit exclusions;
 - observable Definition of Done;
-- claims and minimum receipts;
+- planned claims and minimum receipts;
 - required environment/real boundaries;
 - intentionally omitted checks;
 - STOP/escalation conditions;
 - System Truth Map reference when applicable;
-- expected cross-system effects or known `OPEN_RISK`s.
+- expected cross-system impact or known `OPEN_RISK`s.
 
-The contract defines **WHAT + SUCCESS**, not an implementation script.
+The contract defines **WHAT + SUCCESS**, not every implementation detail.
 
-For MEDIUM/HIGH work, the Designer/Executor may include an **advisory algorithm/pseudocode** to expose reasoning before edits. It is guidance, not frozen implementation, unless the task explicitly makes it an invariant.
+For complex MEDIUM/HIGH work, advisory algorithm/pseudocode is encouraged when it exposes intended semantics before edits. It remains advisory unless explicitly frozen as an invariant.
 
-## 4. Engineering preflight
+## 4. Engineering and failure preflight
 
-For MEDIUM/HIGH, inspect the current system before editing:
+For MEDIUM/HIGH, inspect before editing:
 
 ```text
 What owns the affected state?
+What is authoritative vs derived?
 What is the real call/data path?
 Where do failures propagate or disappear?
-What is authoritative vs derived?
 What is the smallest coherent change?
-What real boundary proves it?
+What real boundary can prove it?
 ```
 
-### Failure-surface matrix
-
-Baseline for material behavior:
+Baseline failure surfaces when relevant:
 
 ```text
 NORMAL PATH
@@ -122,11 +107,10 @@ OBSERVABILITY / HEALTH PROPAGATION
 TEST-ORACLE FALSIFICATION
 ```
 
-Add when applicable:
+Add triggered surfaces only when applicable:
 
 ```text
-THREAD CONCURRENCY
-PROCESS CONCURRENCY
+THREAD / PROCESS CONCURRENCY
 CRASH / RESTART
 DURABILITY / PARTIAL WRITE
 PERMISSION / IDENTITY
@@ -135,11 +119,9 @@ MIGRATION / SCHEMA
 CACHE / CONSISTENCY
 ```
 
-Under `STRICT_PREVIEW`, include the preflight in the first change preview and wait for `APPROVE/APPLY`.
+Under `STRICT_PREVIEW`, include the material preflight in the mutation preview and wait for `APPROVE/APPLY`.
 
-## 5. Dual-Lens preflight
-
-Material changes are viewed through two lenses:
+## 5. Dual-Lens review
 
 ```text
 LOCAL LENS
@@ -151,60 +133,41 @@ What truth does the whole system claim after this change?
 
 ### Local Lens
 
-Before/while implementing, identify:
+Check the actual call path, business invariant, failure semantics, resource ownership/cleanup, focused acceptance tests, related regressions, complete diff and mutation/path-proof seams when load-bearing.
+
+### System Lens dimensions
+
+Use the project System Truth Map and these dimensions when relevant:
 
 ```text
-actual call path
-business invariant
-failure semantics
-resource ownership / cleanup
-focused acceptance tests
-related regressions
-mutation-sensitive / path-proof test seams
+WRITE · READ · AGGREGATE · CACHE · RESTART · FAILURE · RECOVERY
+ADMIN · METRIC · TENANT_ISOLATION · SCALE · PRIVACY · COST
 ```
 
-### System Lens
-
-Use the current `schemas/SYSTEM_TRUTH_MAP.md` artifact and review this fixed matrix:
+Possible states:
 
 ```text
-WRITE
-READ
-AGGREGATE
-CACHE
-RESTART
-FAILURE
-RECOVERY
-ADMIN
-METRIC
-TENANT_ISOLATION
-SCALE
-PRIVACY
-COST
+UNAFFECTED | VERIFIED | CHANGED_AND_TESTED | OPEN_RISK | NOT_APPLICABLE
 ```
 
-Each row gets exactly one state:
+### Risk-adaptive depth
 
-```text
-UNAFFECTED
-VERIFIED
-CHANGED_AND_TESTED
-OPEN_RISK
-NOT_APPLICABLE
-```
+Do **not** turn the matrix into checklist theater.
+
+- `LOW` + genuinely local change: write a short impact summary naming only plausible affected dimensions. Do not mechanically fill all rows.
+- `MEDIUM/HIGH`: record the relevant matrix dimensions explicitly.
+- any risk level touching **money, privacy, identity, tenant isolation, durability/recovery, destructive state or production semantics**: record explicit affected dimensions regardless of nominal task size.
 
 Rules:
 
-- `UNAFFECTED` is a reviewed conclusion, not a default placeholder.
-- `OPEN_RISK` is preserved as a finding/gap and cannot be silently converted to `UNAFFECTED`.
-- If a material data authority, trust boundary, recovery rule or scale boundary changes, update the System Truth Map or raise STOP/re-baseline as appropriate.
-- Caches/projections/summaries/metrics cannot silently become authoritative business truth.
-
-For LOW/local-only tasks, the System Lens may be a short explicit check. For MEDIUM/HIGH it is recorded in the task receipt/review.
+- `UNAFFECTED` is a reviewed conclusion, not a filler value;
+- `OPEN_RISK` remains visible until resolved, accepted or deliberately deferred;
+- caches/projections/summaries/metrics cannot silently become authoritative business truth;
+- when data authority, trust boundary, recovery rule or scale boundary materially changes, update `.agentic/SYSTEM_TRUTH_MAP.yaml` or STOP/re-baseline.
 
 ## 6. Execute in an adequate environment
 
-Use the lowest authorized environment that can directly exercise the changed behavior. Mock-only evidence closes only unit/model claims; it cannot silently inherit persistence, migration, integration, user-flow, deployment or production semantics.
+Use the lowest authorized environment that can directly exercise the changed behavior. Mock-only evidence closes unit/model claims; it does not silently inherit persistence, migration, integration, user-flow, deployment or production semantics.
 
 During execution:
 
@@ -216,30 +179,28 @@ During execution:
 - protect dirty/uncommitted work;
 - do not make real provider/external calls without authority.
 
-## 7. Behavioral scenarios before shallow function tests
+## 7. Test business behavior, not only functions
 
-For material business behavior, prefer scenario tests that trace actual business truth rather than only checking a helper return value.
-
-Examples of scenario dimensions when applicable:
+For material business behavior, prefer scenario tests that trace actual truth. Examples when applicable:
 
 ```text
 normal success
 fallback/escalation
 provider retry / partial charge
-operation fails after an external side effect
+failure after external side effect
 source-of-truth unavailable
 cache restart / projection rebuild
-month/time boundary
+time/month boundary
 admin recovery
-cross-tenant access attempt
+cross-tenant attempt
 concurrency / duplicate work
 ```
 
-The exact scenarios are project-specific. Do not create irrelevant cases merely to fill a template.
+Use only relevant scenarios; templates do not justify irrelevant tests.
 
-## 8. Mutation-sensitive proof
+## 8. Mutation/path proof for load-bearing tests
 
-For load-bearing tests, a green test is not enough. Demonstrate that the test can catch the target defect through controlled mutation/path proof when practical.
+A green load-bearing test is stronger when we show it can detect the target defect.
 
 Examples:
 
@@ -247,35 +208,34 @@ Examples:
 remove tenant dimension from cache key
 turn authority-read failure into zero/empty success
 double-count an aggregate row
-remove a lock / cleanup / readiness condition
+remove lock / cleanup / readiness condition
 skip projection rebuild after restart
 ```
 
-Mutation happens only in an isolated temporary working copy or equivalent safe mechanism. Do not use destructive Git restore/reset/clean commands to recover the operator's work. Preserve/restore exact bytes and verify restoration when doing manual mutation proof.
+Perform manual mutation only in an isolated temporary working copy or equivalent safe mechanism. Do not use destructive Git reset/restore/clean commands against operator work. Preserve and verify restoration of exact bytes.
 
-## 9. Focused + related + final suite
+## 9. Verification sequence
 
-Use risk/size appropriate checks:
+Use risk/size-appropriate checks:
 
 ```text
 focused tests early
-mutation-sensitive/path-proof tests when load-bearing
-related regression tests
-one final broader/full-suite run when the project has a meaningful bounded suite
-static review of the complete diff
+mutation/path proof when load-bearing
+related regressions
+one final broader/full-suite run when meaningful and bounded
+static review of complete diff
+Local + System Lens receipt
 ```
 
-Do not rerun an enormous suite mechanically after every tiny edit; do run the required final qualification before closure when the contract requires it.
+Do not rerun an enormous suite mechanically after every tiny edit; do perform the required final qualification before closure.
 
 ## 10. Pre-Manager adversarial review
 
-For MEDIUM/HIGH, prefer a cold/read-only review before spending Manager attention. Inspect actual diff and surrounding source for false assumptions, duplicate state authorities, swallowed errors, cleanup leaks, concurrency/crash gaps, weak test oracles, missing health propagation, unsafe workspace actions, unauthorized external effects, scope drift, task-focus drift and System-Lens gaps.
-
-Minimum review surfaces for material source changes include logic, error paths, concurrency/partial operations, resource management, logs/metrics, tenant boundaries, compatibility, unnecessary complexity, naming/structure and the cross-system effect matrix.
+For MEDIUM/HIGH, prefer cold/read-only review before spending Manager attention. Inspect exact diff + surrounding source for false assumptions, duplicate authority, swallowed errors, cleanup leaks, concurrency/crash gaps, weak test oracles, missing health propagation, unsafe workspace actions, unauthorized external effects, scope/task-focus drift and System-Lens gaps.
 
 ## 11. Manager consolidated review
 
-Manager reviews the exact commit/PR head, not only the Executor summary. Prefer one consolidated finding set:
+Manager reviews the exact commit/PR head, not only the Executor narrative. Prefer one consolidated finding set:
 
 ```text
 R1 ...
@@ -283,16 +243,15 @@ R2 ...
 R3 ...
 ```
 
-If findings are bounded/same-task, authorize a controlled remediation window per `schemas/MUTATION_APPROVAL_POLICY.md`.
+Manager confirms:
 
-Manager must also confirm that:
+- active task still matches real priority;
+- Local Lens is supported by tests/diff;
+- System Lens is proportionate and honest;
+- `OPEN_RISK`s are explicit;
+- no recent side issue was silently promoted.
 
-- the active task role still matches project priority;
-- the Local Lens is supported by actual tests/diff review;
-- the System Lens matrix is honest and current;
-- material `OPEN_RISK`s are accepted/deferred/escalated explicitly rather than hidden.
-
-A recent side issue is not implicitly promoted by receiving more implementation/review attention.
+For bounded same-task findings, use a controlled remediation window.
 
 ## 12. Controlled remediation
 
@@ -306,40 +265,24 @@ implementation
 → final review
 ```
 
-A second iteration is exceptional: it requires a **new material finding**, stays within the configured maximum, and must not compensate for a shallow first review.
+A second iteration is exceptional: it requires a **new material finding**, stays within configured maximum, and may not hide shallow initial review.
 
 ```text
 round 2 without new material finding
 → STOP / MANAGER REVIEW
 ```
 
-Materially new scope/provider/migration/public contract/security boundary/production action/dependency/architecture strategy invalidates the window.
+New provider/migration/public contract/security boundary/production action/dependency/architecture strategy or out-of-scope resource invalidates the window.
 
 ## 13. Swamp Guard checkpoint
 
-The Swamp Guard runs throughout normal work, not only at project inception. Evaluate it:
-
-```text
-before a major dependency/provider/datastore/framework
-before changing an architecture boundary
-after material review/remediation
-after repeated rework in the same subsystem
-when a SIDE_TASK exceeds its focus budget
-when System-Lens OPEN_RISKs accumulate
-before broad feature expansion
-before staging/production promotion
-at durable project checkpoints
-```
-
-Classify:
+Evaluate at material checkpoints, before major architecture/tooling expansion, after repeated rework, when a side task exceeds focus budget, when System-Lens open risks accumulate, and before staging/production promotion.
 
 ```text
 CLEAR | WATCH | ALERT | STOP_REBASELINE
 ```
 
-Raise at least `WATCH/ALERT` for repeated architecture churn, repeated remediation, abstraction/tooling proliferation without product need, competing mechanisms for one responsibility, AI/RAG tuning without evals, feature growth before a critical vertical slice, chat-only architecture decisions, source-of-truth ambiguity, permanent “temporary” workarounds, complexity growing faster than demonstrated value, side-task attention drift, or repeated unresolved System-Lens risks.
-
-Use `STOP_REBASELINE` when local patching is compounding structural debt or safety risk. Then:
+Use `STOP_REBASELINE` when local patching is compounding structural debt or safety risk:
 
 ```text
 STOP
@@ -347,7 +290,7 @@ STOP
 → Project Inception / Architecture Discovery
 → simplify / measure / decide
 → establish coherent baseline
-→ resume task flow
+→ resume
 ```
 
 Required alert:
@@ -362,13 +305,38 @@ Continue allowed: YES|NO
 Authority needed: <none|Manager|Operator>
 ```
 
-Do not hide a swamp signal merely to maintain velocity.
+## 14. Cross-system audit trigger order
 
-## 14. Independent closure is not model voting
+Periodic audit is a safety net, not a calendar ritual.
+
+```text
+EVENT TRIGGER
+> RISK / AUTHORITY TRIGGER
+> TASK-COUNT REMINDER
+```
+
+Trigger immediately when justified by real-customer release, material incident, or material security/data/authority/recovery change. A configured `5–8 material tasks` interval is only a fallback reminder. Harmless docs/local tasks do not force a meaningless audit.
+
+Audit themes when relevant:
+
+```text
+FINANCIAL TRUTH
+PRIVACY TRUTH
+IDENTITY / AUTHORIZATION
+TENANT ISOLATION
+RESTART SURVIVAL
+BACKUP / RESTORE
+OBSERVABILITY TRUTH
+CAPACITY BOUNDS
+EXTERNAL-PROVIDER FAILURE / SPEND
+ADMIN RECOVERY
+```
+
+## 15. Independent closure is not model voting
 
 For HIGH-risk work when required, use a separate read-only Judge after Manager review/remediation.
 
-Independent closure should separate:
+Prefer separation of:
 
 ```text
 IMPLEMENTATION
@@ -377,15 +345,15 @@ AUTHORITY
 EVIDENCE
 ```
 
-Model diversity can improve coverage, but:
-
 ```text
 MULTI-MODEL AGREEMENT != INDEPENDENT BEHAVIORAL EVIDENCE
 ```
 
-The Judge is read-only by default and does not mutate product code or production.
+The Judge does not mutate product code or production and does not upgrade missing runtime evidence by opinion.
 
-## 15. Verify claims, not activity
+## 16. Claim discipline
+
+Evidence strength rises roughly through:
 
 ```text
 IDENTITY
@@ -411,137 +379,35 @@ reviewer PASS      != missing runtime evidence
 three model PASSes != stronger receipt class
 ```
 
-Report `PASS | FAIL | PARTIAL | SKIPPED | UNVERIFIED` and truth classes `OBSERVED | DERIVED | INFERRED | UNKNOWN | CONTRADICTED`.
+Report `PASS | FAIL | PARTIAL | SKIPPED | UNVERIFIED` and `OBSERVED | DERIVED | INFERRED | UNKNOWN | CONTRADICTED` honestly.
 
-## 16. Compact receipts, raw evidence elsewhere
+## 17. Compact closure receipt
 
-Preferred receipt:
-
-```yaml
-claim: C4
-environment: ephemeral-postgres-17
-command: pytest tests/integration/test_commit_uncertainty.py
-result: PASS 7/7
-artifact_ref: artifacts/T125/integration-03.log
-proves: commit uncertainty classification
-does_not_prove: production provider behavior
-```
-
-Task-end summary should stay compact:
+End material work with a short report pointing to raw evidence:
 
 ```text
 What changed
 Why it is correct
 What was tested
-What mutation/path proof was caught
+Mutation/path proof caught
 What was not tested
-Cross-system effects / OPEN_RISKs
+System-Lens impact / OPEN_RISK
 New findings
 Environment mutations
-Provider calls / spend
-Rollback or recovery
+Provider calls/spend
+Rollback/recovery
 Next authorized action
 ```
 
-Reports index evidence; they do not repeat huge logs.
+Out-of-scope findings are recorded, not silently absorbed into the task unless current safety requires STOP/amendment.
 
-## 17. Periodic cross-system audit
+## 18. Production boundary
 
-Even if each task is locally correct, relationships between components can drift. Run a broader audit according to project policy.
-
-Recommended heuristic triggers:
+Production mutation is separate authority. Before every production mutation require exact target/artifact/change identity, health/success signal, abort condition, rollback or forward-recovery path, state/data constraints, recovery owner and post-change verification.
 
 ```text
-every ~5–8 material tasks (project-configurable)
-before a meaningful demo deployment
-before every real-customer release
-after every material incident
-before/after major authority/trust-boundary change
+missing rollback/recovery readiness
+→ NOT EXECUTION_READY_FOR_PRODUCTION_MUTATION
 ```
 
-Audit themes:
-
-```text
-FINANCIAL TRUTH
-PRIVACY TRUTH
-IDENTITY / AUTHORIZATION
-TENANT ISOLATION
-RESTART SURVIVAL
-BACKUP / RESTORE
-OBSERVABILITY TRUTH
-CAPACITY BOUNDS
-EXTERNAL-PROVIDER FAILURE / SPEND
-ADMIN RECOVERY
-```
-
-This is a System-Lens audit, not another full implementation review. Record findings/gaps and update the System Truth Map when the modeled relationships changed.
-
-## 18. Artifact-driven handoff
-
-```text
-Human transports authority.
-Repository transports engineering state.
-```
-
-Durable state should recover current project mode/baseline, `PRIMARY_TASK`, active task ref/role, suspended/resume state, base/head, findings, remediation window, receipts/gaps, System-Lens open risks, cross-system audit state, Swamp Guard state, closure state and next authority decision. A new session should re-read repository state rather than replay old chat.
-
-## 19. Model/cost routing
-
-Vendor names are adapters, not policy:
-
-```text
-Project Architect → stronger reasoning when architecture ambiguity justifies it
-Executor          → task-adequate / cost-efficient
-Manager           → higher reasoning when justified
-Independent Judge → high reasoning + separate context
-```
-
-Cost optimization never permits weaker acceptance/evidence.
-
-## 20. Production authority
-
-Before every production mutation follow `production/DELIVERY.md`: exact target/change identity, health signals, abort condition, rollback or forward recovery, data constraints, recovery owner and post-change verification. Judge PASS is not production authority.
-
-## 21. Closure and checkpoint
-
-Preserve:
-
-```text
-repository/environment identity
-project mode + architecture baseline state
-System Truth Map ref/version
-PRIMARY_TASK ref
-active task ref + role
-suspended/resume checkpoint when relevant
-current exact head
-verified claims
-open findings/gaps
-System-Lens matrix / OPEN_RISKs
-omitted checks
-remediation state
-Swamp Guard state
-cross-system audit state
-independent review state when required
-next action / authority decision
-```
-
-## 22. Measure Flow friction
-
-For material tasks record when available:
-
-```yaml
-flow_metrics:
-  first_pass_review_passed: true|false|unknown
-  remediation_iterations: <integer>
-  manager_review_rounds: <integer>
-  authorization_round_trips: <integer>
-  unplanned_scope_escalations: <integer>
-  environment_blocked: true|false
-  agent_safety_incidents: <integer>
-  side_task_focus_reviews: <integer>
-  side_task_promotions: <integer>
-  system_lens_open_risks: <integer>
-  task_cycle_time: <optional duration>
-```
-
-Use these to distinguish quality cost, agent defect cost, governance friction, environment friction, attention drift and system-truth drift. Repeated rework also feeds the Swamp Guard.
+Independent review never grants production authority.
