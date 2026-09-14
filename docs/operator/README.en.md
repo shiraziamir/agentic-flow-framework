@@ -1,15 +1,10 @@
-# Operator Documentation Index
+# Operator Documentation
 
-This directory is for human/operator guidance and should not be preloaded by coding agents.
+Start with the full control-plane runbook:
 
-- `OPERATOR_GUIDE.en.md` — practical operation, task workflow, governance and script entrypoints.
-- `DESIGNER_MANAGER_SETUP.md` — separate roles, direct Git mode, isolated Executor branch/PR and Manager review of exact commits.
-- `CONTEXT_PACKET.md` — bounded alternative when a Designer or Manager lacks direct Git access.
-- `USING_PYTHON_TOOLS.en.md` — exact purpose, commands, limitations and self-tests for the deterministic Python helpers.
-- `PROMPT_TASK_AGENT_SETUP.en.md` — prompting, task-writing and agent-setup best practices.
-- `INSTALLATION_PROMPTS.en.md` — ready-to-use prompts for fresh, mature, production-bound and mid-task adoption.
-- `RELEASE_CHECKLIST.en.md` — framework release verification checklist.
+- `OPERATOR_GUIDE.en.md` — complete operator model: Project Architect, Designer, Manager, Executor, Cold Reviewer, Independent Judge, Vibe/Product modes, Swamp Guard, task hierarchy, authority separation, evidence and production control.
+- `OPERATOR_GUIDE.fa.md` — full Persian operator runbook.
 
-Persian equivalents are in the same directory. The portable distribution contains these files for offline operator use, but coding agents still start at `START_HERE.md` and load operator docs only when required.
+Use the remaining files only when needed for installation, role setup, context packets, prompts, deterministic tools, usage telemetry or release operations.
 
-Canonical policy remains `ARCHITECTURE.md`.
+Canonical policy remains in `ARCHITECTURE.md` and `schemas/`; operator docs explain how to run it without loading the entire framework into the Executor context.
