@@ -42,6 +42,7 @@ INCLUDE_SCRIPTS = {
     "scripts/claude_usage_snapshot.py",
     "scripts/test_claude_usage_snapshot.py",
     "scripts/test_docs_onboarding.py",
+    "scripts/test_dual_lens_docs.py",
 }
 EXCLUDE_PARTS = {"__pycache__", ".DS_Store"}
 ZIP_TIME = (2026, 9, 9, 0, 0, 0)
