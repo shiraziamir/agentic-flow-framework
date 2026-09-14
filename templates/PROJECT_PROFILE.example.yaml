@@ -38,6 +38,32 @@ swamp_guard:
   stop_on_unresolved_sensitive_data_boundary: true
   stop_on_source_of_truth_ambiguity: true
   watch_on_side_task_attention_drift: true
+  watch_on_repeated_system_lens_open_risk: true
+
+dual_lens:
+  enabled: true
+  require_system_truth_map_for_product_build: true
+  require_data_authority_map_when_stateful_or_cost_sensitive: true
+  require_system_effect_matrix_for_material_tasks: true
+  require_behavior_scenarios_for_material_business_logic: true
+  require_mutation_or_path_proof_for_load_bearing_tests: true
+  system_effect_states: [UNAFFECTED, VERIFIED, CHANGED_AND_TESTED, OPEN_RISK, NOT_APPLICABLE]
+  cross_system_audit:
+    enabled: true
+    material_task_interval: 6
+    recommended_interval_range: "5-8"
+    before_demo_deployment: true
+    before_real_customer_release: true
+    after_material_incident: true
+    before_or_after_material_authority_change: true
+
+scale_boundaries:
+  require_current_target: true
+  require_expected_load_or_unknown: true
+  require_known_ceiling_or_unknown: true
+  require_hard_safety_limit_for_unbounded_resources: true
+  require_failure_behavior: true
+  require_scale_up_trigger: true
 
 codebase_scale: MEDIUM
 readiness_tier: STANDARD
@@ -133,6 +159,8 @@ state_handoff:
   require_active_task_role: true
   require_resume_checkpoint_for_interrupt: true
   require_current_repository_ref: true
+  require_system_truth_map_ref_when_applicable: true
+  require_system_lens_open_risks: true
   session_reset_after_durable_checkpoint: ALLOWED
 
 flow_metrics:
