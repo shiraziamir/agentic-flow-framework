@@ -1,15 +1,15 @@
 # Agentic Flow Framework
 
-**Framework version:** 1.10 · **Vendor-neutral** · **Repository-first** · **Risk-adaptive**  
+**Framework version:** 1.11 · **Vendor-neutral** · **Repository-first** · **Risk-adaptive**  
 **فارسی:** [راهنمای جامع فارسی](docs/GUIDE.fa.md)
 
 > **Use coding agents fast without letting “looks done” become project truth—or letting fast prototyping become architecture by accident.**
 
-Agentic Flow is a practical operating framework for coding agents. It separates **product intent**, **architecture discovery**, **task priority**, **what is authorized**, **what an agent may change**, **where it may run**, and **what evidence is strong enough to call the work done**.
+Agentic Flow is an operating framework for coding agents. It separates **product intent**, **architecture**, **task priority**, **authority**, **execution**, **evidence**, **review**, and **production control** so agents can move quickly without silently changing what “done” means.
 
-## The five questions
+## Understand it in 30 seconds
 
-If your agent workflow cannot answer these quickly, this project is for you:
+Every material change must answer five questions:
 
 1. **What exactly is authorized?**
 2. **What actually changed?**
@@ -17,9 +17,50 @@ If your agent workflow cannot answer these quickly, this project is for you:
 4. **What remains unproven?**
 5. **If it is wrong, how do we stop or recover?**
 
-## Starting a new project? Do not jump from idea to code
+Normal product flow:
 
-If you only know the product outcome, that is enough to start—but not enough to start coding blindly.
+```text
+PRODUCT INTENT
+→ PRODUCT / EVAL CONSTRAINTS
+→ ARCHITECTURE DISCOVERY
+→ SYSTEM TRUTH / DATA AUTHORITY MAP
+→ WALKING SKELETON
+→ PRIMARY TASK
+→ BOUNDED IMPLEMENTATION
+→ LOCAL LENS + SYSTEM LENS
+→ REVIEW / REMEDIATION
+→ INDEPENDENT CLOSURE when justified
+→ OPERATOR PRODUCTION AUTHORITY
+→ ROLLBACK / RECOVERY READY
+```
+
+**Quality requirements stay fixed. Ceremony adapts to risk.**
+
+## Three practical operating presets
+
+You should not configure twenty controls before doing useful work. Start from a preset and override only what the project truly needs.
+
+```yaml
+operating_preset: VIBE_FAST | PRODUCT_STANDARD | HIGH_ASSURANCE
+```
+
+| Preset | Use for | Default posture |
+|---|---|---|
+| `VIBE_FAST` | disposable experiments / “can this idea work?” | fast, compact review, sacrificial code allowed, no production claims |
+| `PRODUCT_STANDARD` | normal maintainable product | inception when needed, bounded tasks, Dual-Lens, real-enough tests, one remediation by default |
+| `HIGH_ASSURANCE` | money, identity, privacy, tenant isolation, critical durability, destructive/regulated/high-consequence work | stronger evidence, explicit affected system dimensions, independent closure where justified |
+
+Project phase is separate from the preset:
+
+```text
+VIBE_PROTOTYPE | PRODUCT_BUILD | MAINTENANCE
+```
+
+`VIBE_PROTOTYPE` is a learning mode, **not** a production baseline.
+
+## Starting from only a product idea
+
+You do not need to know the implementation stack. The Product Owner should define the outcome and business constraints; the Project Architect discovers the smallest viable system shape.
 
 ```text
 PRODUCT INTENT
@@ -27,188 +68,116 @@ PRODUCT INTENT
 → QUALITY / EVAL CONTRACT
 → ARCHITECTURE DISCOVERY
 → SYSTEM TRUTH / DATA AUTHORITY MAP
-→ 2–3 MINIMAL OPTIONS
+→ CURRENT SCALE BOUNDARY
+→ 2–3 MINIMAL OPTIONS when useful
 → WALKING SKELETON
 → ARCHITECTURE CHECKPOINT
 → PRODUCT BASELINE
-→ NORMAL TASK FLOW
 ```
 
-The Product Owner owns **WHY / WHAT / business trade-offs**. The Project Architect owns **system-shape discovery**. The Executor owns **implementation**.
+For AI/RAG/search work: **no serious tuning before a representative eval baseline exists.** Do not freeze vector vendor, chunk size, reranker, prompt or framework merely because an agent knows one well.
 
-Read [Project Inception & Architecture Discovery](docs/agent/PROJECT_INCEPTION_ARCHITECTURE.md) or use the copy-ready [Project Architect prompt](prompts/operator/PROJECT_ARCHITECT.md).
+Read [Project Inception](docs/agent/PROJECT_INCEPTION_ARCHITECTURE.md).
 
-## Dual-Lens engineering — every material change gets two views
+## Dual-Lens engineering
+
+Every material change is seen through two lenses:
 
 ```text
-Local Lens  — Is the changed behavior implemented correctly?
-System Lens — What truth does the whole system claim after this change?
+LOCAL LENS
+Does the changed behavior work correctly?
+
+SYSTEM LENS
+What truth does the whole system claim after this change?
 ```
 
-The Local Lens covers the diff, focused behavior, failure paths, regression checks and mutation-sensitive tests. The System Lens checks whether the change altered any of these system truths:
+System dimensions include:
 
 ```text
 WRITE · READ · AGGREGATE · CACHE · RESTART · FAILURE · RECOVERY
 ADMIN · METRIC · TENANT_ISOLATION · SCALE · PRIVACY · COST
 ```
 
-Each material task records one status per dimension:
+But the framework deliberately avoids checklist theater:
+
+- `LOW` + genuinely local change → short System-Lens impact summary;
+- `MEDIUM/HIGH` → record relevant dimensions explicitly;
+- money/privacy/identity/tenant/durability/recovery/destructive/production-sensitive work → explicit affected dimensions regardless of nominal task size.
+
+Possible states:
 
 ```text
 UNAFFECTED | VERIFIED | CHANGED_AND_TESTED | OPEN_RISK | NOT_APPLICABLE
 ```
 
-This catches the class of defect where a function is green but the system is now lying—for example cost read from a cache instead of its authoritative ledger, a restart losing state, a cleanup failure never reaching health, or tenant isolation disappearing in an aggregate path.
+Project-level truth lives in `.agentic/SYSTEM_TRUTH_MAP.yaml`, created from [the template](templates/SYSTEM_TRUTH_MAP.example.yaml) and governed by [the schema](schemas/SYSTEM_TRUTH_MAP.md).
 
-Project-level truth lives in the compact [System Truth Map](schemas/SYSTEM_TRUTH_MAP.md): components, trust boundaries, authoritative data, caches/projections, restart/recovery behavior, tenant isolation and current scale boundaries.
-
-## Vibe Coding is a supported mode—but it is explicit
-
-```yaml
-project_mode:
-  mode: VIBE_PROTOTYPE
-```
-
-Use `VIBE_PROTOTYPE` when the main question is “can this idea work?” or “do users like this interaction?”. It deliberately optimizes for learning speed.
-
-```text
-VIBE_PROTOTYPE
-!=
-PRODUCTION BASELINE
-```
-
-Defaults in Vibe mode:
-
-- fast experimentation is allowed;
-- architecture may be provisional;
-- code may be sacrificial;
-- sensitive/production data and production mutation stay separately controlled;
-- production-readiness claims are denied;
-- moving to `PRODUCT_BUILD` requires explicit re-baselining and an architecture checkpoint;
-- prototype code must be classified as `REUSE_AS_IS | REUSE_AFTER_REVIEW | REWRITE | DISCARD` before becoming product baseline.
-
-**Do not “promote the prototype” by simply continuing to code.** Preserve the learnings, evals and useful code; then establish the product architecture intentionally.
+A cache, metric or projection does not become authoritative business truth because it is convenient to read.
 
 ## Primary tasks stay primary
 
-Agent conversations have a dangerous failure mode: a small issue appears during the main task, receives several prompts, then the agent gradually starts optimizing that issue as if it were the project objective.
-
-Agentic Flow makes task focus durable:
-
 ```text
-PRIMARY_TASK = the current durable objective
+PRIMARY_TASK = durable objective
 SIDE_TASK    = bounded supporting work
 INTERRUPT    = urgent bounded preemption
 ```
-
-Core rule:
 
 ```text
 RECENCY IS NOT PRIORITY.
 CONVERSATIONAL MOMENTUM CANNOT PROMOTE A SIDE TASK.
 ```
 
-There is one `PRIMARY_TASK` per workstream. Every side task keeps a reference to it, a bounded success condition, a round/budget limit and a return condition.
+A side task keeps its primary reference, bounded success condition, scope/round budget and return condition. Promotion requires explicit Manager/Operator decision.
 
-Normal behavior:
+If side work starts consuming the project, raise `SIDE_TASK DRIFT` instead of silently optimizing it forever.
 
-```text
-SIDE_TASK done
-→ record result
-→ return to PRIMARY_TASK
-```
+## Swamp Guard
 
-If the side task becomes genuinely more important:
+The agent continuously watches for compounding complexity:
 
 ```text
-SIDE_TASK
-→ PROMOTION PROPOSED
-→ Manager / Operator decision
-→ durable task refs updated
-→ only then PRIMARY_TASK
+CLEAR | WATCH | ALERT | STOP_REBASELINE
 ```
 
-When side work keeps expanding, the agent must raise `SIDE_TASK DRIFT` instead of silently continuing. An urgent `INTERRUPT` must checkpoint the primary task first and preserve exactly where to resume.
+Signals include repeated architecture churn/remediation, unjustified frameworks/datastores/abstractions, competing mechanisms, eval-free AI/RAG tuning, feature growth before vertical slice, ambiguous source-of-truth, prototype-to-production drift, unresolved System-Lens risks and side-task attention drift.
 
-## Swamp Guard — detect the bog before it compounds
-
-Agentic Flow continuously checks for architectural/process drift at material checkpoints. It does not wait until the project is already expensive to repair.
-
-```text
-CLEAR
-WATCH
-ALERT
-STOP_REBASELINE
-```
-
-Typical swamp signals:
-
-- the same subsystem is repeatedly redesigned or remediated;
-- new frameworks, datastores or abstractions appear without a product constraint that requires them;
-- multiple mechanisms compete for the same responsibility;
-- AI/RAG tuning starts before a representative eval baseline exists;
-- features keep growing before a real end-to-end vertical slice works;
-- architecture decisions exist only in chat;
-- source-of-truth/state ownership becomes ambiguous;
-- “temporary” exceptions become permanent structure;
-- a prototype quietly accumulates production expectations;
-- complexity grows faster than demonstrated product value;
-- a `SIDE_TASK` consumes repeated rounds or architecture attention and starts replacing the primary objective;
-- repeated System-Lens `OPEN_RISK` findings remain unresolved.
-
-Hard cases trigger:
+Hard case:
 
 ```text
 SWAMP ALERT: STOP_REBASELINE
-→ stop compounding local patches
+→ stop stacking local patches
+→ preserve evidence/current state
 → return to architecture discovery
 → simplify / measure / decide
-→ continue only from a coherent baseline
+→ resume from a coherent baseline
 ```
 
-The goal is not to kill experimentation. The goal is to stop **unmeasured complexity, system-truth drift or attention drift from becoming architecture by accident**.
+Agentic Flow applies the same rule to itself: once governance surface grows, prefer **simplify + validate + use + measure** over adding more concepts.
 
-## Why use it?
-
-- **Less scope drift** — tasks are bounded before implementation.
-- **Less priority drift** — side work cannot silently replace the primary objective.
-- **Better greenfield starts** — product intent is converted into constraints, evals, a system-truth map and architecture options before serious coding.
-- **Local + system correctness** — every material change checks both its code path and cross-system effects.
-- **Less architecture debt** — hard-to-change invariants are frozen early; easy experiment variables remain open.
-- **Early swamp detection** — architecture churn, framework proliferation, eval-free tuning, unresolved system risks and side-task drift trigger alerts/re-baselining.
-- **Less false confidence** — mocks, CI, screenshots and reviewer agreement cannot silently prove stronger behavior.
-- **Safer autonomy** — agents move quickly inside explicit boundaries instead of asking permission for every line.
-- **Real testing** — behavior claims require an environment that can exercise the changed path.
-- **Independent review** — implementation, context, authority and evidence are separated for material closure.
-- **No fake consensus** — multiple models agreeing is useful review coverage, not independent behavioral evidence.
-- **Less human copy/paste** — engineering state moves through repository artifacts; humans transport authority and decisions.
-- **Controlled production** — production actions require explicit authority and rollback or forward-recovery readiness.
-- **Durable project memory** — a fresh session can continue from committed state without replaying old chats.
-
-## The normal task model in 20 seconds
+## The normal task model
 
 ```text
 Operator intent
-→ Designer: task contract + engineering advisory
-→ Manager: review / freeze / bounded authority
+→ Designer: task contract + advisory
+→ Manager: review / bounded authority
 → Executor: implement + real-enough tests
 → Local Lens + System Lens
-→ cold/adversarial review
+→ cold/adversarial review for MEDIUM/HIGH
 → Manager: one consolidated finding set
 → one bounded remediation round by default
-→ Independent Judge for HIGH-risk closure (read-only)
+→ Independent Judge for HIGH-risk closure when required (read-only)
 → Operator: production / business authority
 ```
 
-**Quality requirements stay fixed. Process ceremony adapts to risk.**
-
 | Risk | Default flow |
 |---|---|
-| LOW | implement → focused test → compact review |
-| MEDIUM | short preflight → implement → Dual-Lens check → cold review → one bounded remediation → Manager review |
-| HIGH | frozen contract → failure/System-Lens preflight → bounded execution → adversarial review → Manager review/remediation → read-only independent closure |
+| LOW | implement → focused test → compact diff review → compact system-impact summary |
+| MEDIUM | short preflight → implement → Dual-Lens → cold review → one remediation → Manager |
+| HIGH | frozen contract → failure/System-Lens preflight → bounded execution → adversarial review → Manager/remediation → read-only independent closure |
 
-## One rule that prevents fake confidence
+A second remediation round requires a **new material finding** and stays inside the configured boundary.
+
+## Independent review is not model voting
 
 ```text
 MULTI-MODEL AGREEMENT
@@ -216,128 +185,133 @@ MULTI-MODEL AGREEMENT
 INDEPENDENT BEHAVIORAL EVIDENCE
 ```
 
-A second or third model may improve review coverage. It does **not** upgrade a unit/mock claim into integration, deployment or production proof. Raw receipts, real execution paths and runtime observations decide claim strength.
+Different models can share the same assumption, bad oracle or incomplete context. Strong closure separates as much as risk requires:
+
+```text
+IMPLEMENTATION
+CONTEXT
+AUTHORITY
+EVIDENCE
+```
+
+The Independent Judge is read-only by default and cannot mutate production.
+
+## Real evidence, not “looks green”
+
+```text
+prototype works       != product architecture validated
+local function works  != whole-system truth preserved
+cache has a number    != authoritative business truth
+unit test passes      != real integration
+HTTP 200              != persistence
+CI green              != deployed behavior
+backup enabled        != recoverability
+reviewer says PASS    != behavioral evidence
+three models say PASS != three independent engineers
+```
+
+Load-bearing tests should use mutation/path proof when practical: deliberately break the target behavior in an isolated copy and prove the test goes red. Never destroy unknown operator work to perform mutation testing.
+
+## Cross-system audit without calendar theater
+
+Task-local correctness is not enough forever. Cross-system audit trigger priority is:
+
+```text
+EVENT
+> RISK / AUTHORITY CHANGE
+> TASK-COUNT REMINDER
+```
+
+Real-customer release, material incident, or material security/data/authority/recovery change can trigger an audit immediately. `5–8 material tasks` is only a fallback reminder, not a law.
 
 ## Production mode
 
-When production mutation is enabled, **every production change must have a rollback or explicit forward-recovery plan before execution**.
+Every production mutation requires **rollback or explicit forward-recovery readiness before execution**.
 
 Minimum production-change contract:
 
-- exact target environment and artifact/config/change identity;
-- expected success and health signals;
-- abort condition;
-- rollback/recovery steps;
-- stateful/data rollback constraints;
-- recovery authority/owner;
-- post-change verification.
+```text
+exact target + artifact/config/change identity
+success/health signals
+abort condition
+rollback OR forward-recovery steps
+state/data constraints
+recovery owner/authority
+post-change verification
+```
 
 ```text
 NO ROLLBACK / RECOVERY PLAN
 → NOT EXECUTION-READY FOR PRODUCTION MUTATION
 ```
 
-The Independent Judge is **read-only by default**. Production mutation remains a separate Operator-authorized action. For irreversible changes, define why rollback is unsafe/impossible plus forward recovery, backup/checkpoint, blast-radius controls and STOP conditions.
-
-## What it prevents
-
-```text
-prototype works       != product architecture validated
-local function works  != whole-system truth preserved
-cache has a number    != authoritative business truth
-recent side task      != primary objective
-long side discussion  != task promotion
-plan exists           != implementation
-unit test passes      != real integration
-HTTP 200              != persistence
-CI green              != deployed behavior
-commit                != deployed artifact
-backup enabled        != recoverability
-reviewer says PASS    != behavioral evidence
-three models say PASS != three independent engineers
-```
+Irreversible changes require forward recovery, backup/checkpoint, blast-radius controls and STOP conditions. Reviewer/Judge PASS never grants production authority.
 
 ## Fast adoption
 
-1. Clone/pin this framework beside your project.
+1. Clone/pin the framework beside the target project or use the portable bundle.
 2. Read [Getting Started](docs/GETTING_STARTED.md).
-3. **Operator:** read the [Operator Runbook](docs/operator/OPERATOR_GUIDE.en.md) or [راهنمای اپراتور فارسی](docs/operator/OPERATOR_GUIDE.fa.md) to understand the full control model and guardrails.
-4. If greenfield/early-stage, choose `VIBE_PROTOTYPE` or `PRODUCT_BUILD` and run [Project Inception](docs/agent/PROJECT_INCEPTION_ARCHITECTURE.md) before serious coding.
-5. Establish/update the [System Truth Map](schemas/SYSTEM_TRUTH_MAP.md) for stateful, tenant-sensitive, privacy-sensitive, cost-sensitive or production-oriented work.
-6. Keep one durable `PRIMARY_TASK`; classify discovered work as `SIDE_TASK` or `INTERRUPT` instead of allowing implicit reprioritization.
-7. Give the Executor [`docs/agent/START_HERE.md`](docs/agent/START_HERE.md).
-8. Start with `STRICT_PREVIEW`; group related edits into bounded batches.
-9. For material tasks, use the [Designer](prompts/operator/TASK_DESIGNER.md) and [Manager](prompts/operator/MANAGER_REVIEWER.md) prompts.
-10. Require both Local-Lens verification and the fixed System-Lens effect matrix for material changes.
-11. For HIGH-risk closure, use the read-only [Independent Judge](prompts/operator/INDEPENDENT_JUDGE.md).
-12. Require real-enough test access for the claims being closed.
-13. Let repository artifacts carry project/task/review/receipt state; involve the human for actual product, authority, priority, risk and business decisions.
+3. Operator: read the [Operator Runbook](docs/operator/OPERATOR_GUIDE.en.md) or [راهنمای اپراتور فارسی](docs/operator/OPERATOR_GUIDE.fa.md).
+4. Choose project mode + `VIBE_FAST | PRODUCT_STANDARD | HIGH_ASSURANCE`.
+5. Give the Executor [START_HERE](docs/agent/START_HERE.md).
+6. If greenfield/untrusted architecture, run [Project Inception](docs/agent/PROJECT_INCEPTION_ARCHITECTURE.md).
+7. For stateful/cost/privacy/tenant-sensitive product work, create `.agentic/SYSTEM_TRUTH_MAP.yaml` from [the template](templates/SYSTEM_TRUTH_MAP.example.yaml).
+8. Keep one durable `PRIMARY_TASK` and bound side work.
+9. Start with `STRICT_PREVIEW` unless the profile intentionally grants more autonomy.
+10. Require evidence appropriate to the claim and separate production authority.
 
 ## Key rules
 
-- **VIBE_PROTOTYPE is an experiment mode, not a production-readiness claim.**
-- **Every material change gets a Local Lens and a System Lens.**
-- **Caches/projections are not authoritative unless explicitly declared.**
-- **Recency is not priority; conversational momentum cannot promote a side task.**
-- **One durable `PRIMARY_TASK` per workstream; side-task promotion requires explicit Manager/Operator decision.**
-- **Freeze hard-to-change invariants, not easy-to-change implementation choices.**
-- **No broad feature expansion before the critical walking skeleton is exercised.**
-- **For AI/RAG, no serious tuning without a representative eval/quality baseline.**
-- **Swamp signals must be surfaced early; severe signals require `STOP_REBASELINE`.**
-- Task authority ≠ mutation authority ≠ environment authority ≠ external-side-effect authority.
-- A claim may be no broader than its current receipt.
-- Model agreement does not upgrade evidence strength.
-- The Independent Judge is read-only by default and cannot mutate production.
-- HIGH risk means strong boundaries + bounded autonomy, not approval spam.
-- Same-task findings get one remediation round by default; a second requires a new material finding.
-- Unknown/unowned dirty work must be preserved.
-- Production mutation requires rollback or explicit forward-recovery readiness.
 - **Human transports authority; repository transports engineering state.**
+- **VIBE_PROTOTYPE != PRODUCTION BASELINE.**
+- **Freeze hard-to-change invariants, not easy experiment variables.**
+- **Recency is not priority.**
+- **Local correctness does not prove System truth.**
+- **LOW work should stay light; sensitive/high-risk work earns stronger ceremony.**
+- **Unknown/unowned dirty work is protected.**
+- **Task authority ≠ mutation authority ≠ environment authority ≠ external-effect authority ≠ production authority.**
+- **Claims may not be broader than receipts.**
+- **One remediation round by default; second only for a new material finding.**
+- **Production mutation requires rollback or forward-recovery readiness.**
 
 ## Read only what you need
 
-For a human newcomer:
+Human newcomer:
 
-1. **This README** — purpose, Vibe mode, Dual-Lens model, task focus and operating model.
-2. **[Getting Started](docs/GETTING_STARTED.md)** — adoption steps.
-3. **[Operator Runbook](docs/operator/OPERATOR_GUIDE.en.md)** / **[راهنمای اپراتور](docs/operator/OPERATOR_GUIDE.fa.md)** — complete role choreography and guardrails.
-4. **[Project Inception](docs/agent/PROJECT_INCEPTION_ARCHITECTURE.md)** — greenfield/vibe/product architecture lifecycle.
-5. **[Task Workflow](docs/agent/TASK_WORKFLOW_DRAFT_REVIEW_APPLY_VERIFY.md)** — execution lifecycle after the project baseline exists.
-6. **[Persian Guide](docs/GUIDE.fa.md)** — راهنمای فارسی کامل.
+```text
+README.md
+→ docs/GETTING_STARTED.md
+→ docs/operator/OPERATOR_GUIDE.*.md
+```
 
-For an Executor:
+Executor:
 
 ```text
 docs/agent/START_HERE.md
-→ current project mode/profile
-→ project inception when baseline is missing
-→ PRIMARY_TASK + active task role
-→ current task
-→ only triggered schemas / verification / production profiles
+→ current profile / primary task
+→ only triggered schemas, verification, production profiles and skills
 ```
 
-## Deeper references
+Greenfield/architecture work:
 
-- [Operator Runbook](docs/operator/OPERATOR_GUIDE.en.md) / [Persian Operator Runbook](docs/operator/OPERATOR_GUIDE.fa.md) — full control-plane operation and guardrails.
-- [System Truth Map](schemas/SYSTEM_TRUTH_MAP.md) — project components, data authority, recovery and scale boundaries.
-- [Project Architect Prompt](prompts/operator/PROJECT_ARCHITECT.md) — architecture discovery without premature coding.
-- [Why Agentic Flow](docs/WHY_AGENTIC_FLOW.md) — problem and evidence map.
-- [Comparison](docs/COMPARISON.md) — trade-offs vs ordinary coding-agent use.
-- [Validation Status](docs/VALIDATION_STATUS.md) — what is proven and what is not.
-- [Role Setup](docs/operator/DESIGNER_MANAGER_SETUP.md) — Designer/Manager/Executor/Judge permissions.
-- [Architecture](ARCHITECTURE.md) — canonical invariants.
-- [Task Contract](schemas/TASK_CONTRACT.md) — focus, scope, evidence and authority contract.
-- [Project Profile](schemas/PROJECT_PROFILE_CONFIG.md) — project-level operating policy.
-- [Primary Sources](docs/references/PRIMARY_SOURCES.md) — external provenance.
+```text
+docs/agent/PROJECT_INCEPTION_ARCHITECTURE.md
+```
 
-## What this project does **not** claim
+Material task execution:
 
-Agentic Flow does **not** claim that more process is always better, that different models are statistically independent, that Vibe mode makes prototype code production-ready, that AI always makes engineering faster, or that this framework has been empirically proven superior to every alternative. The goal is narrower: **move quickly while making product constraints, system truth, task priority, architecture, scope, authority, evidence, recovery and closure explicit—and detect the architectural, system or attention swamp before it compounds.**
+```text
+docs/agent/TASK_WORKFLOW_DRAFT_REVIEW_APPLY_VERIFY.md
+```
 
-## Repository checks
+Current limitations and what is actually proven:
 
-```bash
-python3 -m unittest discover -s scripts -p 'test_*.py'
-python3 scripts/test_docs_onboarding.py
-python3 scripts/build_agent_bundle.py
+```text
+docs/VALIDATION_STATUS.md
+```
+
+Canonical policy:
+
+```text
+ARCHITECTURE.md
 ```
