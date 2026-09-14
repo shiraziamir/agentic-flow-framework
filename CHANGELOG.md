@@ -2,23 +2,11 @@
 
 ## 1.11 — 2026-09-14
 
-Productization and coherence release. Consolidates recent Task Hierarchy, Operator Control Plane and Dual-Lens work into a simpler operating model rather than adding another governance layer.
+Productization release: reduces configuration burden with `VIBE_FAST | PRODUCT_STANDARD | HIGH_ASSURANCE` operating presets; makes Dual-Lens depth explicitly risk-adaptive so LOW/local work uses a compact System-Lens impact summary while sensitive boundaries remain explicit; changes Cross-System Audit precedence to event/risk first and task-count reminder second; adds a concrete `SYSTEM_TRUTH_MAP` template and canonical `.agentic/SYSTEM_TRUTH_MAP.yaml` destination; refreshes README/START_HERE/operator/Persian guidance; resolves portable-bundle vs default-agent-context ambiguity; and promotes semantic documentation tests plus Dual-Lens/productization checks into CI.
 
-Key changes:
+Task-focus and system-coherence hardening: formalizes `PRIMARY_TASK | SIDE_TASK | INTERRUPT`, prevents conversational recency from silently reprioritizing work, adds `SIDE_TASK DRIFT`, integrates attention drift into Swamp Guard, adds the operator control-plane runbook, and introduces Dual-Lens engineering with System Truth/Data Authority maps, cross-system effect review, mutation/path proof, scale boundaries and cross-system audits.
 
-- adds `VIBE_FAST | PRODUCT_STANDARD | HIGH_ASSURANCE` operating presets so adopters can start from sane defaults and override only real project differences;
-- separates project phase (`VIBE_PROTOTYPE | PRODUCT_BUILD | MAINTENANCE`) from assurance/ceremony preset;
-- formalizes `PRIMARY_TASK | SIDE_TASK | INTERRUPT` attention control and explicit side-task promotion;
-- adds the project-level System Truth / Data Authority Map and a directly usable `templates/SYSTEM_TRUTH_MAP.example.yaml`;
-- makes Dual-Lens risk-adaptive: LOW/local work uses a compact system-impact summary, while MEDIUM/HIGH and sensitive boundaries record explicit relevant dimensions;
-- makes cross-system audit event/risk-first, with the 5–8 material-task interval retained only as a fallback reminder;
-- keeps mutation/path proof for load-bearing tests while explicitly protecting operator workspace from destructive Git restore/reset/clean behavior;
-- synchronizes Agent entrypoint, architecture and profile semantics around presets, System Truth, Swamp Guard and production recovery;
-- fixes bundle-vs-agent-context wording: operator/reference docs may be present in the portable ZIP but remain cold/default-excluded from coding-agent context;
-- adds the Dual-Lens/productization self-test to CI so a green release check actually validates the new wiring;
-- keeps the framework itself under Swamp Guard: prefer simplification, validation and real-project measurement over adding new governance concepts.
-
-Production mutation remains separately authorized and requires rollback or explicit forward-recovery readiness before execution. Independent Judge remains read-only by default. Multi-model agreement remains review coverage, not behavioral evidence.
+Experimentation: pre-registers `experiments/tenant-rag-ab-v1`, a paired 12-prompt TenantRAG trial comparing a normal coding-agent workflow with Agentic Flow 1.11 under the same product queue, freeze point, metrics and evaluator oracle.
 
 ## 1.10 — 2026-09-13
 
