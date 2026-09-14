@@ -131,8 +131,8 @@ class OnboardingDocsTest(unittest.TestCase):
         profile = read("schemas/PROJECT_PROFILE_CONFIG.md")
         judge = read("prompts/operator/INDEPENDENT_JUDGE.md")
         manager = read("prompts/operator/MANAGER_REVIEWER.md")
-        setup = read("docs/operator/DESIGNER_MANAGER_SETUP.md")
-        for text in (architecture, workflow, judge, setup):
+        operator = read("docs/operator/OPERATOR_GUIDE.en.md")
+        for text in (architecture, workflow, judge, operator):
             self.assertIn("multi-model agreement", text.lower())
         for phrase in ("IMPLEMENTATION", "CONTEXT", "AUTHORITY", "EVIDENCE"):
             self.assertIn(phrase, judge)
