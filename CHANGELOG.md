@@ -1,5 +1,25 @@
 # Changelog
 
+## 1.11 — 2026-09-14
+
+Productization and coherence release. Consolidates recent Task Hierarchy, Operator Control Plane and Dual-Lens work into a simpler operating model rather than adding another governance layer.
+
+Key changes:
+
+- adds `VIBE_FAST | PRODUCT_STANDARD | HIGH_ASSURANCE` operating presets so adopters can start from sane defaults and override only real project differences;
+- separates project phase (`VIBE_PROTOTYPE | PRODUCT_BUILD | MAINTENANCE`) from assurance/ceremony preset;
+- formalizes `PRIMARY_TASK | SIDE_TASK | INTERRUPT` attention control and explicit side-task promotion;
+- adds the project-level System Truth / Data Authority Map and a directly usable `templates/SYSTEM_TRUTH_MAP.example.yaml`;
+- makes Dual-Lens risk-adaptive: LOW/local work uses a compact system-impact summary, while MEDIUM/HIGH and sensitive boundaries record explicit relevant dimensions;
+- makes cross-system audit event/risk-first, with the 5–8 material-task interval retained only as a fallback reminder;
+- keeps mutation/path proof for load-bearing tests while explicitly protecting operator workspace from destructive Git restore/reset/clean behavior;
+- synchronizes Agent entrypoint, architecture and profile semantics around presets, System Truth, Swamp Guard and production recovery;
+- fixes bundle-vs-agent-context wording: operator/reference docs may be present in the portable ZIP but remain cold/default-excluded from coding-agent context;
+- adds the Dual-Lens/productization self-test to CI so a green release check actually validates the new wiring;
+- keeps the framework itself under Swamp Guard: prefer simplification, validation and real-project measurement over adding new governance concepts.
+
+Production mutation remains separately authorized and requires rollback or explicit forward-recovery readiness before execution. Independent Judge remains read-only by default. Multi-model agreement remains review coverage, not behavioral evidence.
+
 ## 1.10 — 2026-09-13
 
 Project-inception and architecture-safety release: adds explicit `VIBE_PROTOTYPE | PRODUCT_BUILD | MAINTENANCE` project modes; a canonical Product Inception / Architecture Discovery lifecycle; a copy-ready Project Architect prompt; quality/eval-contract-first guidance for AI/RAG systems; minimal architecture option comparison; walking-skeleton and architecture-checkpoint gates; hard-to-change-invariant vs easy-experiment-variable separation; and a continuous Swamp Guard with `CLEAR | WATCH | ALERT | STOP_REBASELINE` states. Vibe prototypes are explicitly sacrificial/non-production by default and require re-baselining before product promotion.
