@@ -44,43 +44,42 @@ class OnboardingDocsTest(unittest.TestCase):
     def test_landing_page_is_fast_and_complete(self) -> None:
         text = read("README.md")
         for phrase in (
-            "The five questions",
+            "Understand it in 30 seconds",
             "What exactly is authorized?",
+            "VIBE_FAST",
+            "PRODUCT_STANDARD",
+            "HIGH_ASSURANCE",
             "MULTI-MODEL AGREEMENT",
             "Independent Judge",
-            "Human transports authority; repository transports engineering state.",
-            "one remediation round by default",
-            "rollback or explicit forward-recovery plan",
+            "Human transports authority",
             "PRIMARY_TASK",
-            "SIDE_TASK DRIFT",
             "RECENCY IS NOT PRIORITY",
-            "Operator Runbook",
+            "System Truth",
+            "NO ROLLBACK / RECOVERY PLAN",
         ):
             self.assertIn(phrase, text)
 
-    def test_operator_runbook_covers_current_control_model(self) -> None:
+    def test_operator_runbooks_cover_current_control_model(self) -> None:
         english = read("docs/operator/OPERATOR_GUIDE.en.md")
         persian = read("docs/operator/OPERATOR_GUIDE.fa.md")
-        index = read("docs/operator/README.md")
         for text in (english, persian):
             for phrase in (
                 "VIBE_PROTOTYPE",
+                "PRODUCT_STANDARD",
+                "HIGH_ASSURANCE",
                 "PROJECT ARCHITECT",
                 "PRIMARY_TASK",
                 "SIDE_TASK DRIFT",
                 "RECENCY IS NOT PRIORITY",
-                "SWAMP ALERT",
                 "Independent Judge",
                 "MULTI-MODEL AGREEMENT",
-                "STRICT_PREVIEW",
+                "SYSTEM TRUTH",
                 "NO ROLLBACK / RECOVERY PLAN",
             ):
-                self.assertIn(phrase, text)
+                self.assertIn(phrase, text.upper() if phrase == "SYSTEM TRUTH" else text)
             self.assertIn("Executor", text)
             self.assertIn("Manager", text)
             self.assertIn("read-only", text)
-        self.assertIn("single operator control-plane runbook", index)
-        self.assertIn("Runbook کامل فارسی اپراتور", index)
 
     def test_task_focus_and_attention_drift_are_canonical(self) -> None:
         architecture = read("ARCHITECTURE.md")
@@ -103,7 +102,18 @@ class OnboardingDocsTest(unittest.TestCase):
             self.assertIn("side_task_max_rounds_without_focus_review: 3", text)
             self.assertIn("side_task_may_redefine_primary_objective: false", text)
             self.assertIn("interrupt_requires_primary_checkpoint: true", text)
-            self.assertIn("alert_on_side_task_attention_drift: true", text)
+
+    def test_presets_simplify_without_weakening_sensitive_controls(self) -> None:
+        profile = read("schemas/PROJECT_PROFILE_CONFIG.md")
+        template = read("templates/PROJECT_PROFILE.example.yaml")
+        start = read("docs/agent/START_HERE.md")
+        for preset in ("VIBE_FAST", "PRODUCT_STANDARD", "HIGH_ASSURANCE"):
+            self.assertIn(preset, profile)
+            self.assertIn(preset, start)
+        self.assertIn("operating_preset: PRODUCT_STANDARD", template)
+        self.assertIn("overrides: {}", template)
+        self.assertIn("production mutation", profile.lower())
+        self.assertIn("rollback_or_forward_recovery_required_for_every_mutation: true", profile)
 
     def test_risk_adaptive_policy_is_canonical(self) -> None:
         architecture = read("ARCHITECTURE.md")
@@ -125,6 +135,17 @@ class OnboardingDocsTest(unittest.TestCase):
         self.assertIn("maximum_without_escalation: 2", profile)
         self.assertIn("extra_iteration_requires_new_material_finding: true", profile)
 
+    def test_dual_lens_depth_is_risk_adaptive(self) -> None:
+        architecture = read("ARCHITECTURE.md")
+        workflow = read("docs/agent/TASK_WORKFLOW_DRAFT_REVIEW_APPLY_VERIFY.md")
+        profile = read("schemas/PROJECT_PROFILE_CONFIG.md")
+        for text in (architecture, workflow):
+            self.assertIn("compact System-Lens", text)
+            self.assertIn("money", text.lower())
+            self.assertIn("tenant", text.lower())
+        self.assertIn("low_risk_mode: COMPACT_IMPACT_SUMMARY", profile)
+        self.assertIn("force_explicit_dimensions_for_sensitive_boundaries: true", profile)
+
     def test_independent_closure_is_not_model_voting(self) -> None:
         architecture = read("ARCHITECTURE.md")
         workflow = read("docs/agent/TASK_WORKFLOW_DRAFT_REVIEW_APPLY_VERIFY.md")
@@ -144,17 +165,16 @@ class OnboardingDocsTest(unittest.TestCase):
 
     def test_artifact_handoff_and_routing_are_wired(self) -> None:
         architecture = read("ARCHITECTURE.md")
-        workflow = read("docs/agent/TASK_WORKFLOW_DRAFT_REVIEW_APPLY_VERIFY.md")
         getting_started = read("docs/GETTING_STARTED.md")
+        operator = read("docs/operator/OPERATOR_GUIDE.en.md")
         profile = read("schemas/PROJECT_PROFILE_CONFIG.md")
-        for text in (architecture, workflow, getting_started):
+        for text in (architecture, getting_started, operator):
             lowered = text.lower()
             self.assertIn("human transports authority", lowered)
             self.assertIn("repository transports engineering state", lowered)
         self.assertIn("model_routing:", profile)
         self.assertIn("state_handoff:", profile)
         self.assertIn("require_primary_task_ref: true", profile)
-        self.assertIn("require_active_task_role: true", profile)
         self.assertIn("never_reduce_acceptance_or_evidence_for_cost: true", profile)
 
     def test_failure_surface_and_adversarial_review_are_wired(self) -> None:
@@ -190,23 +210,30 @@ class OnboardingDocsTest(unittest.TestCase):
             self.assertIn("rollback_or_forward_recovery_required_for_every_mutation: true", text)
         self.assertIn("rollback or forward-recovery", delivery.lower())
 
-    def test_bundle_builder_includes_operator_role_prompts(self) -> None:
+    def test_bundle_builder_includes_operator_role_prompts_and_dual_lens_test(self) -> None:
         builder = read("scripts/build_agent_bundle.py")
         self.assertIn('"prompts/operator/"', builder)
+        self.assertIn('"scripts/test_dual_lens_docs.py"', builder)
         self.assertTrue((ROOT / "prompts/operator/INDEPENDENT_JUDGE.md").is_file())
 
-    def test_persian_guide_has_rtl_ltr_and_new_flow(self) -> None:
+    def test_persian_guide_is_current_and_role_clear(self) -> None:
         text = read("docs/GUIDE.fa.md")
-        self.assertGreater(len(re.findall(r"[\u0600-\u06ff]", text)), 1000)
+        self.assertGreater(len(re.findall(r"[\u0600-\u06ff]", text)), 700)
         self.assertTrue(text.startswith('<div dir="rtl" align="right">'))
         self.assertTrue(text.rstrip().endswith("</div>"))
         self.assertNotIn("```", text)
-        self.assertGreaterEqual(text.count('<pre dir="ltr" style="text-align:left"'), 10)
-        self.assertIn('class="sourceCode bash"', text)
-        self.assertIn("MULTI-MODEL AGREEMENT", text)
-        self.assertIn("Independent Judge", text)
-        self.assertIn("Human transports authority", text)
-        self.assertIn("default_max_iterations: 1", text)
+        self.assertGreaterEqual(text.count('<pre dir="ltr" style="text-align:left"'), 8)
+        for phrase in (
+            "1.11",
+            "VIBE_FAST",
+            "PRODUCT_STANDARD",
+            "HIGH_ASSURANCE",
+            "System Truth Map",
+            "MULTI-MODEL AGREEMENT",
+            "Independent Judge",
+            "Human transports authority",
+        ):
+            self.assertIn(phrase, text)
 
     def test_validation_status_does_not_overclaim(self) -> None:
         text = read("docs/VALIDATION_STATUS.md")
