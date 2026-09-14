@@ -1,16 +1,10 @@
-# فهرست مستندات اپراتور
+# مستندات اپراتور
 
-این پوشه برای انسان/اپراتور است و Agent برنامه‌نویس نباید آن را به‌صورت دائمی preload کند.
+برای فهم کامل مدل کنترل و Guardrailها از این فایل شروع کنید:
 
-- `OPERATOR_GUIDE.fa.md` — راهنمای عملی استفاده، Workflow تسک، Governance و مسیر ورود به Scriptها.
-- `DESIGNER_MANAGER_SETUP.md` — جدایی نقش‌ها، دسترسی مستقیم Git، branch/PR مستقل Executor و review واقعی Manager.
-- `CONTEXT_PACKET.md` — جایگزین محدود وقتی Designer یا Manager دسترسی مستقیم Git ندارد.
-- `../GUIDE.fa.md` — راهنمای جامع و مستقل فارسی با متن RTL و code blockهای LTR.
-- `USING_PYTHON_TOOLS.fa.md` — هدف، دستورها، محدودیت‌ها و Self-testهای ابزارهای Python.
-- `PROMPT_TASK_AGENT_SETUP.fa.md` — بهترین روش‌های Prompt، Task و Agent Setup.
-- `INSTALLATION_PROMPTS.fa.md` — Promptهای آماده برای نصب، پروژه Mature و Adoption وسط کار.
-- `RELEASE_CHECKLIST.fa.md` — Checklist بررسی Release چارچوب.
+- `OPERATOR_GUIDE.fa.md` — Runbook کامل فارسی: Project Architect، Designer، Manager، Executor، Cold Reviewer، Independent Judge، Vibe/Product Mode، Swamp Guard، Task Hierarchy، Authority Separation، Evidence و Production Control.
+- `OPERATOR_GUIDE.en.md` — نسخه کامل انگلیسی همان Runbook.
 
-نسخه‌های انگلیسی همین راهنماها نیز در همین پوشه هستند. Artifact قابل‌حمل این فایل‌ها را برای استفاده Offline اپراتور دارد، ولی Agent برنامه‌نویس همچنان از `START_HERE.md` شروع می‌کند و فقط در صورت نیاز فایل‌های Operator را Load می‌کند.
+بقیه فایل‌های این پوشه فقط در صورت نیاز برای نصب، Role Setup، Context Packet، Promptها، ابزار deterministic، Usage telemetry یا Release operation خوانده شوند.
 
-Policy اصلی همیشه `ARCHITECTURE.md` است.
+Canonical policy همچنان `ARCHITECTURE.md` و `schemas/` است؛ Operator docs روش اجرای آن را توضیح می‌دهند و نباید همگی داخل context دائمی Executor قرار بگیرند.
