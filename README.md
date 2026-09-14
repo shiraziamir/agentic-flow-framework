@@ -231,14 +231,15 @@ three models say PASS != three independent engineers
 
 1. Clone/pin this framework beside your project.
 2. Read [Getting Started](docs/GETTING_STARTED.md).
-3. If greenfield/early-stage, choose `VIBE_PROTOTYPE` or `PRODUCT_BUILD` and run [Project Inception](docs/agent/PROJECT_INCEPTION_ARCHITECTURE.md) before serious coding.
-4. Keep one durable `PRIMARY_TASK`; classify discovered work as `SIDE_TASK` or `INTERRUPT` instead of allowing implicit reprioritization.
-5. Give the Executor [`docs/agent/START_HERE.md`](docs/agent/START_HERE.md).
-6. Start with `STRICT_PREVIEW`; group related edits into bounded batches.
-7. For material tasks, use the [Designer](prompts/operator/TASK_DESIGNER.md) and [Manager](prompts/operator/MANAGER_REVIEWER.md) prompts.
-8. For HIGH-risk closure, use the read-only [Independent Judge](prompts/operator/INDEPENDENT_JUDGE.md).
-9. Require real-enough test access for the claims being closed.
-10. Let repository artifacts carry project/task/review/receipt state; involve the human for actual product, authority, priority, risk and business decisions.
+3. **Operator:** read the [Operator Runbook](docs/operator/OPERATOR_GUIDE.en.md) or [راهنمای اپراتور فارسی](docs/operator/OPERATOR_GUIDE.fa.md) to understand the full control model and guardrails.
+4. If greenfield/early-stage, choose `VIBE_PROTOTYPE` or `PRODUCT_BUILD` and run [Project Inception](docs/agent/PROJECT_INCEPTION_ARCHITECTURE.md) before serious coding.
+5. Keep one durable `PRIMARY_TASK`; classify discovered work as `SIDE_TASK` or `INTERRUPT` instead of allowing implicit reprioritization.
+6. Give the Executor [`docs/agent/START_HERE.md`](docs/agent/START_HERE.md).
+7. Start with `STRICT_PREVIEW`; group related edits into bounded batches.
+8. For material tasks, use the [Designer](prompts/operator/TASK_DESIGNER.md) and [Manager](prompts/operator/MANAGER_REVIEWER.md) prompts.
+9. For HIGH-risk closure, use the read-only [Independent Judge](prompts/operator/INDEPENDENT_JUDGE.md).
+10. Require real-enough test access for the claims being closed.
+11. Let repository artifacts carry project/task/review/receipt state; involve the human for actual product, authority, priority, risk and business decisions.
 
 ## Key rules
 
@@ -265,9 +266,10 @@ For a human newcomer:
 
 1. **This README** — purpose, Vibe mode, task focus and operating model.
 2. **[Getting Started](docs/GETTING_STARTED.md)** — adoption steps.
-3. **[Project Inception](docs/agent/PROJECT_INCEPTION_ARCHITECTURE.md)** — greenfield/vibe/product architecture lifecycle.
-4. **[Task Workflow](docs/agent/TASK_WORKFLOW_DRAFT_REVIEW_APPLY_VERIFY.md)** — execution lifecycle after the project baseline exists.
-5. **[Persian Guide](docs/GUIDE.fa.md)** — راهنمای فارسی کامل.
+3. **[Operator Runbook](docs/operator/OPERATOR_GUIDE.en.md)** / **[راهنمای اپراتور](docs/operator/OPERATOR_GUIDE.fa.md)** — complete role choreography and guardrails.
+4. **[Project Inception](docs/agent/PROJECT_INCEPTION_ARCHITECTURE.md)** — greenfield/vibe/product architecture lifecycle.
+5. **[Task Workflow](docs/agent/TASK_WORKFLOW_DRAFT_REVIEW_APPLY_VERIFY.md)** — execution lifecycle after the project baseline exists.
+6. **[Persian Guide](docs/GUIDE.fa.md)** — راهنمای فارسی کامل.
 
 For an Executor:
 
@@ -282,6 +284,7 @@ docs/agent/START_HERE.md
 
 ## Deeper references
 
+- [Operator Runbook](docs/operator/OPERATOR_GUIDE.en.md) / [Persian Operator Runbook](docs/operator/OPERATOR_GUIDE.fa.md) — full control-plane operation and guardrails.
 - [Project Architect Prompt](prompts/operator/PROJECT_ARCHITECT.md) — architecture discovery without premature coding.
 - [Why Agentic Flow](docs/WHY_AGENTIC_FLOW.md) — problem and evidence map.
 - [Comparison](docs/COMPARISON.md) — trade-offs vs ordinary coding-agent use.
