@@ -1,0 +1,50 @@
+system_truth_map_version: 1
+updated_at: 2026-09-14T00:00:00Z
+repository_ref: <commit/ref>
+
+components:
+  entry_points: []
+  trust_boundaries: []
+  databases: []
+  caches: []
+  queues: []
+  external_providers: []
+  background_workers: []
+  admin_operations: []
+  metrics_and_alerts: []
+  deployment_and_recovery: []
+
+# Add only load-bearing data/state. Do not inventory every field in the application.
+data_authority:
+  - name: example_business_datum
+    authoritative_source: <database/service/ledger>
+    derived_or_cached_copies: []
+    writers: []
+    readers: []
+    ttl_or_freshness: null
+    maximum_size_or_bound: null
+    privacy_class: INTERNAL
+    restart_behavior: <survives|reconstructs|lost|unknown>
+    failure_behavior: <fail-closed|unavailable|degraded|project-defined>
+    recovery_procedure: <runbook/ref>
+    tenant_isolation: NOT_APPLICABLE
+
+scale_boundaries:
+  current_target: <prototype|demo|early-tenants|production>
+  resources:
+    - name: example_queue_or_store
+      expected_load: UNKNOWN
+      known_ceiling: UNKNOWN
+      soft_warning: UNKNOWN
+      hard_safety_limit: UNKNOWN
+      failure_behavior: <bounded behavior>
+      scale_up_trigger: <signal/threshold>
+
+cross_system_audit:
+  last_audit_ref: null
+  material_tasks_since_last_audit: 0
+  trigger_precedence: EVENT_THEN_RISK_THEN_COUNT
+  reminder_interval: 6
+  next_trigger: <release|incident|authority-change|task-count|manual>
+
+open_truth_questions: []
