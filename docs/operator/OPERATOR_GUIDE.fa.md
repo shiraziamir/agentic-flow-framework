@@ -1,7 +1,7 @@
 # راهنمای اپراتور — Agentic Flow
 
-**Runbook اصلی اپراتور. Agent نباید این فایل را دائماً preload کند مگر Task اپراتوری به آن نیاز داشته باشد.**  
-**نسخه فریم‌ورک:** 1.10  
+**Runbook اصلی اپراتور. Coding Agent نباید این فایل را دائماً preload کند مگر Task اپراتوری به آن نیاز داشته باشد.**  
+**نسخه فریم‌ورک:** 1.11  
 **به‌روزرسانی:** 2026-09-14
 
 این سند توضیح عملیاتی واحد برای اپراتور است: چه نقشی چه کاری می‌کند، مدل اجراکننده و مدل مراقب چگونه جدا می‌شوند، چه Guardrailهایی فعال‌اند، `Dual-Lens` چطور جلوی «درست بودن محلی ولی غلط شدن کل سیستم» را می‌گیرد، و انسان کجا باید تصمیم واقعی بگیرد. Authority نهایی همچنان در `ARCHITECTURE.md` و Schemaهاست.
@@ -12,14 +12,13 @@
 PRODUCT OWNER / OPERATOR
 WHY / WHAT / priority / business trade-offs / accepted risk / production authority
         │
-        ├── greenfield یا معماری نامطمئن ──► PROJECT ARCHITECT (read-only)
+        ├── greenfield / معماری نامطمئن ──► PROJECT ARCHITECT (read-only)
         │                                      │
-        │                                      ▼
-        │                    architecture + System Truth Map + eval contract
+        │                    product constraints + eval + System Truth Map
         │                                      │
         ▼                                      ▼
 DESIGNER / TASK ARCHITECT ──► MANAGER / REVIEWER ──► EXECUTOR
-طراحی Task به‌صورت read-only      freeze + authority       اجرای محدود
+Task design به‌صورت read-only      freeze + authority       اجرای محدود
                                                              │
                                                              ▼
                                                    LOCAL + SYSTEM LENS
@@ -30,7 +29,7 @@ DESIGNER / TASK ARCHITECT ──► MANAGER / REVIEWER ──► EXECUTOR
                                                              ▼
                                                   MANAGER CONSOLIDATED REVIEW
                                                              │
-                                                    bounded remediation
+                                                    one bounded remediation
                                                              │
                                                              ▼
                                                INDEPENDENT JUDGE (read-only)
@@ -47,67 +46,41 @@ Human transports authority and priority.
 Repository transports engineering state.
 ```
 
-## ۲. نقش‌ها و حدود اختیار
+## ۲. با Preset شروع کنید، نه با یک دیوار تنظیمات
 
-| نقش | مسئولیت اصلی | Mutation پیش‌فرض | Production mutation |
-|---|---|---:|---:|
-| Operator / Product Owner | هدف، اولویت، trade-off، ریسک و Production authority | اختیار انسانی | فقط تصمیم صریح انسان |
-| Project Architect | تبدیل Product Intent به constraint، eval، System Truth Map و گزینه معماری | read-only | ممنوع |
-| Designer / Task Architect | تبدیل هدف محدود به Task Contract | read-only | ممنوع |
-| Manager / Reviewer | freeze کردن Task، کنترل authority، بررسی diff/receipt/System Lens | read/review | پیش‌فرض ممنوع |
-| Executor | اجرای HOW داخل مرزهای freeze‌شده | bounded write | فقط با مجوز جداگانه Owner |
-| Cold / Adversarial Reviewer | پیدا کردن defect و فرض غلط قبل از Manager | read-only | ممنوع |
-| Independent Judge | closure مستقل برای HIGH-risk | read-only | ممنوع |
-
-مدل متفاوت به‌تنهایی استقلال ایجاد نمی‌کند. استقلال واقعی تا جای ممکن باید در این چهار بعد باشد:
+Phase پروژه و Operating Preset دو مفهوم جدا هستند:
 
 ```text
-IMPLEMENTATION
-CONTEXT
-AUTHORITY
-EVIDENCE
+Project phase:
+VIBE_PROTOTYPE | PRODUCT_BUILD | MAINTENANCE
+
+Operating preset:
+VIBE_FAST | PRODUCT_STANDARD | HIGH_ASSURANCE
 ```
 
-و:
+| Preset | کاربرد | رفتار پیش‌فرض |
+|---|---|---|
+| `VIBE_FAST` | آزمایش disposable، امکان‌سنجی، UX learning | سریع، review فشرده، sacrificial code مجاز، بدون production claim |
+| `PRODUCT_STANDARD` | محصول قابل نگهداری معمولی | Project Inception در صورت نیاز، Dual-Lens risk-adaptive، تست واقعی کافی، remediation محدود |
+| `HIGH_ASSURANCE` | پول، identity، privacy، tenant isolation، durability حساس، عملیات destructive/regulated | evidence قوی‌تر و independent closure هرجا توجیه دارد |
 
-```text
-MULTI-MODEL AGREEMENT != INDEPENDENT BEHAVIORAL EVIDENCE
-```
+لازم نیست تمام optionهای Schema را داخل هر پروژه copy کنید. از Preset شروع کنید و فقط تفاوت واقعی پروژه را در `.agentic/PROJECT_PROFILE.yaml` override کنید.
 
-## ۳. Modeهای پروژه
-
-### `VIBE_PROTOTYPE`
-
-فعال‌سازی:
-
-```yaml
-project_mode:
-  mode: VIBE_PROTOTYPE
-```
-
-وقتی سؤال اصلی این است که «آیا ایده کار می‌کند؟» یا «کاربر این تجربه را دوست دارد؟» استفاده می‌شود. سرعت یادگیری اولویت دارد و بخشی از کد می‌تواند sacrificial باشد.
+## ۳. Vibe Mode پشتیبانی می‌شود، ولی محصور است
 
 ```text
 VIBE_PROTOTYPE != PRODUCTION BASELINE
 ```
 
-این Mode مجوز Production readiness، داده حساس یا Production mutation نمی‌دهد. عبور به `PRODUCT_BUILD` نیازمند re-baseline، Architecture Checkpoint و دسته‌بندی کد Prototype است:
+در Vibe Mode سرعت یادگیری اولویت دارد. معماری می‌تواند موقت و بخشی از کد sacrificial باشد. اما این Mode مجوز داده حساس، production readiness یا production mutation نمی‌دهد.
+
+برای عبور به `PRODUCT_BUILD` باید re-baseline شود و کد Prototype صریحاً دسته‌بندی شود:
 
 ```text
 REUSE_AS_IS | REUSE_AFTER_REVIEW | REWRITE | DISCARD
 ```
 
-### `PRODUCT_BUILD`
-
-برای ساخت Product baseline. Product constraint، quality/eval contract، `System Truth Map` و تصمیم‌های معماری باربر باید قبل از رشد وسیع featureها روشن باشند.
-
-### `MAINTENANCE`
-
-برای پروژه‌ای با baseline معتبر. اگر boundary مهم عوض شد یا Swamp Guard drift ساختاری دید، دوباره به Architecture Discovery برگردید.
-
-## ۴. شروع پروژه از صفر
-
-ایده نباید مستقیم به Executor داده شود:
+## ۴. پروژه Greenfield: ایده مستقیم به کدنویسی نمی‌رود
 
 ```text
 PRODUCT INTENT
@@ -116,123 +89,127 @@ PRODUCT INTENT
 → ARCHITECTURE DISCOVERY
 → SYSTEM TRUTH / DATA AUTHORITY MAP
 → CURRENT SCALE BOUNDARY
-→ 2–3 MINIMAL OPTIONS
-→ LOAD-BEARING DECISIONS
+→ MINIMAL OPTIONS when useful
 → WALKING SKELETON
 → ARCHITECTURE CHECKPOINT
 → PRODUCT BASELINE
-→ NORMAL TASK FLOW
 ```
 
-اپراتور سؤال محصول را جواب می‌دهد، نه سؤال تخصصی دیتابیس یا framework: کاربر کیست، outcome چیست، رفتار غیرقابل قبول چیست، privacy/freshness/latency/cost چقدر مهم است و چه trade-off تجاری قابل قبول است.
+Product Owner outcome و trade-off را مشخص می‌کند: کاربر کیست، success/failure چیست، privacy/freshness/latency/cost چقدر مهم است و چه ریسکی قابل قبول است. Project Architect کوچک‌ترین شکل سیستم را پیشنهاد می‌دهد.
 
-برای AI/RAG، tuning جدی روی chunking، embedding، top-k، reranking، prompt یا vector vendor قبل از eval baseline نماینده ممنوع است.
+برای AI/RAG/Search، tuning جدی قبل از eval baseline نماینده انجام نمی‌شود.
 
-راهنما: `docs/agent/PROJECT_INCEPTION_ARCHITECTURE.md`  
-نقشه سیستم: `schemas/SYSTEM_TRUTH_MAP.md`  
-Prompt: `prompts/operator/PROJECT_ARCHITECT.md`
+فایل‌های اصلی:
 
-## ۵. Dual-Lens — هر تغییر با دو نگاه
+```text
+docs/agent/PROJECT_INCEPTION_ARCHITECTURE.md
+prompts/operator/PROJECT_ARCHITECT.md
+schemas/SYSTEM_TRUTH_MAP.md
+templates/SYSTEM_TRUTH_MAP.example.yaml
+```
 
-هر تغییر material باید هم‌زمان با دو لنز دیده شود:
+## ۵. نقش‌ها و حدود اختیار
+
+| نقش | مسئولیت اصلی | Mutation پیش‌فرض | Production mutation |
+|---|---|---:|---:|
+| Operator / Product Owner | هدف، اولویت، trade-off، ریسک، production authority | اختیار انسانی | تصمیم صریح انسان |
+| Project Architect | constraint، eval، System Truth Map، گزینه معماری | read-only | ممنوع |
+| Designer / Task Architect | Task Contract و advisory | read-only | ممنوع |
+| Manager / Reviewer | freeze Task، review exact diff/evidence، authority محدود | read/review | پیش‌فرض ممنوع |
+| Executor | اجرای HOW داخل boundary تصویب‌شده | bounded write | فقط با مجوز جداگانه Owner |
+| Cold / Adversarial Reviewer | کشف defect/فرض غلط قبل از Manager | read-only | ممنوع |
+| Independent Judge | closure برای HIGH-risk یا policy-required | read-only | ممنوع |
+
+مدل متفاوت به‌تنهایی independence نیست. استقلال واقعی تا جای ممکن این چهار بعد را جدا می‌کند:
+
+```text
+IMPLEMENTATION
+CONTEXT
+AUTHORITY
+EVIDENCE
+```
+
+```text
+MULTI-MODEL AGREEMENT != INDEPENDENT BEHAVIORAL EVIDENCE
+```
+
+## ۶. Task Focus — موضوع فعلی گفتگو مساوی اولویت پروژه نیست
+
+```text
+PRIMARY_TASK = هدف durable اصلی
+SIDE_TASK    = کار کمکی محدود
+INTERRUPT    = وقفه فوری و محدود
+```
+
+```text
+RECENCY IS NOT PRIORITY.
+CONVERSATIONAL MOMENTUM CANNOT PROMOTE A SIDE TASK.
+```
+
+Side Task باید reference به Primary، success condition محدود، budget/scope و return condition داشته باشد. بعد از پایان، Flow به Primary برمی‌گردد.
+
+Promotion فقط با تصمیم صریح Manager/Operator انجام می‌شود. اگر Side Task در حال بلعیدن پروژه باشد، Agent باید `SIDE_TASK DRIFT` اعلام کند و `CLOSE | DEFER | PROMOTE_PROPOSAL` پیشنهاد دهد.
+
+برای `INTERRUPT` ابتدا Primary Task و resume state دقیق checkpoint می‌شود.
+
+## ۷. Dual-Lens بدون Checklist Theater
 
 ```text
 LOCAL LENS
-آیا خود تغییر درست پیاده‌سازی شده است؟
+آیا رفتار تغییرکرده درست کار می‌کند؟
 
 SYSTEM LENS
-بعد از این تغییر، کل سیستم چه حقیقتی را ادعا می‌کند؟
+بعد از این تغییر، سیستم چه حقیقتی را ادعا می‌کند؟
 ```
 
-### Local Lens
-
-حداقل بررسی می‌کند:
-
-- call path واقعی؛
-- business invariant؛
-- failure semantics؛
-- resource/cleanup behavior؛
-- تست هدفمند و regression مرتبط؛
-- mutation/path proof برای تست‌های باربر.
-
-### System Lens
-
-پروژه یک `System Truth Map` کوچک نگه می‌دارد که شامل اجزا، trust boundaryها، منبع authoritative داده، cache/projectionها، رفتار restart/failure/recovery، tenant isolation و مرز مقیاس فعلی است.
-
-برای هر Task material این ماتریس مرور می‌شود:
+ابعاد System Lens:
 
 ```text
-WRITE
-READ
-AGGREGATE
-CACHE
-RESTART
-FAILURE
-RECOVERY
-ADMIN
-METRIC
-TENANT_ISOLATION
-SCALE
-PRIVACY
-COST
+WRITE · READ · AGGREGATE · CACHE · RESTART · FAILURE · RECOVERY
+ADMIN · METRIC · TENANT_ISOLATION · SCALE · PRIVACY · COST
 ```
 
-برای هر سطر فقط یکی از این وضعیت‌ها مجاز است:
+وضعیت‌ها:
 
 ```text
-UNAFFECTED
-VERIFIED
-CHANGED_AND_TESTED
-OPEN_RISK
-NOT_APPLICABLE
+UNAFFECTED | VERIFIED | CHANGED_AND_TESTED | OPEN_RISK | NOT_APPLICABLE
 ```
 
-قواعد مهم:
+قاعده risk-adaptive:
 
-- `UNAFFECTED` نتیجه بررسی است، نه مقدار پیش‌فرض.
-- cache، projection، summary یا metric صرفاً چون خواندنش راحت است authoritative نمی‌شود.
-- `OPEN_RISK` باید تا زمان resolve/accept/defer/escalate شدن قابل مشاهده بماند.
-- اگر authority، trust boundary، recovery rule یا scale boundary مادی عوض شد، `System Truth Map` باید update شود.
-- سبز بودن یک تابع، claim سراسری سیستم را ثابت نمی‌کند.
+- `LOW` و واقعاً local → یک خلاصه کوتاه از system impact؛ ۱۳ خانه را مکانیکی پر نکنید.
+- `MEDIUM/HIGH` → ابعاد مرتبط صریح ثبت شوند.
+- هر Risk Level که به **پول، privacy، identity، tenant isolation، durability/recovery، state destructive یا production semantics** دست می‌زند → ابعاد affected صریح ثبت شوند.
 
-## ۶. System Truth Map و Data Authority
+`UNAFFECTED` نتیجه بررسی است، نه filler. `OPEN_RISK` باید visible بماند. Cache/projection/metric بی‌صدا authority نمی‌شود.
 
-برای پروژه‌های stateful، cost-sensitive، privacy-sensitive، tenant-aware یا Production-oriented، این نقشه باید پاسخ دهد:
+## ۸. System Truth Map
+
+برای `PRODUCT_BUILD` و سیستم‌های stateful/cost/privacy/tenant-sensitive نگه دارید:
 
 ```text
-Entry points
-Trust boundaries
-Databases
-Caches
-Queues
-External providers
-Background workers
-Admin operations
-Metrics / alerts
-Deployment / rollback / recovery
+.agentic/SYSTEM_TRUTH_MAP.yaml
 ```
 
-و برای داده باربر:
+این artifact فقط حقیقت‌های باربر را نگه می‌دارد:
 
 ```text
-Data name
-Authoritative source
-Derived/cached copies
-Writer / readers
-TTL/freshness
-Maximum size/bound
-Privacy class
-Restart behavior
-Failure behavior
-Recovery procedure
-Tenant isolation
+entry points / trust boundaries
+DB / cache / queue / provider / worker
+admin / observability / deployment / recovery
+authoritative data + derived copies
+writers / readers
+freshness / size / privacy bounds
+restart / failure / recovery behavior
+tenant isolation
+current scale target / ceiling / safety limit / scale trigger
 ```
 
-مثلاً اگر «هزینه Provider» حقیقت مالی سیستم است، باید معلوم باشد authority آن PostgreSQL ledger است یا چیز دیگر؛ Redis projection نباید بی‌صدا authority شود.
+این Map مدل سیستم است، نه runtime proof. Claimهای runtime همچنان receipt می‌خواهند.
 
-## ۷. Threat/Failure review کوچک
+## ۹. Threat/Failure Mini-Review
 
-هدف سند صدصفحه‌ای نیست. در شروع پروژه یا تغییر boundary باربر این سؤال‌ها مرور می‌شوند:
+در Project Inception یا تغییر boundary باربر به‌طور کوتاه بپرسید:
 
 ```text
 What can leak?
@@ -248,246 +225,89 @@ What can cause unexpected provider spend?
 What can an administrator safely do later?
 ```
 
-فقط risk و decision مادی ثبت می‌شود و به invariant، تست، STOP condition یا architecture boundary تبدیل می‌شود.
+فقط risk و decision مادی ثبت شود. هدف ساختن سند امنیتی صدصفحه‌ای نیست.
 
-## ۸. Audit دوره‌ای سراسری
-
-درست بودن تک‌تک Taskها تضمین نمی‌کند رابطه اجزا بعد از چند تغییر هنوز درست باشد.
-
-Trigger پیشنهادی و قابل تنظیم:
-
-```text
-هر حدود 5–8 Task مادی (پیش‌فرض نمونه: 6)
-قبل از Demo deployment مهم
-قبل از release واقعی به مشتری
-بعد از incident مادی
-قبل/بعد از تغییر مهم data authority یا trust boundary
-```
-
-Audit روی این محورهاست:
-
-```text
-FINANCIAL TRUTH
-PRIVACY TRUTH
-IDENTITY / AUTHORIZATION
-TENANT ISOLATION
-RESTART SURVIVAL
-BACKUP / RESTORE
-OBSERVABILITY TRUTH
-CAPACITY BOUNDS
-EXTERNAL-PROVIDER FAILURE / SPEND
-ADMIN RECOVERY
-```
-
-این مرحله full code review دوباره نیست؛ هدفش پیدا کردن drift بین اجزاست.
-
-## ۹. Task Hierarchy — جلوگیری از گم‌شدن هدف اصلی
-
-هر workstream فقط یک هدف durable اصلی دارد:
-
-```text
-PRIMARY_TASK = هدف اصلی فعلی
-SIDE_TASK    = کار کمکی محدود
-INTERRUPT    = وقفه فوری و محدود
-```
-
-قانون:
-
-```text
-RECENCY IS NOT PRIORITY.
-CONVERSATIONAL MOMENTUM CANNOT PROMOTE A SIDE TASK.
-```
-
-هر `SIDE_TASK` باید `primary_task_ref`، success condition محدود، scope/budget، return condition و promotion authority داشته باشد. بعد از پایان، نتیجه ثبت می‌شود و Flow به Primary Task برمی‌گردد.
-
-Promotion فقط با تصمیم صریح Manager/Operator انجام می‌شود. طولانی‌شدن بحث یا چند prompt پشت‌سرهم promotion نیست.
-
-اگر Side Task بیش از حد round بخورد، معماری unrelated بسازد یا هدف de-facto شود:
-
-```text
-SIDE_TASK DRIFT
-Recommended action: CLOSE | DEFER | PROMOTE_PROPOSAL
-```
-
-برای `INTERRUPT` ابتدا Primary Task و resume state دقیق checkpoint می‌شود.
-
-## ۱۰. Lifecycle معمول Task
-
-Risk و نوع کار جدا هستند:
-
-```text
-risk.level = LOW | MEDIUM | HIGH
-work_kind  = IMPLEMENTATION | REMEDIATION | EVIDENCE_ONLY
-```
-
-Flow پیش‌فرض:
+## ۱۰. Lifecycle تسک بر اساس Risk
 
 ```text
 LOW
-execute → focused test → compact review
+execute → focused test → compact diff review → compact system-impact summary
 
 MEDIUM
-short preflight → execute → Dual-Lens → cold review → one remediation → Manager review
+short preflight → execute → Dual-Lens → cold review
+→ one remediation → Manager review
 
 HIGH
-frozen contract
-→ failure/System-Lens preflight
-→ explicit apply authority
-→ bounded execution
-→ adversarial review
-→ Manager consolidated findings
-→ one remediation by default
-→ read-only Independent Judge
+frozen contract → failure/System-Lens preflight → explicit authority
+→ bounded execution → adversarial review → Manager findings
+→ one remediation by default → read-only Independent Judge
 → Operator production/business decision
 ```
 
-Round دوم remediation فقط با finding جدید و مادی قابل توجیه است.
+Round دوم remediation فقط با **new material finding** توجیه دارد و باید داخل boundary قبلی بماند.
 
-## ۱۱. Task Contract باید چه چیزی داشته باشد؟
+## ۱۱. تست و Evidence
 
-برای Task مادی حداقل:
+برای business behavior مادی فقط helper return را تست نکنید. بسته به feature سناریوهای واقعی مانند success، fallback، retry، external side-effect سپس failure، source-of-truth unavailable، restart/rebuild، time boundary، admin recovery، cross-tenant و concurrency/duplicate-work را بررسی کنید.
 
-```text
-Goal
-Invariants
-Allowed mutation surface
-Failure semantics
-Acceptance tests
-STOP conditions
-```
+برای تست‌های load-bearing، mutation/path proof وقتی عملی است استفاده شود: رفتار هدف را در یک copy ایزوله عمداً خراب کنید و ثابت کنید تست قرمز می‌شود.
 
-برای MEDIUM/HIGH، الگوریتم یا pseudocode پیشنهادی مفید است تا reasoning قبل از edit دیده شود؛ اما تا وقتی owner آن را invariant نکرده، implementation script محسوب نمی‌شود.
-
-Task Contract همچنین Local Lens و System Lens را ثبت می‌کند.
-
-## ۱۲. تست رفتاری و Mutation Proof
-
-فقط تست تابع کافی نیست وقتی claim کسب‌وکاری بزرگ‌تر است. سناریوهای واقعی متناسب با feature بررسی شوند: success، fallback/escalation، retry، partial external side effect، source-of-truth unavailable، restart/rebuild، boundary زمانی، admin recovery، cross-tenant و concurrency.
-
-برای تست باربر، نشان دهید تست defect هدف را می‌گیرد. نمونه mutationها:
+برای این کار از destructive Git reset/restore/clean روی workspace نامعلوم اپراتور استفاده نکنید.
 
 ```text
-remove tenant dimension from cache key
-turn database/authority failure into zero or empty success
-double-count aggregate data
-remove lock / cleanup / readiness condition
-skip rebuild after restart
+unit PASS          != user flow proven
+HTTP 200           != persistence
+CI green           != deployed artifact
+backup configured  != restore proven
+reviewer PASS      != runtime evidence
 ```
 
-Mutation فقط در محیط موقت/ایزوله انجام می‌شود. برای برگرداندن فایل از `git reset --hard` یا `git checkout --` استفاده نکنید؛ bytes نسخه اصلی را حفظ و restore را verify کنید.
-
-## ۱۳. Authorityها عمداً جدا هستند
-
-```text
-TASK AUTHORITY
-MUTATION AUTHORITY
-ENVIRONMENT AUTHORITY
-EXTERNAL-SIDE-EFFECT AUTHORITY
-PRODUCTION AUTHORITY
-```
-
-Task approved به معنی source mutation، provider call یا production deploy نیست. برای adoption اولیه `STRICT_PREVIEW` مناسب است؛ editهای مرتبط را batch کنید تا approval spam ایجاد نشود.
-
-## ۱۴. Swamp Guard
+## ۱۲. Swamp Guard
 
 ```text
 CLEAR | WATCH | ALERT | STOP_REBASELINE
 ```
 
-Signalهای مهم:
+Signalهای رایج: architecture churn، remediation تکراری، tool/abstraction بدون نیاز، چند mechanism برای یک responsibility، AI/RAG tuning بدون eval، feature growth قبل از vertical slice، تصمیم معماری فقط در chat، ambiguity در source-of-truth، prototype-to-production drift، side-task attention drift، System-Lens risk حل‌نشده و رشد complexity سریع‌تر از value اثبات‌شده.
 
-- redesign/remediation تکراری؛
-- framework/datastore/abstraction بدون نیاز واقعی؛
-- چند mechanism برای یک responsibility؛
-- AI/RAG tuning بدون eval؛
-- feature growth قبل از vertical slice واقعی؛
-- تصمیم معماری فقط در chat؛
-- source-of-truth مبهم؛
-- workaround موقت که دائمی شده؛
-- prototype با expectation production؛
-- `SIDE_TASK` که توجه را از `PRIMARY_TASK` می‌دزدد؛
-- System-Lens `OPEN_RISK`های تکراری؛
-- cache/projection که بی‌تصمیم رسمی تبدیل به business authority شده است.
-
-Alert:
+حالت شدید:
 
 ```text
-SWAMP ALERT: <WATCH|ALERT|STOP_REBASELINE>
-Signal: ...
-Evidence: ...
-Why it matters: ...
-Recommended action: ...
-Continue allowed: YES|NO
-Authority needed: <none|Manager|Operator>
+STOP_REBASELINE
+→ preserve state/evidence
+→ architecture discovery
+→ simplify / measure / decide
+→ resume from coherent baseline
 ```
 
-## ۱۵. مدل مراقب و روند Review
+خود Framework هم تحت همین قانون است: وقتی controls زیاد می‌شوند، قبل از افزودن مفهوم جدید باید simplify و validate کنیم.
 
-Executor نباید کار material خودش را close کند.
+## ۱۳. Cross-System Audit
 
-برای MEDIUM/HIGH، Cold/Adversarial Reviewer قبل از Manager exact diff را بررسی می‌کند. Manager ترجیحاً این ترتیب را دنبال می‌کند:
+اولویت Trigger:
 
 ```text
-frozen contract
-→ System Truth Map / engineering advisory
-→ exact base/head / diff
-→ surrounding source
-→ raw tests / CI / receipts
-→ Dual-Lens matrix / OPEN_RISKs
-→ Executor narrative last
+EVENT
+> RISK / AUTHORITY CHANGE
+> TASK-COUNT REMINDER
 ```
 
-Manager findingها را یکجا می‌دهد و same-task fixها را داخل remediation window محدود می‌کند.
+Release واقعی به مشتری، incident مادی یا تغییر مهم security/data/authority/recovery می‌تواند فوراً Audit را trigger کند. عدد `5–8 material tasks` فقط reminder است.
 
-برای HIGH-risk، Independent Judge read-only است و source/diff/receipt را مستقل می‌سنجد. Judge حق edit، provider call یا production mutation ندارد.
+محورهای Audit می‌تواند شامل financial truth، privacy، identity/authorization، tenant isolation، restart survival، backup/restore، observability truth، capacity bounds، provider failure/spend و admin recovery باشد.
 
-## ۱۶. Evidence
+## ۱۴. Production Control
 
-```text
-unit PASS          != integration proven
-mock PASS          != real boundary proven
-HTTP 200           != persistence proven
-CI green           != deployed behavior proven
-backup configured  != restore proven
-reviewer PASS      != runtime evidence
-three models PASS  != three independent engineers
-```
-
-پایین‌ترین Environment مجاز را استفاده کنید که changed path واقعی را exercise کند. اگر وجود ندارد نتیجه `UNVERIFIED` یا `BLOCKED` است.
-
-## ۱۷. Handoff مبتنی بر Repository
-
-اپراتور نباید message bus باشد. Session جدید باید از repo بتواند این موارد را پیدا کند:
+Production mutation یک Authority مستقل است. قبل از **هر** Production change باید این موارد مشخص باشند:
 
 ```text
-project mode / architecture baseline
-System Truth Map ref/version
-PRIMARY_TASK
-active SIDE_TASK / INTERRUPT
-resume state
-exact base/head
-frozen task contract
-review findings
-remediation window
-receipts / gaps
-System-Lens OPEN_RISKs
-cross-system audit state
-Swamp Guard state
-closure state
-next authority decision
-```
-
-## ۱۸. Production Control
-
-قبل از هر Production mutation:
-
-```text
-exact target and change identity
-success / health signals
+exact target environment
+exact artifact/config/change identity
+expected health/success signal
 abort condition
-rollback OR explicit forward-recovery path
-stateful/data rollback constraints
-recovery authority/owner
+rollback OR forward-recovery path
+state/data constraints
+recovery owner/authority
 post-change verification
 ```
 
@@ -496,74 +316,76 @@ NO ROLLBACK / RECOVERY PLAN
 → NOT EXECUTION-READY FOR PRODUCTION MUTATION
 ```
 
-اگر rollback امن نیست، forward recovery، backup/checkpoint، blast-radius control و STOP condition لازم است. Independent Judge read-only می‌ماند.
+اگر rollback unsafe یا impossible است، forward recovery، backup/checkpoint، blast-radius control و STOP condition لازم است. PASS مدل مراقب یا Manager مجوز Production نیست.
 
-## ۱۹. Workspace Safety و External Effects
+## ۱۵. انسان نباید Message Bus باشد
 
-Dirty work با ownership نامعلوم state محافظت‌شده است. `reset/restore/clean` مخرب را صرفاً برای راحتی Agent استفاده نکنید.
-
-Provider call واقعی، paid API، ارسال پیام، deployment و destructive data action authority جدا می‌خواهند.
-
-## ۲۰. Routing مدل و هزینه
+Repository باید durable نگه دارد:
 
 ```text
-Project Architect → reasoning قوی‌تر وقتی ambiguity معماری بالاست
-Executor          → task-adequate / cost-efficient
-Manager           → judgment قوی‌تر در صورت نیاز
-Independent Judge → high reasoning + separate context
+project mode / preset
+System Truth Map
+PRIMARY / active task
+exact refs
+findings
+remediation state
+receipts / gaps
+Swamp state
+next authority decision
 ```
 
-کاهش هزینه evidence/acceptance bar را پایین نمی‌آورد.
-
-## ۲۱. اپراتور چه چیزهایی را دائماً چک کند؟
-
-- Project Mode هنوز درست است؟
-- `PRIMARY_TASK` هنوز صریح است؟
-- Side Taskها محدودند؟
-- Swamp Alert نادیده گرفته نشده؟
-- `System Truth Map` هنوز با implementation باربر هم‌خوان است؟
-- `OPEN_RISK`های System Lens جمع نشده‌اند؟
-- Cross-System Audit عقب نیفتاده؟
-- Architecture/Eval baseline هنوز واقعی است؟
-- HEAD بررسی‌شده همان candidate است؟
-- Receiptها current هستند و Claim بیش‌ازحد بزرگ نشده؟
-- Restore/Recovery evidence کافی است؟
-- Production authority به Reviewer/Judge نشت نکرده؟
-- Governance خودش round-trip بی‌فایده نساخته؟
-
-## ۲۲. Quick Start اپراتور
+انسان عمدتاً باید authority واقعی را حمل کند:
 
 ```text
-1. README.md را بخوان.
-2. .agentic/PROJECT_PROFILE.yaml را ایجاد/تأیید کن.
-3. VIBE_PROTOTYPE | PRODUCT_BUILD | MAINTENANCE را انتخاب کن.
-4. برای greenfield: Project Architect / Project Inception.
-5. System Truth Map + Data Authority + Scale Boundary را بساز/تأیید کن.
-6. یک PRIMARY_TASK ثبت کن.
-7. Designer برای Task material، Contract + Dual-Lens preflight می‌دهد.
-8. Manager freeze و authority محدود می‌دهد.
-9. Executor اجرا و تست می‌کند.
-10. Local Lens + System Lens → Cold review → Manager findings → یک remediation.
-11. HIGH-risk → Independent Judge در صورت نیاز.
-12. Cross-System Audit را در triggerهای پروژه اجرا کن.
-13. Operator درباره production/business risk تصمیم می‌گیرد.
-14. Repository state را به session بعد منتقل می‌کند.
+approve / reject
+change priority
+accept risk
+choose business trade-off
+authorize production
 ```
 
-## ۲۳. مراجع canonical
+Session جدید باید بتواند بدون replay کردن chat قبلی از روی repo ادامه دهد.
 
-- `ARCHITECTURE.md` — invariantهای اصلی.
-- `schemas/PROJECT_PROFILE_CONFIG.md` — Mode، Dual-Lens، Swamp Guard و authority defaults.
-- `schemas/SYSTEM_TRUTH_MAP.md` — component/data authority/recovery/scale map.
-- `schemas/TASK_CONTRACT.md` — Task focus، Dual-Lens، scope، claim و authority.
-- `docs/agent/PROJECT_INCEPTION_ARCHITECTURE.md` — Project Inception.
-- `docs/agent/TASK_WORKFLOW_DRAFT_REVIEW_APPLY_VERIFY.md` — lifecycle Task.
-- `schemas/MUTATION_APPROVAL_POLICY.md` — apply/remediation authority.
-- `docs/operator/DESIGNER_MANAGER_SETUP.md` — setup نقش‌ها و permissionها.
-- `prompts/operator/PROJECT_ARCHITECT.md` — Prompt معماری.
-- `prompts/operator/TASK_DESIGNER.md` — Prompt Designer.
-- `prompts/operator/MANAGER_REVIEWER.md` — Prompt Manager.
-- `prompts/operator/INDEPENDENT_JUDGE.md` — Prompt Judge read-only.
-- `production/DELIVERY.md` — rollback/recovery production.
+## ۱۶. Checklist روزانه اپراتور
 
-Operator Guide روش استفاده را توضیح می‌دهد و canonical policy را override نمی‌کند.
+قبل از material work:
+
+```text
+1. PRIMARY_TASK چیست؟
+2. Project Mode و Preset چیست؟
+3. Architecture/System Truth baseline کافی است؟
+4. Risk و allowed mutation surface چیست؟
+5. کدام evidence/environment موفقیت را ثابت می‌کند؟
+6. کدام System-Lens dimensions ممکن است حساس باشند؟
+7. چه external/production authority جداگانه لازم است؟
+```
+
+در Closure:
+
+```text
+چه چیزی تغییر کرد؟
+چه چیزی آن را ثابت می‌کند؟
+چه چیزی هنوز ثابت نشده؟
+کدام System Truth تغییر کرد؟
+چه risk جدید/باز باقی مانده؟
+چه provider/environment mutation رخ داد؟
+چطور stop/recover می‌کنیم؟
+Next authorized action چیست؟
+```
+
+## ۱۷. مسیرهای عمیق‌تر
+
+```text
+Canonical policy          ARCHITECTURE.md
+Project profile/presets   schemas/PROJECT_PROFILE_CONFIG.md
+Project inception         docs/agent/PROJECT_INCEPTION_ARCHITECTURE.md
+System Truth              schemas/SYSTEM_TRUTH_MAP.md
+Task workflow             docs/agent/TASK_WORKFLOW_DRAFT_REVIEW_APPLY_VERIFY.md
+Mutation authority        schemas/MUTATION_APPROVAL_POLICY.md
+Role setup                docs/operator/DESIGNER_MANAGER_SETUP.md
+Independent Judge         prompts/operator/INDEPENDENT_JUDGE.md
+Production rollback       production/DELIVERY.md
+Validation limits         docs/VALIDATION_STATUS.md
+```
+
+هدف «حداکثر Process» نیست. هدف **کمترین Processی است که Product Intent، System Truth، Evidence و Authority را در Risk فعلی منسجم نگه دارد**.
