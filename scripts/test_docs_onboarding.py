@@ -54,8 +54,33 @@ class OnboardingDocsTest(unittest.TestCase):
             "PRIMARY_TASK",
             "SIDE_TASK DRIFT",
             "RECENCY IS NOT PRIORITY",
+            "Operator Runbook",
         ):
             self.assertIn(phrase, text)
+
+    def test_operator_runbook_covers_current_control_model(self) -> None:
+        english = read("docs/operator/OPERATOR_GUIDE.en.md")
+        persian = read("docs/operator/OPERATOR_GUIDE.fa.md")
+        index = read("docs/operator/README.md")
+        for text in (english, persian):
+            for phrase in (
+                "VIBE_PROTOTYPE",
+                "PROJECT ARCHITECT",
+                "PRIMARY_TASK",
+                "SIDE_TASK DRIFT",
+                "RECENCY IS NOT PRIORITY",
+                "SWAMP ALERT",
+                "Independent Judge",
+                "MULTI-MODEL AGREEMENT",
+                "STRICT_PREVIEW",
+                "NO ROLLBACK / RECOVERY PLAN",
+            ):
+                self.assertIn(phrase, text)
+            self.assertIn("Executor", text)
+            self.assertIn("Manager", text)
+            self.assertIn("read-only", text)
+        self.assertIn("single operator control-plane runbook", index)
+        self.assertIn("Runbook کامل فارسی اپراتور", index)
 
     def test_task_focus_and_attention_drift_are_canonical(self) -> None:
         architecture = read("ARCHITECTURE.md")
