@@ -1,55 +1,55 @@
-profile_version: 1
+profile_version: 2
 project_id: example-service
 updated_at: 2026-09-14T00:00:00Z
 
+# Start with a preset. Add overrides only when this project truly differs.
+operating_preset: PRODUCT_STANDARD
+
 project_mode:
   mode: PRODUCT_BUILD
-  vibe_prototype:
-    sacrificial_by_default: true
-    production_baseline: false
-    sensitive_or_production_data: DENIED
-    promotion_requires_rebaseline: true
-  product_build:
-    require_product_brief: true
-    require_quality_or_eval_contract: true
-    require_architecture_discovery: true
-    require_walking_skeleton: true
-    require_architecture_checkpoint: true
 
+codebase_scale: MEDIUM
+readiness_tier: STANDARD
+
+project_traits:
+  stateful: true
+  tenant_scoped: false
+  privacy_sensitive: false
+  cost_sensitive: false
+  production_bound: true
+
+# These are the most important default controls made explicit for readability.
 task_focus_policy:
   require_single_primary_task: true
-  require_active_task_role: true
   side_task_max_rounds_without_focus_review: 3
   side_task_may_redefine_primary_objective: false
   side_task_promotion: MANAGER_OR_OPERATOR_DECISION
   interrupt_requires_primary_checkpoint: true
   resume_primary_after_side_or_interrupt_by_default: true
-  alert_on_side_task_attention_drift: true
 
 swamp_guard:
   enabled: true
-  check_at_material_checkpoints: true
-  states: [CLEAR, WATCH, ALERT, STOP_REBASELINE]
   repeated_remediation_alert_after: 2
   require_eval_before_ai_rag_tuning: true
   require_vertical_slice_before_broad_feature_growth: true
-  require_decision_for_major_architecture_change: true
   require_rebaseline_for_vibe_to_product: true
-  stop_on_unresolved_sensitive_data_boundary: true
   stop_on_source_of_truth_ambiguity: true
   watch_on_side_task_attention_drift: true
   watch_on_repeated_system_lens_open_risk: true
 
 dual_lens:
   enabled: true
+  low_risk_mode: COMPACT_IMPACT_SUMMARY
   require_system_truth_map_for_product_build: true
   require_data_authority_map_when_stateful_or_cost_sensitive: true
-  require_system_effect_matrix_for_material_tasks: true
+  require_explicit_matrix_for_medium_high: true
+  force_explicit_dimensions_for_sensitive_boundaries: true
   require_behavior_scenarios_for_material_business_logic: true
   require_mutation_or_path_proof_for_load_bearing_tests: true
   system_effect_states: [UNAFFECTED, VERIFIED, CHANGED_AND_TESTED, OPEN_RISK, NOT_APPLICABLE]
   cross_system_audit:
     enabled: true
+    trigger_precedence: EVENT_THEN_RISK_THEN_COUNT
     material_task_interval: 6
     recommended_interval_range: "5-8"
     before_demo_deployment: true
@@ -65,17 +65,10 @@ scale_boundaries:
   require_failure_behavior: true
   require_scale_up_trigger: true
 
-codebase_scale: MEDIUM
-readiness_tier: STANDARD
-
 quality:
   test_strategy: TEST_FIRST_FOR_MATERIAL_CLAIMS
   mutation_or_path_proof:
     required_for_load_bearing_tests: true
-  minimum_layers:
-    - UNIT
-    - INTEGRATION
-    - CONTRACT
 
 execution_readiness:
   required_for_behavior_changes: true
@@ -113,22 +106,11 @@ review_policy:
   pre_manager_adversarial_review: REQUIRED_FOR_MEDIUM_HIGH
   consolidated_manager_findings: true
   independent_closure: REQUIRED_FOR_HIGH
-  independence:
-    implementation: REQUIRED_FOR_INDEPENDENT_CLOSURE
-    context: REQUIRED_FOR_INDEPENDENT_CLOSURE
-    authority: REQUIRED_FOR_MATERIAL_WORK
-    evidence: REQUIRED_FOR_INDEPENDENT_CLOSURE
-    model_diversity: PREFERRED
   multi_model_agreement_upgrades_evidence: false
 
 role_access:
   project_architect:
     source: READ_ONLY
-    product_mutation: DENIED
-    production_mutation: DENIED
-  designer:
-    source: READ_ONLY
-    production_read: DENIED
     production_mutation: DENIED
   executor:
     source: BOUNDED_WRITE
@@ -145,7 +127,6 @@ role_access:
 
 model_routing:
   vendor_neutral: true
-  project_architect: HIGH_REASONING_WHEN_JUSTIFIED
   executor: TASK_ADEQUATE_COST_EFFICIENT
   manager: HIGH_REASONING_WHEN_JUSTIFIED
   independent_judge: HIGH_REASONING_SEPARATE_CONTEXT
@@ -154,7 +135,6 @@ model_routing:
 state_handoff:
   repository_transports_engineering_state: true
   human_transports_authority: true
-  require_current_task_ref: true
   require_primary_task_ref: true
   require_active_task_role: true
   require_resume_checkpoint_for_interrupt: true
@@ -162,32 +142,6 @@ state_handoff:
   require_system_truth_map_ref_when_applicable: true
   require_system_lens_open_risks: true
   session_reset_after_durable_checkpoint: ALLOWED
-
-flow_metrics:
-  enabled: true
-  collect_material_tasks_only: true
-
-operations:
-  metrics: REQUIRED
-  logs: REQUIRED
-  traces: OPTIONAL
-  slo: OPTIONAL
-  backup: REQUIRED
-  restore_test: REQUIRED
-  rollback: REQUIRED
-
-security:
-  threat_model: OPTIONAL
-  dependency_review: REQUIRED
-  secret_scanning: REQUIRED
-  least_privilege: REQUIRED
-
-usage_reporting:
-  quota_snapshot: OPTIONAL
-  report_after_material_task: true
-  notify_operator: false
-  stale_after_seconds: 900
-  never_reduce_acceptance_quality: true
 
 agent_environment_policy:
   local: AUTO_ALLOWED
@@ -207,17 +161,5 @@ production_mode:
     require_backup_or_checkpoint: true
     require_blast_radius_control: true
 
-architecture_policy:
-  pattern_mode: AGENT_PROPOSES_OWNER_MAY_OVERRIDE
-  require_rationale_for_new_abstraction: true
-  avoid_pattern_without_boundary_or_failure_mode: true
-  freeze_hard_to_change_invariants_not_easy_choices: true
-  architecture_decisions:
-    require_context_decision_consequences_revisit_trigger: true
-
-temporary_overrides:
-  directory: .agentic/overrides
-  require_expiry: true
-  require_owner: true
-  require_reason: true
-  require_compensating_control: true
+# Add project-specific deviations from the preset here rather than copying the full schema.
+overrides: {}
