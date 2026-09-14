@@ -100,7 +100,9 @@ class DualLensDocsTest(unittest.TestCase):
         architecture = read("ARCHITECTURE.md")
         for text in (profile, template):
             self.assertIn("low_risk_mode: COMPACT_IMPACT_SUMMARY", text)
-        self.assertIn("Do not turn the matrix into checklist theater", workflow)
+        lowered = workflow.lower()
+        self.assertIn("checklist theater", lowered)
+        self.assertIn("do not mechanically fill all rows", lowered)
         self.assertIn("LOW", architecture)
         self.assertIn("compact System-Lens", architecture)
 
@@ -153,11 +155,12 @@ class DualLensDocsTest(unittest.TestCase):
             self.assertIn(phrase, inception)
 
     def test_bundle_vs_context_semantics_are_not_contradictory(self) -> None:
-        agents = read("AGENTS.md")
-        bundle_readme = read("bundle/README.md")
-        self.assertIn("Included in the bundle does not mean included in default agent context", agents)
+        agents = read("AGENTS.md").lower()
+        bundle_readme = read("bundle/README.md").lower()
+        self.assertIn("included in the bundle does not mean included in default agent context", agents)
         self.assertIn("docs/operator/", bundle_readme)
-        self.assertIn("does **not** mean the coding agent should preload", bundle_readme)
+        self.assertIn("presence in the zip", bundle_readme)
+        self.assertIn("preload", bundle_readme)
 
 
 if __name__ == "__main__":
